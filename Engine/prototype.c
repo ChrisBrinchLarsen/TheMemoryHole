@@ -4,6 +4,8 @@
 #include <string.h>
 #include <stdbool.h> 
 #include <stdint.h>
+#include "prototype.h"
+
 
 // Cache architecture
 const uint32_t CACHE_SIZE = 32768;          // Amount of bytes in cache
@@ -13,9 +15,11 @@ const uint32_t ADDR_LEN = 32;               // The address length, usually 32-bi
 
 // Address bit fields
 uint32_t BLOCK_OFFSET_BIT_LENGTH;
+uint32_t SET_COUNT;
 uint32_t SET_BIT_LENGTH;
 uint32_t VALID_BIT_LENGTH;
 uint32_t TAG_BIT_LENGTH;
+
 
 // Policies
 #define LRU_REPLACEMENT_POLICY 0
@@ -25,14 +29,32 @@ const uint32_t ACTIVE_REPLACEMENT_POLICY = RANDOM_REPLACEMENT_POLICY;
 
 uint32_t linesPerSet = 8; // det her er også mega temporary
 
-
-typedef struct CacheLine {
-    bool valid;
-    uint32_t tag;
-    char block[BLOCK_SIZE];
-} CacheLine_t;
-
 CacheLine_t** L1Cache;
+
+int main() {
+    // Initializing address bit fields
+    BLOCK_OFFSET_BIT_LENGTH = log2(BLOCK_SIZE);
+    SET_COUNT = CACHE_SIZE / (ASSOCIATIVITY * BLOCK_SIZE);
+    SET_BIT_LENGTH = log2(SET_COUNT);
+    VALID_BIT_LENGTH = 1;
+    TAG_BIT_LENGTH = ADDR_LEN - BLOCK_OFFSET_BIT_LENGTH - SET_BIT_LENGTH - VALID_BIT_LENGTH;
+
+    printf("1");
+    // malloc 2d array af alle cache lines
+    L1Cache = malloc(SET_COUNT * ASSOCIATIVITY * sizeof(CacheLine_t));
+    // for (uint32_t i = 0; i < SET_COUNT; i++) {
+    //     for (int32_t j = 0; j < ASSOCIATIVITY; j++) {
+    //         L1Cache[i][j].valid = 0;
+    //         L1Cache[i][j].tag = 0;
+    //     }
+    // }
+    printf("2");
+
+    //ReadMemory(0b10001100011110100111001100110001);
+    ReadMemory(0b11111111111111111111111111111111);
+    
+    return 0;
+}
 
 void ReadMemory(uint32_t address) {
 
@@ -70,22 +92,6 @@ void ReadMemory(uint32_t address) {
 
 }
 
-void printBits(size_t const size, void const * const ptr)
-{
-    unsigned char *b = (unsigned char*) ptr;
-    unsigned char byte;
-    int i, j;
-    
-    for (i = size-1; i >= 0; i--) {
-        for (j = 7; j >= 0; j--) {
-            byte = (b[i] >> j) & 1;
-            printf("%u", byte);
-        }
-    }
-    puts("");
-}
-
-
 
 int IsLineInSet(CacheLine_t *set, uint32_t tag) {
     for (uint32_t i = 0; i < linesPerSet; i++) {
@@ -94,8 +100,6 @@ int IsLineInSet(CacheLine_t *set, uint32_t tag) {
     }
     return 0;
 }
-
-
 
 void InsertLineInSet(CacheLine_t *set, uint32_t tag) {
 
@@ -133,6 +137,10 @@ void InsertLineInSet(CacheLine_t *set, uint32_t tag) {
     c.tag = tag;
     //memcpy(&c.block, blockData, BLOCK_SIZE * sizeof(char)); // CALL TO L2
     set[insertIdx] = c;
+    
+    char buff[50];
+    CacheLineToString(c, buff);
+    printf(buff);
 
     UpdateCacheSet(set);
 }
@@ -141,23 +149,34 @@ void UpdateCacheSet(CacheLine_t *set) {
 
 }
 
-int main() {
-    // Initializing address bit fields
-    BLOCK_OFFSET_BIT_LENGTH = log2(BLOCK_SIZE);
-    SET_BIT_LENGTH = log2(CACHE_SIZE / (ASSOCIATIVITY * BLOCK_SIZE));
-    VALID_BIT_LENGTH = 1;
-    TAG_BIT_LENGTH = ADDR_LEN - BLOCK_OFFSET_BIT_LENGTH - SET_BIT_LENGTH - VALID_BIT_LENGTH;
+// tysm stackexchange (https://stackoverflow.com/questions/111928/is-there-a-printf-converter-to-print-in-binary-format)
+void printBits(size_t const size, void const * const ptr) {
+    unsigned char *b = (unsigned char*) ptr;
+    unsigned char byte;
+    int i, j;
+    
+    for (i = size-1; i >= 0; i--) {
+        for (j = 7; j >= 0; j--) {
+            byte = (b[i] >> j) & 1;
+            printf("%u", byte);
+        }
+    }
+    puts("");
+}
 
-    uint32_t setCount = pow(2, SET_BIT_LENGTH);
-    uint32_t blocksPerSet = pow(2, BLOCK_OFFSET_BIT_LENGTH);
 
-    // malloc 2d array af alle cache lines
-    L1Cache = malloc(setCount * linesPerSet * sizeof(intptr_t));
-    for (uint32_t i = 0; i < setCount; i++) {
-        L1Cache[i] = malloc(linesPerSet * sizeof(CacheLine_t));
+
+void CacheLineToString(CacheLine_t cacheLine, char* out) {
+    
+    char valid = cacheLine.valid ? '1' : '0';
+
+    char* tag = malloc(TAG_BIT_LENGTH * sizeof(char));
+    for (int32_t i = 0; i < TAG_BIT_LENGTH; i++) {
+        int shft = (cacheLine.tag >> (TAG_BIT_LENGTH-i-1)) & 0b1;
+        tag[i] = shft ? '1' : '0';
     }
 
-    ReadMemory(0b10001100011110100111001100110001);
-
-    return 0;
+    sprintf(out, " (%s) (%s) (%s) |", &valid, tag, 'x');
+    
+    free(tag);
 }

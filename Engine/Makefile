@@ -1,15 +1,15 @@
 CC=gcc -g
 
 # All the flags in the (CompSys) world
-CFLAGS= -pedantic -std=gnu11 -std=c11 -pedantic -g3 # -Werror -Wextra -Wall
+CFLAGS= -std=gnu11 -std=c11 -g3 # -Werror -Wextra -Wall -pedantic
 
 SRC = file.c test.sh
 EXEC = file
 VFLAGS = --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose
 
 # Compile your program (make og make file)
-prototype: prototype.c Makefile
-	$(CC) $(CFLAGS) -o prototype prototype.c
+prototype: prototype.c prototype.h
+	$(CC) $(CFLAGS) -o prototype prototype.h prototype.c
 
 # Used for removing generated files (make clean)
 clean:
