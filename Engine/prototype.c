@@ -26,7 +26,7 @@ uint32_t TAG_BIT_LENGTH;
 #define RANDOM_REPLACEMENT_POLICY 1
 const uint32_t ACTIVE_REPLACEMENT_POLICY = RANDOM_REPLACEMENT_POLICY;
 
-CacheLine_t** L1Cache;
+CacheLine_t** L1;
 
 int main() {
     // Initializing address bit fields
@@ -36,17 +36,15 @@ int main() {
     VALID_BIT_LENGTH = 1;
     TAG_BIT_LENGTH = ADDR_LEN - BLOCK_OFFSET_BIT_LENGTH - SET_BIT_LENGTH - VALID_BIT_LENGTH;
     
-    // malloc 2d array af alle cache lines
-    L1Cache = malloc(SET_COUNT * ASSOCIATIVITY * sizeof(CacheLine_t));
-    printf("%d", L1Cache[1][1].tag);
+    // Malloc 2D array of all sets with all of their lines
+    L1 = malloc(SET_COUNT * sizeof(CacheLine_t *));
     for (uint32_t i = 0; i < SET_COUNT; i++) {
-        printf("\n%d\n", i);
+        L1[i] = malloc(ASSOCIATIVITY * sizeof(CacheLine_t));
         for (uint32_t j = 0; j < ASSOCIATIVITY; j++) {
-            printf("%d ", j);
-            L1Cache[i][j].valid = 0;
-            L1Cache[i][j].tag = 0;
-        }
-    }
+            L1[i][j].valid = 0;
+            L1[i][j].tag = 0;
+        };
+    };
 
     //ReadMemory(0b10001100011110100111001100110001);
     ReadMemory(0b11111111111111111111111111111111);
@@ -78,17 +76,13 @@ void ReadMemory(uint32_t address) {
     address = address >> SET_BIT_LENGTH;
     tag = address;
 
-    printf("3");
-
     // check if line is already in set, otherwise add it. CACHE HIT/MISS
-    if (!IsLineInSet(L1Cache[setIndex], tag)) {
-        printf("4");
+    if (!IsLineInSet(L1[setIndex], tag)) {
         // count cache hits/misses
-        InsertLineInSet(L1Cache[setIndex], tag);
+        InsertLineInSet(L1[setIndex], tag);
     }
     else {
-        printf("5");
-        UpdateCacheSet(L1Cache[setIndex]);
+        UpdateCacheSet(L1[setIndex]);
     }
 
 }
@@ -177,7 +171,7 @@ void CacheLineToString(CacheLine_t cacheLine, char* out) {
         tag[i] = shft ? '1' : '0';
     }
 
-    sprintf(out, " (%s) (%s) (%s) |", &valid, tag, 'x');
+    sprintf(out, " (%s) (%s) (%c) |", &valid, tag, 'x');
     
     free(tag);
 }
