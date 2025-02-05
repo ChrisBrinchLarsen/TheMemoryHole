@@ -26,9 +26,6 @@ uint32_t TAG_BIT_LENGTH;
 #define RANDOM_REPLACEMENT_POLICY 1
 const uint32_t ACTIVE_REPLACEMENT_POLICY = RANDOM_REPLACEMENT_POLICY;
 
-
-uint32_t linesPerSet = 8; // det her er også mega temporary
-
 CacheLine_t** L1Cache;
 
 int main() {
@@ -38,17 +35,18 @@ int main() {
     SET_BIT_LENGTH = log2(SET_COUNT);
     VALID_BIT_LENGTH = 1;
     TAG_BIT_LENGTH = ADDR_LEN - BLOCK_OFFSET_BIT_LENGTH - SET_BIT_LENGTH - VALID_BIT_LENGTH;
-
-    printf("1");
+    
     // malloc 2d array af alle cache lines
     L1Cache = malloc(SET_COUNT * ASSOCIATIVITY * sizeof(CacheLine_t));
-    // for (uint32_t i = 0; i < SET_COUNT; i++) {
-    //     for (int32_t j = 0; j < ASSOCIATIVITY; j++) {
-    //         L1Cache[i][j].valid = 0;
-    //         L1Cache[i][j].tag = 0;
-    //     }
-    // }
-    printf("2");
+    printf("%d", L1Cache[1][1].tag);
+    for (uint32_t i = 0; i < SET_COUNT; i++) {
+        printf("\n%d\n", i);
+        for (uint32_t j = 0; j < ASSOCIATIVITY; j++) {
+            printf("%d ", j);
+            L1Cache[i][j].valid = 0;
+            L1Cache[i][j].tag = 0;
+        }
+    }
 
     //ReadMemory(0b10001100011110100111001100110001);
     ReadMemory(0b11111111111111111111111111111111);
@@ -80,13 +78,16 @@ void ReadMemory(uint32_t address) {
     address = address >> SET_BIT_LENGTH;
     tag = address;
 
+    printf("3");
 
     // check if line is already in set, otherwise add it. CACHE HIT/MISS
     if (!IsLineInSet(L1Cache[setIndex], tag)) {
+        printf("4");
         // count cache hits/misses
         InsertLineInSet(L1Cache[setIndex], tag);
     }
     else {
+        printf("5");
         UpdateCacheSet(L1Cache[setIndex]);
     }
 
@@ -94,7 +95,7 @@ void ReadMemory(uint32_t address) {
 
 
 int IsLineInSet(CacheLine_t *set, uint32_t tag) {
-    for (uint32_t i = 0; i < linesPerSet; i++) {
+    for (uint32_t i = 0; i < ASSOCIATIVITY; i++) {
         if (set[i].tag == tag && set[i].valid)
             return 1;
     }
@@ -104,8 +105,8 @@ int IsLineInSet(CacheLine_t *set, uint32_t tag) {
 void InsertLineInSet(CacheLine_t *set, uint32_t tag) {
 
     // first check if there's room anywhere.
-    uint32_t insertIdx = -1;
-    for (uint32_t i = 0; i < linesPerSet; i++) {
+    int32_t insertIdx = -1;
+    for (uint32_t i = 0; i < ASSOCIATIVITY; i++) {
         if (!set[i].valid) {
             insertIdx = i;
             break;
@@ -171,7 +172,7 @@ void CacheLineToString(CacheLine_t cacheLine, char* out) {
     char valid = cacheLine.valid ? '1' : '0';
 
     char* tag = malloc(TAG_BIT_LENGTH * sizeof(char));
-    for (int32_t i = 0; i < TAG_BIT_LENGTH; i++) {
+    for (uint32_t i = 0; i < TAG_BIT_LENGTH; i++) {
         int shft = (cacheLine.tag >> (TAG_BIT_LENGTH-i-1)) & 0b1;
         tag[i] = shft ? '1' : '0';
     }

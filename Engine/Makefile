@@ -1,7 +1,7 @@
 CC=gcc -g
 
 # All the flags in the (CompSys) world
-CFLAGS= -std=gnu11 -std=c11 -g3 # -Werror -Wextra -Wall -pedantic
+CFLAGS= -std=gnu11 -std=c11 -g3 -Wextra -Wall -pedantic
 
 SRC = file.c test.sh
 EXEC = file
