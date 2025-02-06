@@ -161,10 +161,10 @@ void printBits(size_t const size, void const * const ptr) {
 
 
 void CacheSetToString(CacheLine_t** Cache, int setIndex, char* out) {
-    char holder[500] = {0};
+    char holder[50 * ASSOCIATIVITY] = {0};
     CacheLine_t* lines = Cache[setIndex];
 
-    for (int i = 0; i  < ASSOCIATIVITY; i++) {
+    for (int i = 0; i < ASSOCIATIVITY; i++) {
         char buf[50] = {0};
         CacheLineToString(lines[i], buf);
         strcat(holder, buf);
