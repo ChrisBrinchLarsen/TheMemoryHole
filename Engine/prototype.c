@@ -34,7 +34,7 @@ int main() {
         PrintSet(L1->childCache, i);
     }
 
-    ReadMemory(L1, 0b11111111111111111111111111111111);
+    ReadData(L1, 0b11111111111111111111111111111111);
     printf("----\nL1:\n");
     for (int i = 0; i < L1->setCount; i++) {
         PrintSet(L1, i);
@@ -43,7 +43,7 @@ int main() {
     for (int i = 0; i < L1->childCache->setCount; i++) {
         PrintSet(L1->childCache, i);
     }
-    ReadMemory(L1, 0b01111111111111111111111111111111);
+    ReadData(L1, 0b01111111111111111111111111111111);
     printf("----\nL1:\n");
     for (int i = 0; i < L1->setCount; i++) {
         PrintSet(L1, i);
@@ -52,7 +52,7 @@ int main() {
     for (int i = 0; i < L1->childCache->setCount; i++) {
         PrintSet(L1->childCache, i);
     }
-    ReadMemory(L1, 0b10111111111111111111111111111111);
+    ReadData(L1, 0b10111111111111111111111111111111);
     printf("----\nL1:\n");
     for (int i = 0; i < L1->setCount; i++) {
         PrintSet(L1, i);
@@ -61,7 +61,7 @@ int main() {
     for (int i = 0; i < L1->childCache->setCount; i++) {
         PrintSet(L1->childCache, i);
     }
-    ReadMemory(L1, 0b11111111111111111111111111111111);
+    ReadData(L1, 0b11111111111111111111111111111111);
     printf("----\nL1:\n");
     for (int i = 0; i < L1->setCount; i++) {
         PrintSet(L1, i);
@@ -71,23 +71,35 @@ int main() {
         PrintSet(L1->childCache, i);
     }
 
-    // ReadMemory(L1, 0b11011111111111111111111111111111);
-    // ReadMemory(L1, 0b10111111111111111111111111111111);
-    // ReadMemory(L1, 0b10011111111111111111111111111111);
+    // FetchBlock(L1, 0b11011111111111111111111111111111);
+    // FetchBlock(L1, 0b10111111111111111111111111111111);
+    // FetchBlock(L1, 0b10011111111111111111111111111111);
 
     // // HIT test
-    // ReadMemory(L1, 0b11011111111111111111111111111111);
+    // FetchBlock(L1, 0b11011111111111111111111111111111);
 
     // // MISS
-    // ReadMemory(L1, 0b10001111111111111111111111111111);
+    // FetchBlock(L1, 0b10001111111111111111111111111111);
 
 
 
     
     return 0;
 }
+char ReadData(Cache_t* cache, uint32_t address) {
+    char* block = FetchBlock(cache, address);
 
-void ReadMemory(Cache_t* cache, uint32_t address) {
+    uint32_t mask;
+    uint32_t blockOffset;
+    mask = ~0;
+    mask = mask << cache->blockOffsetBitLength;
+    mask = ~mask;
+    blockOffset = address & mask;
+
+    return block[blockOffset];
+}
+
+char* FetchBlock(Cache_t* cache, uint32_t address) {
 
     /// separate the address to parts
     uint32_t blockOffset;
@@ -117,29 +129,36 @@ void ReadMemory(Cache_t* cache, uint32_t address) {
 
     UpdateCacheSet(cache, setIndex);
 
+
+    int lineIndex = GetLineIndexFromTag(cache, setIndex, tag);
+
     // check if line is already in set, otherwise add it. CACHE HIT/MISS
     // MISS
-    if (!IsLineInSet(cache, setIndex, tag)) {
+    if (lineIndex == -1) {
+        char* block = NULL;
+
         // count cache hits/misses
         if (cache->childCache != NULL) {
-            ReadMemory(cache->childCache, address);
+            block = FetchBlock(cache->childCache, address);
+        }
+        else { // fetch block from main memory
+            block = malloc(BLOCK_SIZE * WORD_SIZE * sizeof(char));
         }
         InsertLineInSet(cache, setIndex, tag);
+        return block;
     }
     // HIT
-    else {
-        
-    }
+    return cache->sets[setIndex][lineIndex].block;
 }
 
-int IsLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag) {
+int GetLineIndexFromTag(Cache_t* cache, uint32_t setIndex, uint32_t tag) {
     for (uint32_t i = 0; i < cache->associativity; i++) {
         if (cache->sets[setIndex][i].tag == tag && cache->sets[setIndex][i].valid) {
             cache->sets[setIndex][i].LRU = 0; // least recently used; just now
-            return 1;
+            return i;
         }
     }
-    return 0;
+    return -1;
 }
 
 void InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag) {

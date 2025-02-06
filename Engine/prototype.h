@@ -81,9 +81,9 @@ void Cache_free(Cache_t* c) {
     free(c);
 }
 
-
-void ReadMemory(Cache_t* cache, uint32_t address);
-int IsLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag);
+char ReadData(Cache_t* cache, uint32_t address);
+char* FetchBlock(Cache_t* cache, uint32_t address);
+int GetLineIndexFromTag(Cache_t* cache, uint32_t setIndex, uint32_t tag);
 void InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag);
 void UpdateCacheSet(Cache_t* cache, uint32_t setIndex);
 
