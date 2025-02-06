@@ -28,11 +28,11 @@ int main() {
     ReadMemory(L1, 0b11011111111111111111111111111111);
     ReadMemory(L1, 0b10111111111111111111111111111111);
     ReadMemory(L1, 0b10011111111111111111111111111111);
- 
+
     // HIT test
     ReadMemory(L1, 0b11011111111111111111111111111111);
 
-    // MISS test
+    // MISS
     ReadMemory(L1, 0b10001111111111111111111111111111);
 
     for (int i = 0; i < L1->setCount; i++) {
@@ -89,7 +89,7 @@ void ReadMemory(Cache_t* cache, uint32_t address) {
 int IsLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag) {
     for (uint32_t i = 0; i < cache->associativity; i++) {
         if (cache->sets[setIndex][i].tag == tag && cache->sets[setIndex][i].valid) {
-            cache->sets[setIndex][i].LRU = 0;
+            cache->sets[setIndex][i].LRU = 0; // least recently used; just now
             return 1;
         }
     }
@@ -168,7 +168,6 @@ void UpdateCacheSet(Cache_t* cache, uint32_t setIndex) {
 
 void CacheSetToString(Cache_t* cache, int setIndex, char* out) {
     char holder[400] = {0};
-    CacheLine_t* lines = cache->sets[setIndex];
 
     for (int i = 0; i < cache->associativity; i++) {
         char buf[50] = {0};
@@ -183,8 +182,6 @@ void CacheLineToString(Cache_t* cache, uint32_t setIndex, uint32_t lineIndex, ch
     
     CacheLine_t cacheLine = cache->sets[setIndex][lineIndex];
 
-    char valid = cacheLine.valid ? '1' : '0';
-    
 
     char* tag = malloc(1 + cache->TagBitLength * sizeof(char));
     for (uint32_t i = 0; i < cache->TagBitLength; i++) {
@@ -193,7 +190,7 @@ void CacheLineToString(Cache_t* cache, uint32_t setIndex, uint32_t lineIndex, ch
     }
     tag[cache->TagBitLength] = 0;
 
-    sprintf(out, " (V:%s) (T:%s) (LRU:%d) |", &valid, tag, cacheLine.LRU);
+    sprintf(out, " (V:%d) (T:%s) (LRU:%d) |", cacheLine.valid, tag, cacheLine.LRU);
     
     free(tag);
 }
