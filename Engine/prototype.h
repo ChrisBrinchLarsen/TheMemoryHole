@@ -5,6 +5,7 @@
 typedef struct CacheLine {
     bool valid;
     uint32_t tag;
+    uint32_t LRU;
     char block[BLOCK_SIZE];
 } CacheLine_t;
 
