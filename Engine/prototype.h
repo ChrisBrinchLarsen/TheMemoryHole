@@ -59,7 +59,7 @@ Cache_t* Cache_new(uint32_t cacheSize, uint32_t associativity) {
     c->blockOffsetBitLength = log2(BLOCK_SIZE);
 
     c->SetBitLength = log2(c->setCount);
-    c->TagBitLength = 32 - c->blockOffsetBitLength - c->SetBitLength - 1; // TODO ASSUMES VALID BIT LENGTH = 1 AND ADDRESS LENGTH = 32
+    c->TagBitLength = ADDR_LEN - c->blockOffsetBitLength - c->SetBitLength; // TODO ASSUMES VALID BIT LENGTH = 1 AND ADDRESS LENGTH = 32
     
     c->sets = malloc(c->setCount * sizeof(CacheLine_t*));
     for (uint32_t i = 0; i < c->setCount; i++) {
@@ -71,6 +71,9 @@ Cache_t* Cache_new(uint32_t cacheSize, uint32_t associativity) {
             c->sets[i][j].block = 0; // NULL
         };
     };
+
+    c->childCache = NULL;
+
     return c;
 }
 

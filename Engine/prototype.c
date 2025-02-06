@@ -25,20 +25,63 @@ int main() {
     Cache_t** caches = ParseCPUArchitecture("./Architectures/SimpleCPU.md");
     L1 = caches[0];
 
-    ReadMemory(L1, 0b11111111111111111111111111111111);
-    ReadMemory(L1, 0b11011111111111111111111111111111);
-    ReadMemory(L1, 0b10111111111111111111111111111111);
-    ReadMemory(L1, 0b10011111111111111111111111111111);
-
-    // HIT test
-    ReadMemory(L1, 0b11011111111111111111111111111111);
-
-    // MISS
-    ReadMemory(L1, 0b10001111111111111111111111111111);
-
+    printf("L1:\n");
     for (int i = 0; i < L1->setCount; i++) {
         PrintSet(L1, i);
     }
+    printf("L2:\n");
+    for (int i = 0; i < L1->childCache->setCount; i++) {
+        PrintSet(L1->childCache, i);
+    }
+
+    ReadMemory(L1, 0b11111111111111111111111111111111);
+    printf("----\nL1:\n");
+    for (int i = 0; i < L1->setCount; i++) {
+        PrintSet(L1, i);
+    }
+    printf("L2:\n");
+    for (int i = 0; i < L1->childCache->setCount; i++) {
+        PrintSet(L1->childCache, i);
+    }
+    ReadMemory(L1, 0b01111111111111111111111111111111);
+    printf("----\nL1:\n");
+    for (int i = 0; i < L1->setCount; i++) {
+        PrintSet(L1, i);
+    }
+    printf("L2:\n");
+    for (int i = 0; i < L1->childCache->setCount; i++) {
+        PrintSet(L1->childCache, i);
+    }
+    ReadMemory(L1, 0b10111111111111111111111111111111);
+    printf("----\nL1:\n");
+    for (int i = 0; i < L1->setCount; i++) {
+        PrintSet(L1, i);
+    }
+    printf("L2:\n");
+    for (int i = 0; i < L1->childCache->setCount; i++) {
+        PrintSet(L1->childCache, i);
+    }
+    ReadMemory(L1, 0b11111111111111111111111111111111);
+    printf("----\nL1:\n");
+    for (int i = 0; i < L1->setCount; i++) {
+        PrintSet(L1, i);
+    }
+    printf("L2:\n");
+    for (int i = 0; i < L1->childCache->setCount; i++) {
+        PrintSet(L1->childCache, i);
+    }
+
+    // ReadMemory(L1, 0b11011111111111111111111111111111);
+    // ReadMemory(L1, 0b10111111111111111111111111111111);
+    // ReadMemory(L1, 0b10011111111111111111111111111111);
+
+    // // HIT test
+    // ReadMemory(L1, 0b11011111111111111111111111111111);
+
+    // // MISS
+    // ReadMemory(L1, 0b10001111111111111111111111111111);
+
+
 
     
     return 0;
@@ -78,6 +121,9 @@ void ReadMemory(Cache_t* cache, uint32_t address) {
     // MISS
     if (!IsLineInSet(cache, setIndex, tag)) {
         // count cache hits/misses
+        if (cache->childCache != NULL) {
+            ReadMemory(cache->childCache, address);
+        }
         InsertLineInSet(cache, setIndex, tag);
     }
     // HIT
@@ -85,7 +131,6 @@ void ReadMemory(Cache_t* cache, uint32_t address) {
         
     }
 }
-
 
 int IsLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag) {
     for (uint32_t i = 0; i < cache->associativity; i++) {
@@ -201,6 +246,7 @@ void PrintSet(Cache_t* cache, uint32_t setIndex) {
     CacheSetToString(cache, setIndex, buff);
     printf(buff);
 }
+
 
 Cache_t** ParseCPUArchitecture(char* path) {
     FILE* file = fopen(path, "r");
