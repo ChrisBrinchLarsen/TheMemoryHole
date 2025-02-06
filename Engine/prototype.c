@@ -80,6 +80,9 @@ void ReadMemory(uint32_t address) {
     if (!IsLineInSet(L1[setIndex], tag)) {
         // count cache hits/misses
         InsertLineInSet(L1[setIndex], tag);
+        char buff[500] = {0};
+        CacheSetToString(L1, setIndex, buff);
+        printf(buff);
     }
     else {
         UpdateCacheSet(L1[setIndex]);
@@ -132,10 +135,7 @@ void InsertLineInSet(CacheLine_t *set, uint32_t tag) {
     c.tag = tag;
     //memcpy(&c.block, blockData, BLOCK_SIZE * sizeof(char)); // CALL TO L2
     set[insertIdx] = c;
-    
-    char buff[50];
-    CacheLineToString(c, buff);
-    printf(buff);
+
 
     UpdateCacheSet(set);
 }
@@ -160,6 +160,18 @@ void printBits(size_t const size, void const * const ptr) {
 }
 
 
+void CacheSetToString(CacheLine_t** Cache, int setIndex, char* out) {
+    char holder[500] = {0};
+    CacheLine_t* lines = Cache[setIndex];
+
+    for (int i = 0; i  < ASSOCIATIVITY; i++) {
+        char buf[50] = {0};
+        CacheLineToString(lines[i], buf);
+        strcat(holder, buf);
+    }
+
+    sprintf(out, "Set %d |%s\n", setIndex, holder);
+}
 
 void CacheLineToString(CacheLine_t cacheLine, char* out) {
     
