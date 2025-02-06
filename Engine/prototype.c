@@ -80,7 +80,7 @@ void ReadMemory(uint32_t address) {
     if (!IsLineInSet(L1[setIndex], tag)) {
         // count cache hits/misses
         InsertLineInSet(L1[setIndex], tag);
-        char buff[500] = {0};
+        char buff[50 * ASSOCIATIVITY] = {0};
         CacheSetToString(L1, setIndex, buff);
         printf(buff);
     }
