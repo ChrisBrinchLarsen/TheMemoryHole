@@ -10,7 +10,7 @@
 // Cache architecture
 const uint32_t CACHE_SIZE = 32768;          // Amount of bytes in cache
 #define BLOCK_SIZE 16                       // Amount of bytes in a block
-const uint32_t ASSOCIATIVITY = 2;           // How associative our cache is, determines how many lines are in each set
+const uint32_t ASSOCIATIVITY = 4;           // How associative our cache is, determines how many lines are in each set
 const uint32_t ADDR_LEN = 32;               // The address length, usually 32-bit or 64-bit
 
 // Address bit fields
@@ -80,7 +80,7 @@ void ReadMemory(uint32_t address) {
     if (!IsLineInSet(L1[setIndex], tag)) {
         // count cache hits/misses
         InsertLineInSet(L1[setIndex], tag);
-        char buff[50 * ASSOCIATIVITY] = {0};
+        char buff[400] = {0};
         CacheSetToString(L1, setIndex, buff);
         printf(buff);
     }
@@ -161,7 +161,7 @@ void printBits(size_t const size, void const * const ptr) {
 
 
 void CacheSetToString(CacheLine_t** Cache, int setIndex, char* out) {
-    char holder[50 * ASSOCIATIVITY] = {0};
+    char holder[400] = {0};
     CacheLine_t* lines = Cache[setIndex];
 
     for (int i = 0; i < ASSOCIATIVITY; i++) {
