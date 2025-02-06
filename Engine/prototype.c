@@ -183,7 +183,7 @@ void CacheLineToString(CacheLine_t cacheLine, char* out) {
         tag[i] = shft ? '1' : '0';
     }
 
-    sprintf(out, " (%s) (%s) (%c) |", &valid, tag, 'x');
+    sprintf(out, " (V:%s) (T:%s) (LRU:%c) |", &valid, tag, 'x');
     
     free(tag);
 }
