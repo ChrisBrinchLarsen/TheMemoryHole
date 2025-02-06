@@ -22,7 +22,8 @@ const uint32_t ACTIVE_REPLACEMENT_POLICY = LRU_REPLACEMENT_POLICY;
 Cache_t* L1;
 
 int main() {
-    L1 = Cache_new(1024, 4, 8);
+    Cache_t** caches = ParseCPUArchitecture("./Architectures/SimpleCPU.md");
+    L1 = caches[0];
 
     ReadMemory(L1, 0b11111111111111111111111111111111);
     ReadMemory(L1, 0b11011111111111111111111111111111);
@@ -199,4 +200,50 @@ void PrintSet(Cache_t* cache, uint32_t setIndex) {
     char buff[400] = {0};
     CacheSetToString(cache, setIndex, buff);
     printf(buff);
+}
+
+Cache_t** ParseCPUArchitecture(char* path) {
+    FILE* file = fopen(path, "r");
+    if (!file) {
+        printf("ERROR: Couldn't find file: '%s' when trying to parse a CPU architecture", path);
+        exit(1);
+    }
+    char buf[64] = {0};
+    fgets(buf, sizeof(buf), file);
+    ADDR_LEN = atoi(buf);
+    memset(buf, 0, sizeof(buf));
+
+    fgets(buf, sizeof(buf), file);
+    WORD_SIZE = atoi(buf);
+    memset(buf, 0, sizeof(buf));
+
+    fgets(buf, sizeof(buf), file);
+    BLOCK_SIZE = atoi(buf);
+    memset(buf, 0, sizeof(buf));
+
+    fgets(buf, sizeof(buf), file);
+    N_CACHE_LEVELS = atoi(buf);
+    memset(buf, 0, sizeof(buf));
+    
+    Cache_t** caches = malloc(N_CACHE_LEVELS * (sizeof(Cache_t*)));
+
+    for (int i = 0; i < N_CACHE_LEVELS; i++) {
+        fgets(buf, sizeof(buf), file); // Name
+        memset(buf, 0, sizeof(buf));
+        fgets(buf, sizeof(buf), file); // Size
+        uint32_t size = atoi(buf);
+        memset(buf, 0, sizeof(buf));
+        fgets(buf, sizeof(buf), file); // Associativity
+        uint32_t associativity = atoi(buf);
+
+        caches[i] = Cache_new(size, associativity);
+    }
+
+    fclose(file);
+
+    for (int i = 0; i < (N_CACHE_LEVELS-1); i++) {
+        caches[i]->childCache = caches[i+1]; // L1 -> L2 -> L3 -> NULL (since children are set to NULL in constructor)
+    }
+
+    return caches;
 }

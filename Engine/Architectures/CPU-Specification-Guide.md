@@ -5,6 +5,8 @@
 4
 [Then specify how many words are in each block]
 2
+[Now specify how many levels of cache you intend to have]
+3
 [Then specify some name of a top level cache]
 L1
 [Then specify the size in bytes of this level of cache]
@@ -23,6 +25,7 @@ L3
 32
 4
 2
+3
 L1
 1024
 8

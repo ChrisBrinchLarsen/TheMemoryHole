@@ -2,8 +2,14 @@
 
 #include <stdbool.h> 
 #include <stdint.h>
+#include <stdlib.h>
+#include <math.h>
 
-#define BLOCK_SIZE 16
+int ADDR_LEN;
+int WORD_SIZE;
+int BLOCK_SIZE;
+int N_CACHE_LEVELS;
+
 typedef struct CacheLine {
     bool valid;
     uint32_t tag;
@@ -28,7 +34,6 @@ typedef struct Cache {
     // base parameters
     uint32_t cacheSize;
     uint32_t associativity;
-    uint32_t blockSize;
 
     uint32_t setCount;
 
@@ -37,20 +42,21 @@ typedef struct Cache {
     uint32_t SetBitLength;
     uint32_t TagBitLength;
 
+    struct Cache* childCache;
+
     CacheLine_t **sets;
 
 } Cache_t;
 
-Cache_t* Cache_new(uint32_t cacheSize, uint32_t associativity, uint32_t blockSize) {
+Cache_t* Cache_new(uint32_t cacheSize, uint32_t associativity) {
     Cache_t* c = malloc(sizeof(Cache_t));
 
     c->cacheSize = cacheSize;
     c->associativity = associativity;
-    c->blockSize = blockSize;
 
-    c->setCount = c->cacheSize / (c->associativity * c->blockSize);
+    c->setCount = c->cacheSize / (c->associativity * BLOCK_SIZE);
 
-    c->blockOffsetBitLength = log2(blockSize);
+    c->blockOffsetBitLength = log2(BLOCK_SIZE);
 
     c->SetBitLength = log2(c->setCount);
     c->TagBitLength = 32 - c->blockOffsetBitLength - c->SetBitLength - 1; // TODO ASSUMES VALID BIT LENGTH = 1 AND ADDRESS LENGTH = 32
@@ -82,3 +88,5 @@ void UpdateCacheSet(Cache_t* cache, uint32_t setIndex);
 void CacheSetToString(Cache_t* cache, int setIndex, char* out);
 void CacheLineToString(Cache_t* cache, uint32_t setIndex, uint32_t lineIndex, char* out);
 void PrintSet(Cache_t* cache, uint32_t setIndex);
+
+Cache_t** ParseCPUArchitecture(char* path);
