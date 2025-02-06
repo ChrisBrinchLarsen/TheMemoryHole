@@ -62,18 +62,23 @@ Cache_t* Cache_new(uint32_t cacheSize, uint32_t associativity, uint32_t blockSiz
             c->sets[i][j].valid = 0;
             c->sets[i][j].LRU = 0;
             c->sets[i][j].tag = 0;
+            c->sets[i][j].block = 0; // NULL
         };
     };
     return c;
 }
+
 void Cache_free(Cache_t* c) {
     free(c);
 }
 
 
-void ReadMemory(uint32_t address);
-int IsLineInSet(CacheLine_t *set, uint32_t tag);
-void InsertLineInSet(CacheLine_t *set, uint32_t tag);
-void UpdateCacheSet(CacheLine_t *set);
-void CacheSetToString(CacheLine_t** Cache, int setIndex, char* out);
-void CacheLineToString(CacheLine_t cacheLine, char* out);
+void ReadMemory(Cache_t* cache, uint32_t address);
+int IsLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag);
+void InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag);
+void UpdateCacheSet(Cache_t* cache, uint32_t setIndex);
+
+//void printBits(size_t const size, void const * const ptr);
+void CacheSetToString(Cache_t* cache, int setIndex, char* out);
+void CacheLineToString(Cache_t* cache, uint32_t setIndex, uint32_t lineIndex, char* out);
+void PrintSet(Cache_t* cache, uint32_t setIndex);
