@@ -37,7 +37,7 @@ int main() {
     TAG_BIT_LENGTH = ADDR_LEN - BLOCK_OFFSET_BIT_LENGTH - SET_BIT_LENGTH - VALID_BIT_LENGTH;
     
     // Malloc 2D array of all sets with all of their lines
-    L1 = malloc(SET_COUNT * sizeof(CacheLine_t *));
+    L1 = malloc(SET_COUNT * sizeof(CacheLine_t*));
     for (uint32_t i = 0; i < SET_COUNT; i++) {
         L1[i] = malloc(ASSOCIATIVITY * sizeof(CacheLine_t));
         for (uint32_t j = 0; j < ASSOCIATIVITY; j++) {
@@ -163,10 +163,12 @@ void InsertLineInSet(CacheLine_t *set, uint32_t tag) {
     // writeback to lower cache
 
     // insert
-    CacheLine_t c;
-    c.valid = 1;
-    c.LRU = 0;
-    c.tag = tag;
+    CacheLine_t c = CacheLine_new(1, tag, 0, NULL); // INSTEAD OF NULL POINTER, CALL L2
+    // CacheLine_t c;
+    // c.valid = 1;
+    // c.LRU = 0;
+    // c.tag = tag;
+    // c.block = NULL;
     //memcpy(&c.block, blockData, BLOCK_SIZE * sizeof(char)); // CALL TO L2
     set[insertIdx] = c;
 }
