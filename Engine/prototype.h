@@ -68,7 +68,7 @@ Cache_t* Cache_new(uint32_t cacheSize, uint32_t associativity) {
             c->sets[i][j].valid = 0;
             c->sets[i][j].LRU = 0;
             c->sets[i][j].tag = 0;
-            c->sets[i][j].block = 0; // NULL
+            c->sets[i][j].block = malloc(BLOCK_SIZE * WORD_SIZE * sizeof(char)); // NULL
         };
     };
 
@@ -84,12 +84,15 @@ void Cache_free(Cache_t* c) {
 char ReadData(Cache_t* cache, uint32_t address);
 char* FetchBlock(Cache_t* cache, uint32_t address);
 int GetLineIndexFromTag(Cache_t* cache, uint32_t setIndex, uint32_t tag);
-void InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag);
+void InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* block);
 void UpdateCacheSet(Cache_t* cache, uint32_t setIndex);
 
 //void printBits(size_t const size, void const * const ptr);
 void CacheSetToString(Cache_t* cache, int setIndex, char* out);
 void CacheLineToString(Cache_t* cache, uint32_t setIndex, uint32_t lineIndex, char* out);
 void PrintSet(Cache_t* cache, uint32_t setIndex);
+
+uint64_t BinStrToNum(char* num, int n);
+void ParseMemoryRequests(char* path);
 
 Cache_t** ParseCPUArchitecture(char* path);

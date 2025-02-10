@@ -34,8 +34,8 @@ int main() {
         PrintSet(L1->childCache, i);
     }
 
-    ReadData(L1, 0b11111111111111111111111111111111);
-    printf("----\nL1:\n");
+    ParseMemoryRequests("./Instructions/Simple.md");
+    printf("L1:\n");
     for (int i = 0; i < L1->setCount; i++) {
         PrintSet(L1, i);
     }
@@ -43,46 +43,6 @@ int main() {
     for (int i = 0; i < L1->childCache->setCount; i++) {
         PrintSet(L1->childCache, i);
     }
-    ReadData(L1, 0b01111111111111111111111111111111);
-    printf("----\nL1:\n");
-    for (int i = 0; i < L1->setCount; i++) {
-        PrintSet(L1, i);
-    }
-    printf("L2:\n");
-    for (int i = 0; i < L1->childCache->setCount; i++) {
-        PrintSet(L1->childCache, i);
-    }
-    ReadData(L1, 0b10111111111111111111111111111111);
-    printf("----\nL1:\n");
-    for (int i = 0; i < L1->setCount; i++) {
-        PrintSet(L1, i);
-    }
-    printf("L2:\n");
-    for (int i = 0; i < L1->childCache->setCount; i++) {
-        PrintSet(L1->childCache, i);
-    }
-    ReadData(L1, 0b11111111111111111111111111111111);
-    printf("----\nL1:\n");
-    for (int i = 0; i < L1->setCount; i++) {
-        PrintSet(L1, i);
-    }
-    printf("L2:\n");
-    for (int i = 0; i < L1->childCache->setCount; i++) {
-        PrintSet(L1->childCache, i);
-    }
-
-    // FetchBlock(L1, 0b11011111111111111111111111111111);
-    // FetchBlock(L1, 0b10111111111111111111111111111111);
-    // FetchBlock(L1, 0b10011111111111111111111111111111);
-
-    // // HIT test
-    // FetchBlock(L1, 0b11011111111111111111111111111111);
-
-    // // MISS
-    // FetchBlock(L1, 0b10001111111111111111111111111111);
-
-
-
     
     return 0;
 }
@@ -96,7 +56,7 @@ char ReadData(Cache_t* cache, uint32_t address) {
     mask = ~mask;
     blockOffset = address & mask;
 
-    return block[blockOffset];
+    return block[blockOffset * WORD_SIZE];
 }
 
 char* FetchBlock(Cache_t* cache, uint32_t address) {
@@ -144,7 +104,7 @@ char* FetchBlock(Cache_t* cache, uint32_t address) {
         else { // fetch block from main memory
             block = malloc(BLOCK_SIZE * WORD_SIZE * sizeof(char));
         }
-        InsertLineInSet(cache, setIndex, tag);
+        InsertLineInSet(cache, setIndex, tag, block);
         return block;
     }
     // HIT
@@ -161,7 +121,7 @@ int GetLineIndexFromTag(Cache_t* cache, uint32_t setIndex, uint32_t tag) {
     return -1;
 }
 
-void InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag) {
+void InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* block) {
 
     // first check if there's room anywhere.
     int32_t insertIdx = -1;
@@ -204,7 +164,7 @@ void InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag) {
     // writeback to lower cache
 
     // insert
-    CacheLine_t c = CacheLine_new(1, tag, 0, NULL); // INSTEAD OF NULL POINTER, CALL L2
+    CacheLine_t c = CacheLine_new(1, tag, 0, block);
 
     cache->sets[setIndex][insertIdx] = c;
 }
@@ -311,4 +271,29 @@ Cache_t** ParseCPUArchitecture(char* path) {
     }
 
     return caches;
+}
+
+void ParseMemoryRequests(char* path) {
+    FILE* file = fopen(path, "r");
+    if (!file) {
+        printf("ERROR: Couldn't find file: '%s' when trying to parse a file of memory requests", path);
+        exit(1);
+    }
+
+    char buf[65] = {0};
+    while (fgets(buf, sizeof(buf), file)) {
+        char type = buf[ADDR_LEN];
+
+        ReadData(L1, BinStrToNum(buf, ADDR_LEN));
+    }
+}
+
+// Takes in a binary string, computes the value as an unsigned 64-bit integer
+// The input for n should usually be either 32 or 64
+uint64_t BinStrToNum(char* num, int n) {
+    uint64_t result = 0;
+    for (int i = 0; i < n; i++) {
+        result += pow(2, i) * (num[n - i - 1] - '0');
+    }
+    return result;
 }
