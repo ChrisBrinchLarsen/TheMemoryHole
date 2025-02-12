@@ -9,7 +9,7 @@ VFLAGS = --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins
 
 # Compile your program (make og make file)
 prototype: prototype.c prototype.h
-	$(CC) $(CFLAGS) prototype.h prototype.c -o prototype -lm
+	$(CC) $(CFLAGS) prototype.h prototype.c -o prototype.exe -lm
 
 # Used for removing generated files (make clean)
 clean:
