@@ -1,0 +1,30 @@
+:root {
+    --BGCol: #707070;
+    --FGCol: #eb9c1d;
+ 
+    --gray-1: #1a1919;
+    --gray-2: #2d2c2c;
+    --gray-3: #414141;
+    --gray-4: #575757;
+
+    --top-bot-height-percent: 14%;
+    --middle-height-percent: 72%;
+
+    --left-right-width-percent: 13%;
+    --middle-width-percent: 77%;
+
+    --planeswalker-height-percent: 18.2%;
+    --stack-height-percent: 100%;
+}
+
+.hidden {
+    display: none !important;
+}
+
+body {
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+}
+  

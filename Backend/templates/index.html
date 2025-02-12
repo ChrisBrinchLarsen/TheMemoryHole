@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>MTG Simulator</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+<script type="text/javascript">
+    socket.on('redirect', function(data) {
+        window.location.href = data["url"];
+    });
+
+
+
+</script>
+{% endblock %}
+
+
+{% block body %}
+<div id="full-container">
+    <div id="navbar" class="center">
+      <h1>The Memory Hole</h1>
+    </div>
+    <div id="architecture"></div>
+    <div id="program_side">
+        <textarea id="programText" rows="4" cols="50"></textarea><br>
+        <input type="submit" value="Submit Addresses" onclick="sendProgram()">
+    </div>
+    
+</div>
+
+<script src="{{ url_for('static', filename='scripts/main.js') }}"></script>
+{% endblock %}

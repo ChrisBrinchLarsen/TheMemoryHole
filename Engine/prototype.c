@@ -21,8 +21,8 @@ const uint32_t ACTIVE_REPLACEMENT_POLICY = LRU_REPLACEMENT_POLICY;
 
 Cache_t* L1;
 
-int main() {
-    Cache_t** caches = ParseCPUArchitecture("./Architectures/SimpleCPU.md");
+int main(int argc, char** argv) {
+    Cache_t** caches = ParseCPUArchitecture(argv[1]);
     L1 = caches[0];
 
     printf("L1:\n");
@@ -34,7 +34,7 @@ int main() {
         PrintSet(L1->childCache, i);
     }
 
-    ParseMemoryRequests("./Instructions/Simple.md");
+    ParseMemoryRequests(argv[2]);
     printf("L1:\n");
     for (int i = 0; i < L1->setCount; i++) {
         PrintSet(L1, i);
