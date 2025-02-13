@@ -22,27 +22,37 @@ const uint32_t ACTIVE_REPLACEMENT_POLICY = LRU_REPLACEMENT_POLICY;
 Cache_t* L1;
 
 int main(int argc, char** argv) {
+    
+    // We perform unit tests if no additional arguments are provided
+    if (argc == 1) {
+        Cache_t** caches = ParseCPUArchitecture("./Testing/Architectures/SimpleCPU.md");
+        L1 = caches[0];
+        printf("L1:\n");
+        for (int i = 0; i < L1->setCount; i++) {
+            PrintSet(L1, i);
+        }
+        printf("L2:\n");
+        for (int i = 0; i < L1->childCache->setCount; i++) {
+            PrintSet(L1->childCache, i);
+        }
+        
+        ParseMemoryRequests("./Testing/Instructions/Simple.md");
+
+        printf("L1:\n");
+        for (int i = 0; i < L1->setCount; i++) {
+            PrintSet(L1, i);
+        }
+        printf("L2:\n");
+        for (int i = 0; i < L1->childCache->setCount; i++) {
+            PrintSet(L1->childCache, i);
+        }
+        return 0;
+    }
+
     Cache_t** caches = ParseCPUArchitecture(argv[1]);
-    L1 = caches[0];
-
-    printf("L1:\n");
-    for (int i = 0; i < L1->setCount; i++) {
-        PrintSet(L1, i);
-    }
-    printf("L2:\n");
-    for (int i = 0; i < L1->childCache->setCount; i++) {
-        PrintSet(L1->childCache, i);
-    }
-
     ParseMemoryRequests(argv[2]);
-    printf("L1:\n");
-    for (int i = 0; i < L1->setCount; i++) {
-        PrintSet(L1, i);
-    }
-    printf("L2:\n");
-    for (int i = 0; i < L1->childCache->setCount; i++) {
-        PrintSet(L1->childCache, i);
-    }
+
+    L1 = caches[0];
     
     return 0;
 }
