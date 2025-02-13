@@ -20,6 +20,7 @@ prototype: prototype.c prototype.h
 
 # Used for removing generated files (make clean)
 clean:
+	rm -f prototype.exe
 	rm -f *.o
 	rm -f file
 	rm -f file.c~     # For emacs uses
