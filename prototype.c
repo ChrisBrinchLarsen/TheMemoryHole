@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
     
     // We perform unit tests if no additional arguments are provided
     if (argc == 1) {
-        Cache_t** caches = ParseCPUArchitecture("./Testing/Architectures/SimpleCPU.md");
+        Cache_t** caches = ParseCPUArchitecture("./testing/Architectures/SimpleCPU.md");
         L1 = caches[0];
         printf("L1:\n");
         for (int i = 0; i < L1->setCount; i++) {
@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
             PrintSet(L1->childCache, i);
         }
         
-        ParseMemoryRequests("./Testing/Instructions/Simple.md");
+        ParseMemoryRequests("./testing/Instructions/Simple.md");
 
         printf("L1:\n");
         for (int i = 0; i < L1->setCount; i++) {
