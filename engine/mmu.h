@@ -1,13 +1,7 @@
-#ifndef __MEMORY_H__
-#define __MEMORY_H__
+#ifndef __MMU_H__
+#define __MMU_H__
 
 #include <stdint.h>
-
-struct memory;
-
-// opret/nedlæg lager
-struct memory *memory_create();
-void memory_delete(struct memory *);
 
 // skriv word/halfword/byte til lager
 void memory_wr_w(struct memory *mem, int addr, uint32_t data);
