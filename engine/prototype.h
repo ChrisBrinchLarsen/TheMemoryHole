@@ -49,7 +49,7 @@ typedef struct Cache {
 } Cache_t;
 
 Cache_t* Cache_new(uint32_t cacheSize, uint32_t associativity) {
-    Cache_t* c = malloc(sizeof(Cache_t));
+    Cache_t* c = (Cache_t*)(sizeof(Cache_t));
 
     c->cacheSize = cacheSize;
     c->associativity = associativity;
@@ -61,14 +61,14 @@ Cache_t* Cache_new(uint32_t cacheSize, uint32_t associativity) {
     c->SetBitLength = log2(c->setCount);
     c->TagBitLength = ADDR_LEN - c->blockOffsetBitLength - c->SetBitLength; // TODO ASSUMES VALID BIT LENGTH = 1 AND ADDRESS LENGTH = 32
     
-    c->sets = malloc(c->setCount * sizeof(CacheLine_t*));
+    c->sets = (CacheLine_t**)(c->setCount * sizeof(CacheLine_t*));
     for (uint32_t i = 0; i < c->setCount; i++) {
-        c->sets[i] = malloc(c->associativity * sizeof(CacheLine_t));
+        c->sets[i] = (CacheLine_t*)malloc(c->associativity * sizeof(CacheLine_t));
         for (uint32_t j = 0; j < c->associativity; j++) {
             c->sets[i][j].valid = 0;
             c->sets[i][j].LRU = 0;
             c->sets[i][j].tag = 0;
-            c->sets[i][j].block = malloc(BLOCK_SIZE * WORD_SIZE * sizeof(char)); // NULL
+            c->sets[i][j].block = (char*)malloc(BLOCK_SIZE * WORD_SIZE * sizeof(char)); // NULL
         };
     };
 

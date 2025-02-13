@@ -49,7 +49,7 @@ def handle_run_program(data):
         file.write(f"4\n")
 
     with open("program", 'w') as file: file.write(program)
-    result = subprocess.run([f"./prototype.exe", "./config", "./program"], capture_output=True, text=True)
+    result = subprocess.run([f"./Engine/prototype.exe", "./config", "./program"], capture_output=True, text=True)
     print("C program finished:\n")
     print(result.stdout)
 
