@@ -1,10 +1,12 @@
 #include <stdio.h>  
-#include <stdlib.h>
-#include <math.h>
 #include <string.h>
+#include "cache.h"
+
+// TODO : already included in the header file?
 #include <stdbool.h> 
 #include <stdint.h>
-#include "cache.h"
+#include <stdlib.h>
+#include <math.h>
 
 // Cache architecture
 // const uint32_t CACHE_SIZE = 1024;          // Amount of bytes in cache
@@ -70,8 +72,8 @@ void cache_wr_h(Cache_t *cache, int addr, uint16_t data) {
 void cache_wr_b(Cache_t *cache, int addr, uint8_t data) {
 }
 
-int cache_rd_w(Cache_t *cache, int addr) {
-    char* block = FetchBlock(cache, addr, BLOCK_SIZE);
+int cache_rd_w(Cache_t *cache, struct memory *mem, int addr) {
+    char* block = FetchBlock(cache, addr, BLOCK_SIZE, mem);
 
     uint32_t blockOffset = getBlockOffset(cache, addr);
 
@@ -79,16 +81,16 @@ int cache_rd_w(Cache_t *cache, int addr) {
 
 }
 
-int cache_rd_h(Cache_t *cache, int addr) {
-    char* block = FetchBlock(cache, addr, BLOCK_SIZE);
+int cache_rd_h(Cache_t *cache, struct memory *mem, int addr) {
+    char* block = FetchBlock(cache, addr, BLOCK_SIZE, mem);
 
     uint32_t blockOffset = getBlockOffset(cache, addr);
 
     return (uint16_t*) block[blockOffset * WORD_SIZE];
 }
 
-int cache_rd_b(Cache_t *cache, int addr) {
-    char* block = FetchBlock(cache, addr, BLOCK_SIZE);
+int cache_rd_b(Cache_t *cache, struct memory *mem, int addr) {
+    char* block = FetchBlock(cache, addr, BLOCK_SIZE, mem);
 
     uint32_t blockOffset = getBlockOffset(cache, addr);
 
@@ -118,7 +120,7 @@ uint32_t getBlockOffset(Cache_t *cache, int addr) {
 //     return block[blockOffset * WORD_SIZE];
 // }
 
-char* FetchBlock(Cache_t* cache, uint32_t address, uint32_t blockSize) {
+char* FetchBlock(Cache_t* cache, uint32_t addr, uint32_t blockSize, struct memory *mem) {
 
     /// separate the address to parts
     uint32_t blockOffset;
@@ -130,21 +132,21 @@ char* FetchBlock(Cache_t* cache, uint32_t address, uint32_t blockSize) {
     mask = ~0;
     mask = mask << cache->blockOffsetBitLength;
     mask = ~mask;
-    blockOffset = address & mask;
+    blockOffset = addr & mask;
 
     // set index
-    address = address >> cache->blockOffsetBitLength;
+    addr = addr >> cache->blockOffsetBitLength;
     mask = ~0;
     mask = mask << cache->SetBitLength;
     mask = ~mask;
-    setIndex = address & mask;
+    setIndex = addr & mask;
 
     // tag
-    address = address >> cache->SetBitLength;
+    addr = addr >> cache->SetBitLength;
     mask = ~0;
     mask = mask << cache->TagBitLength;
     mask = ~mask;
-    tag = address & mask;
+    tag = addr & mask;
 
     UpdateCacheSet(cache, setIndex);
 
@@ -157,14 +159,15 @@ char* FetchBlock(Cache_t* cache, uint32_t address, uint32_t blockSize) {
         char* block = NULL;
 
         // count cache misses
-        
+
         if (cache->childCache != NULL) {
             // recursive call
-            block = FetchBlock(cache->childCache, address, BLOCK_SIZE);
+            block = FetchBlock(cache->childCache, addr, BLOCK_SIZE, mem);
 
         }
         else { // TODO : fetch block from main memory
-            block = malloc(BLOCK_SIZE * WORD_SIZE * sizeof(char));
+            
+            block = find_block(mem, addr, BLOCK_SIZE);
         }
         cache->sets[setIndex][lineIndex].block = block;
         InsertLineInSet(cache, setIndex, tag, block);
@@ -273,6 +276,11 @@ void PrintSet(Cache_t* cache, uint32_t setIndex) {
     char buff[400] = {0};
     CacheSetToString(cache, setIndex, buff);
     printf(buff);
+}
+void PrintCache(Cache_t cache) {
+    for (int i = 0; i < L1->setCount; i++) {
+        PrintSet(L1->childCache, i);
+    }
 }
 
 
