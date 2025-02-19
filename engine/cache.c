@@ -14,6 +14,11 @@
 // const uint32_t ASSOCIATIVITY = 4;           // How associative our cache is, determines how many lines are in each set
 // const uint32_t ADDR_LEN = 32;               // The address length, usually 32-bit or 64-bit
 
+// shouldn't need to be exposed actually
+int ADDR_LEN;
+int WORD_SIZE;
+int BLOCK_SIZE;
+int N_CACHE_LEVELS;
 
 // Policies
 #define LRU_REPLACEMENT_POLICY 0
@@ -29,22 +34,22 @@ void init_cache(int argc, char** argv) {
         Cache_t** caches = ParseCPUArchitecture("./testing/Architectures/SimpleCPU.md");
         L1 = caches[0];
         printf("L1:\n");
-        for (int i = 0; i < L1->setCount; i++) {
+        for (uint32_t i = 0; i < L1->setCount; i++) {
             PrintSet(L1, i);
         }
         printf("L2:\n");
-        for (int i = 0; i < L1->childCache->setCount; i++) {
+        for (uint32_t i = 0; i < L1->childCache->setCount; i++) {
             PrintSet(L1->childCache, i);
         }
         
         //ParseMemoryRequests("./testing/Instructions/Simple.md");
 
         printf("L1:\n");
-        for (int i = 0; i < L1->setCount; i++) {
+        for (uint32_t i = 0; i < L1->setCount; i++) {
             PrintSet(L1, i);
         }
         printf("L2:\n");
-        for (int i = 0; i < L1->childCache->setCount; i++) {
+        for (uint32_t i = 0; i < L1->childCache->setCount; i++) {
             PrintSet(L1->childCache, i);
         }
         return;
@@ -224,7 +229,7 @@ void InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* bloc
             case LRU_REPLACEMENT_POLICY:
                 {
                     uint32_t maxval = 0;
-                    for (int i = 0; i < cache->associativity; i++) {
+                    for (uint32_t i = 0; i < cache->associativity; i++) {
                         if (cache->sets[setIndex][i].LRU >= maxval) {
                             insertIdx = i;
                             maxval = cache->sets[setIndex][i].LRU;
@@ -299,8 +304,8 @@ void PrintSet(Cache_t* cache, uint32_t setIndex) {
     printf(buff);
 }
 void PrintCache(Cache_t* cache) {
-    for (int i = 0; i < L1->setCount; i++) {
-        PrintSet(L1->childCache, i);
+    for (uint32_t i = 0; i < L1->setCount; i++) {
+        PrintSet(cache, i);
     }
 }
 

@@ -7,13 +7,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-
-// shouldn't need to be exposed actually
-int ADDR_LEN;
-int WORD_SIZE;
-int BLOCK_SIZE;
-int N_CACHE_LEVELS;
-
 typedef struct CacheLine {
     bool valid;
     uint32_t tag;
