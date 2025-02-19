@@ -8,12 +8,6 @@
 #include <math.h>
 
 
-
-
-
-
-
-
 // shouldn't need to be exposed actually
 int ADDR_LEN;
 int WORD_SIZE;
@@ -27,18 +21,9 @@ typedef struct CacheLine {
     char* block;
 } CacheLine_t;
 
-CacheLine_t CacheLine_new(bool valid, uint32_t tag, uint32_t LRU, char* block) {
-    CacheLine_t l;
-    l.valid = valid;
-    l.tag = tag;
-    l.LRU = LRU;
-    l.block = block;
-    return l;
-}
-void CacheLine_free(CacheLine_t* l) {
-    free(l->block);
-    free(l);
-}
+CacheLine_t CacheLine_new(bool valid, uint32_t tag, uint32_t LRU, char* block);
+
+void CacheLine_free(CacheLine_t* l);
 
 typedef struct Cache {
     // base parameters
@@ -60,41 +45,9 @@ typedef struct Cache {
 
 } Cache_t;
 
-Cache_t* Cache_new(uint32_t cacheSize, uint32_t associativity) {
-    Cache_t* c = (Cache_t*)(sizeof(Cache_t));
+Cache_t* Cache_new(uint32_t cacheSize, uint32_t associativity);
 
-    c->cacheSize = cacheSize;
-    c->associativity = associativity;
-
-    c->setCount = c->cacheSize / (c->associativity * BLOCK_SIZE);
-
-    c->blockOffsetBitLength = log2(BLOCK_SIZE);
-
-    c->SetBitLength = log2(c->setCount);
-    c->TagBitLength = ADDR_LEN - c->blockOffsetBitLength - c->SetBitLength; // TODO ASSUMES VALID BIT LENGTH = 1 AND ADDRESS LENGTH = 32
-    
-    c->blockSize = BLOCK_SIZE;
-
-    // TODO : Call CacheLine_t constructor 
-    c->sets = (CacheLine_t**)(c->setCount * sizeof(CacheLine_t*));
-    for (uint32_t i = 0; i < c->setCount; i++) {
-        c->sets[i] = (CacheLine_t*)malloc(c->associativity * sizeof(CacheLine_t));
-        for (uint32_t j = 0; j < c->associativity; j++) {
-            c->sets[i][j].valid = 0;
-            c->sets[i][j].LRU = 0;
-            c->sets[i][j].tag = 0;
-            c->sets[i][j].block = (char*)malloc(BLOCK_SIZE * WORD_SIZE * sizeof(char)); // NULL
-        };
-    };
-
-    c->childCache = NULL;
-
-    return c;
-}
-
-void Cache_free(Cache_t* c) {
-    free(c);
-}
+void Cache_free(Cache_t* c);
 
 void init_cache(int argc, char** argv);
 uint32_t getBlockOffset(Cache_t *cache, int addr);

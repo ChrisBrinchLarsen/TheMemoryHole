@@ -37,7 +37,7 @@ void init_cache(int argc, char** argv) {
             PrintSet(L1->childCache, i);
         }
         
-        ParseMemoryRequests("./testing/Instructions/Simple.md");
+        //ParseMemoryRequests("./testing/Instructions/Simple.md");
 
         printf("L1:\n");
         for (int i = 0; i < L1->setCount; i++) {
@@ -51,7 +51,7 @@ void init_cache(int argc, char** argv) {
     }
 
     Cache_t** caches = ParseCPUArchitecture(argv[1]);
-    ParseMemoryRequests(argv[2]);
+    //ParseMemoryRequests(argv[2]);
 
     L1 = caches[0];
     
@@ -102,6 +102,7 @@ uint32_t getBlockOffset(Cache_t *cache, int addr) {
     mask = mask << cache->blockOffsetBitLength;
     mask = ~mask;
     blockOffset = addr & mask;
+    return blockOffset;
 }
 
 // char ReadData(Cache_t* cache, uint32_t address) {
@@ -350,20 +351,20 @@ Cache_t** ParseCPUArchitecture(char* path) {
     return caches;
 }
 
-void ParseMemoryRequests(char* path) {
-    FILE* file = fopen(path, "r");
-    if (!file) {
-        printf("ERROR: Couldn't find file: '%s' when trying to parse a file of memory requests", path);
-        exit(1);
-    }
+// void ParseMemoryRequests(char* path) {
+//     FILE* file = fopen(path, "r");
+//     if (!file) {
+//         printf("ERROR: Couldn't find file: '%s' when trying to parse a file of memory requests", path);
+//         exit(1);
+//     }
 
-    char buf[65] = {0};
-    while (fgets(buf, sizeof(buf), file)) {
-        char type = buf[ADDR_LEN];
+//     char buf[65] = {0};
+//     while (fgets(buf, sizeof(buf), file)) {
+//         char type = buf[ADDR_LEN];
 
-        ReadData(L1, BinStrToNum(buf, ADDR_LEN));
-    }
-}
+//         ReadData(L1, BinStrToNum(buf, ADDR_LEN));
+//     }
+// }
 
 // Takes in a binary string, computes the value as an unsigned 64-bit integer
 // The input for n should usually be either 32 or 64
@@ -373,4 +374,55 @@ uint64_t BinStrToNum(char* num, int n) {
         result += pow(2, i) * (num[n - i - 1] - '0');
     }
     return result;
+}
+
+
+Cache_t* Cache_new(uint32_t cacheSize, uint32_t associativity) {
+    Cache_t* c = (Cache_t*)(sizeof(Cache_t));
+
+    c->cacheSize = cacheSize;
+    c->associativity = associativity;
+
+    c->setCount = c->cacheSize / (c->associativity * BLOCK_SIZE);
+
+    c->blockOffsetBitLength = log2(BLOCK_SIZE);
+
+    c->SetBitLength = log2(c->setCount);
+    c->TagBitLength = ADDR_LEN - c->blockOffsetBitLength - c->SetBitLength; // TODO ASSUMES VALID BIT LENGTH = 1 AND ADDRESS LENGTH = 32
+    
+    c->blockSize = BLOCK_SIZE;
+
+    // TODO : Call CacheLine_t constructor 
+    c->sets = (CacheLine_t**)(c->setCount * sizeof(CacheLine_t*));
+    for (uint32_t i = 0; i < c->setCount; i++) {
+        c->sets[i] = (CacheLine_t*)malloc(c->associativity * sizeof(CacheLine_t));
+        for (uint32_t j = 0; j < c->associativity; j++) {
+            c->sets[i][j].valid = 0;
+            c->sets[i][j].LRU = 0;
+            c->sets[i][j].tag = 0;
+            c->sets[i][j].block = (char*)malloc(BLOCK_SIZE * WORD_SIZE * sizeof(char)); // NULL
+        };
+    };
+
+    c->childCache = NULL;
+
+    return c;
+}
+
+void Cache_free(Cache_t* c) {
+    free(c);
+}
+
+CacheLine_t CacheLine_new(bool valid, uint32_t tag, uint32_t LRU, char* block) {
+    CacheLine_t l;
+    l.valid = valid;
+    l.tag = tag;
+    l.LRU = LRU;
+    l.block = block;
+    return l;
+}
+
+void CacheLine_free(CacheLine_t* l) {
+    free(l->block);
+    free(l);
 }
