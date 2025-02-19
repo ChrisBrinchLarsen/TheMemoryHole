@@ -102,6 +102,7 @@ void Cache_free(Cache_t* c) {
     free(c);
 }
 
+void init_cache(int argc, char** argv);
 uint32_t getBlockOffset(Cache_t *cache, int addr);
 //char ReadData(Cache_t* cache, uint32_t address);
 char* FetchBlock(Cache_t* cache, uint32_t addr, uint32_t blockSize, struct memory *mem);
