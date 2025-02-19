@@ -42,3 +42,8 @@ char* find_block(struct memory *mem, int addr, uint32_t block_size) {
   return &page[page_offset];
 }
 
+void memory_write_back(struct memory* mem, int addr, char* block, uint32_t block_size) {
+  char* page = get_page(mem, addr);
+  int page_offset = addr & 0x0ffff;
+  memcpy(&page[page_offset], block, block_size);
+}

@@ -12,5 +12,6 @@ void memory_delete(struct memory *);
 char *get_page(struct memory *mem, int addr);
 
 char* find_block(struct memory *mem, int addr, uint32_t block_size);
+void memory_write_back(struct memory* mem, int addr, char* block, uint32_t block_size);
 
 #endif
