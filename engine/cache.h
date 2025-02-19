@@ -8,15 +8,6 @@
 #include <math.h>
 
 
-// skriv word/halfword/byte til lager
-void cache_wr_w(Cache_t *cache, int addr, uint32_t data);
-void cache_wr_h(Cache_t *cache, int addr, uint16_t data);
-void cache_wr_b(Cache_t *cache, int addr, uint8_t data);
-
-// læs word/halfword/byte fra lager - data er nul-forlænget
-int cache_rd_w(Cache_t *cache, struct memory *mem, int addr);
-int cache_rd_h(Cache_t *cache, struct memory *mem, int addr);
-int cache_rd_b(Cache_t *cache, struct memory *mem, int addr);
 
 
 
@@ -123,4 +114,16 @@ uint64_t BinStrToNum(char* num, int n);
 void ParseMemoryRequests(char* path);
 
 Cache_t** ParseCPUArchitecture(char* path);
+
+
+// skriv word/halfword/byte til lager
+void cache_wr_w(Cache_t *cache, int addr, uint32_t data);
+void cache_wr_h(Cache_t *cache, int addr, uint16_t data);
+void cache_wr_b(Cache_t *cache, int addr, uint8_t data);
+
+// læs word/halfword/byte fra lager - data er nul-forlænget
+int cache_rd_w(Cache_t *cache, struct memory *mem, int addr);
+int cache_rd_h(Cache_t *cache, struct memory *mem, int addr);
+int cache_rd_b(Cache_t *cache, struct memory *mem, int addr);
+
 #endif

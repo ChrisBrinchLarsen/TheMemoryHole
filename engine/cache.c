@@ -163,7 +163,7 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem) {
 
         if (cache->childCache != NULL) {
             // recursive call
-            printf("calling FetchBlock on next layer of cache,\n")
+            printf("calling FetchBlock on next layer of cache,\n");
             block = FetchBlock(cache->childCache, addr, mem);
 
         }
@@ -297,7 +297,7 @@ void PrintSet(Cache_t* cache, uint32_t setIndex) {
     CacheSetToString(cache, setIndex, buff);
     printf(buff);
 }
-void PrintCache(Cache_t cache) {
+void PrintCache(Cache_t* cache) {
     for (int i = 0; i < L1->setCount; i++) {
         PrintSet(L1->childCache, i);
     }
