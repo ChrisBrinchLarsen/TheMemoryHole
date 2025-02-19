@@ -316,7 +316,7 @@ void PrintSet(Cache_t* cache, uint32_t setIndex) {
     printf(buff);
 }
 void PrintCache(Cache_t* cache) {
-    for (uint32_t i = 0; i < L1->setCount; i++) {
+    for (uint32_t i = 0; i < cache->setCount; i++) {
         PrintSet(cache, i);
     }
 }
