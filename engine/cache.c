@@ -264,7 +264,7 @@ void InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* bloc
 
 // TODO : better name
 void UpdateCacheSet(Cache_t* cache, uint32_t setIndex) {
-    for (int i = 0; i < cache->associativity; i++) {
+    for (uint32_t i = 0; i < cache->associativity; i++) {
         cache->sets[setIndex][i].LRU++;
     }
 }
@@ -272,7 +272,7 @@ void UpdateCacheSet(Cache_t* cache, uint32_t setIndex) {
 void CacheSetToString(Cache_t* cache, int setIndex, char* out) {
     char holder[400] = {0};
 
-    for (int i = 0; i < cache->associativity; i++) {
+    for (uint32_t i = 0; i < cache->associativity; i++) {
         char buf[50] = {0};
         CacheLineToString(cache, setIndex, i, buf);
         strcat(holder, buf);
