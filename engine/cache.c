@@ -23,9 +23,6 @@ const uint32_t ACTIVE_REPLACEMENT_POLICY = LRU_REPLACEMENT_POLICY;
 Cache_t* L1;
 
 void init_cache(int argc, char** argv) {
-    
-    // temporary integration initialization here
-    return;
 
     // We perform unit tests if no additional arguments are provided
     if (argc == 1) {
