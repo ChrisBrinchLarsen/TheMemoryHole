@@ -47,7 +47,3 @@ clean:
 	rm -f prototype.exe
 	rm -f *.o
 	rm -f file
-	rm -f file.c~     # For emacs uses
-	rm -rf file.dSYM  # For Mac users
-	rm -rf *.o sim  vgcore*
-	/opt/riscv/bin/riscv32-unknown-elf-objdump -S $< >> $@
