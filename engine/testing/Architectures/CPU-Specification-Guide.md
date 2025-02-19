@@ -1,38 +1,49 @@
 [Delete all lines covered in square brackets like this]
 [First specify whether the system is 32-bit or 64-bit]
 32
-[Then specify how many bytes are in a word on this machine (1 would be a byte addressable machine)]
-4
-[Then specify how many words are in each block]
-2
 [Now specify how many levels of cache you intend to have]
 3
 [Then specify some name of a top level cache]
 L1
-[Then specify the size in bytes of this level of cache]
-1024
+[Next, specify a 'p' and a 'q', such that the formula 2^p * q gives the amount of bytes in the cache]
+10
+4
+[Next, specify a 'k' in the formula 2^k for how many bytes are in a given block for this cache]
+3
 [Then specify the associativity]
 8
-[Then continue the last three instructions for each level of cache you want]
+[Then continue the last four instructions for each level of cache you want]
 L2
-2048
-8
-L3
-4896
-12
-
-[As such, a final file might look something like this:
-32
+10
+16
 4
+16
+L3
+11
 2
+5
+32
+
+Then if we were to describe the following architecture:
+On a 32bit address machine, with three caches L1, L2, L3.
+The L1 cache has 4kb of space (2^10 * 4), has 8 bytes in each block (2^3), and is 8 way associative.
+The L2 cache has 16kb of space (2^10 * 16), has 16 bytes in each block (2^4), and is 16 way associative.
+The L3 cache has 2mb of space (2^20 * 2), has 32 bytes in each block (2^5), and is 32 way associative.
+We could express this in an architecture file as:
+32
 3
 L1
-1024
+10
+4
+3
 8
 L2
-2048
-8
+10
+16
+4
+16
 L3
-4896
-12
-]
+20
+2
+5
+32
