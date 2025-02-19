@@ -9,14 +9,8 @@ struct memory;
 struct memory *memory_create();
 void memory_delete(struct memory *);
 
-// skriv word/halfword/byte til lager
-void memory_wr_w(struct memory *mem, int addr, uint32_t data);
-void memory_wr_h(struct memory *mem, int addr, uint16_t data);
-void memory_wr_b(struct memory *mem, int addr, uint8_t data);
+char *get_page(struct memory *mem, int addr);
 
-// læs word/halfword/byte fra lager - data er nul-forlænget
-int memory_rd_w(struct memory *mem, int addr);
-int memory_rd_h(struct memory *mem, int addr);
-int memory_rd_b(struct memory *mem, int addr);
+char* find_block(struct memory *mem, int addr, uint32_t block_size);
 
 #endif
