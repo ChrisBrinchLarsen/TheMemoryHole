@@ -333,6 +333,8 @@ Cache_t** ParseCPUArchitecture(char* path) {
     N_CACHE_LEVELS = atoi(buf);
     memset(buf, 0, sizeof(buf));
     
+    printf("During architecture parsing, we just finished reading globals\n");
+
     Cache_t** caches = malloc(N_CACHE_LEVELS * (sizeof(Cache_t*)));
 
     for (int i = 0; i < N_CACHE_LEVELS; i++) {
@@ -348,6 +350,7 @@ Cache_t** ParseCPUArchitecture(char* path) {
     }
 
     fclose(file);
+    printf("We just finished reading info from the file\n");
 
     for (int i = 0; i < (N_CACHE_LEVELS-1); i++) {
         caches[i]->childCache = caches[i+1]; // L1 -> L2 -> L3 -> NULL (since children are set to NULL in constructor)
@@ -383,7 +386,7 @@ uint64_t BinStrToNum(char* num, int n) {
 
 
 Cache_t* Cache_new(uint32_t cacheSize, uint32_t associativity) {
-    Cache_t* c = (Cache_t*)(sizeof(Cache_t));
+    Cache_t* c = (Cache_t*)malloc(sizeof(Cache_t));
 
     c->cacheSize = cacheSize;
     c->associativity = associativity;
@@ -398,7 +401,7 @@ Cache_t* Cache_new(uint32_t cacheSize, uint32_t associativity) {
     c->blockSize = BLOCK_SIZE;
 
     // TODO : Call CacheLine_t constructor 
-    c->sets = (CacheLine_t**)(c->setCount * sizeof(CacheLine_t*));
+    c->sets = (CacheLine_t**)malloc(c->setCount * sizeof(CacheLine_t*));
     for (uint32_t i = 0; i < c->setCount; i++) {
         c->sets[i] = (CacheLine_t*)malloc(c->associativity * sizeof(CacheLine_t));
         for (uint32_t j = 0; j < c->associativity; j++) {
