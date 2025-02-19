@@ -10,7 +10,7 @@ struct memory {
 
 struct memory *memory_create() {
   // When we create our memory, we malloc memory for 16 bits worth of null pointers that could later point to each page start
-  return calloc(sizeof(struct memory), 1);
+  return calloc(1, sizeof(struct memory));
 }
 
 void memory_delete(struct memory *mem) {

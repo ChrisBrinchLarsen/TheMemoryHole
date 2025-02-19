@@ -9,7 +9,8 @@
         "tuple": "c",
         "type_traits": "c",
         "utility": "c",
-        "variant": "c"
+        "variant": "c",
+        "random": "c"
     },
     "basedpyright.disableLanguageServices": true
 }

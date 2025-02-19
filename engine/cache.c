@@ -216,7 +216,7 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem) {
     // HIT
     else {
         // count cache hits
-        printf("cache hit!");
+        printf("cache hit!\n");
     }
     
     printf("returning block to previous cache layer.\n");
