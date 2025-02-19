@@ -165,32 +165,38 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem) {
     if (lineIndex == -1) {
         printf("cache miss!\n");
 
-        char* block = NULL;
 
-        // count cache misses
+
+        // the cache below returns its entire block, we need to know which part of that cache is our block (since it might be smaller)
+        char* block = NULL;
+        uint32_t blockidx = 0;
 
         if (cache->childCache != NULL) {
             // recursive call
             printf("calling FetchBlock on next layer of cache,\n");
             block = FetchBlock(cache->childCache, addr, mem);
 
+            // in case were getting stuff from another layer of cache, we need to find the offset within the block we've been given
+
+            // mask out the top and bottom bits. If L1 uses 00000011 and L2 uses 00001111, the block_idx after shifting and masking will be 00001100
+            blockidx = (addr >> cache->blockOffsetBitLength) << cache->blockOffsetBitLength;
+            uint32_t mask = ((uint32_t)pow(2,cache->childCache->blockOffsetBitLength)-1);
+            blockidx = blockidx & mask;
+
         }
-        else { // TODO : fetch block from main memory
+        else {
             printf("no more cache layers. Calling find_block in main memory.\n");
             block = find_block(mem, addr, cache->blockSize);
+
+            // when fetching from main memory, the blockidx will just be 0, since we've already requested our specific size.
+            
         }
 
-        printf("inserting cache line into cache");
-
-        // the cache below returns its entire block, we need to know which part of that cache is our block (since it might be smaller)
-        uint32_t blockidx = addr;
-        // mask out the top and bottom bits. If L1 uses 00000011 and L2 uses 00001111, the block_idx after shifting and masking will be 00001100
-        blockidx = (blockidx >> cache->blockOffsetBitLength) << cache->blockOffsetBitLength;
-        uint32_t mask = ((uint32_t)pow(2,cache->childCache->blockOffsetBitLength)-1);
-        blockidx = blockidx & mask;
+        printf("inserting cache line into cache\n");
 
         // copy and insert block
         InsertLineInSet(cache, setIndex, tag, &block[blockidx]);
+
     }
     // HIT
     else {
@@ -214,6 +220,7 @@ int GetLineIndexFromTag(Cache_t* cache, uint32_t setIndex, uint32_t tag) {
 
 void InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* block) {
 
+    printf("begin inserting\n");
     // first check if there's room anywhere.
     int32_t insertIdx = -1;
     for (uint32_t i = 0; i < cache->associativity; i++) {
@@ -225,7 +232,7 @@ void InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* bloc
 
     // if no room, find room based on replacement policy
     if (insertIdx == -1) {
-        
+        printf("cache is full, another line needs to be evicted\n");
         switch (ACTIVE_REPLACEMENT_POLICY)
         {
             case LRU_REPLACEMENT_POLICY:
@@ -256,6 +263,7 @@ void InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* bloc
 
     // insert
     //CacheLine_t c = CacheLine_new(1, tag, 0, block);
+    printf("insertIdx: %u\n", insertIdx);
 
     cache->sets[setIndex][insertIdx].valid = 1;
     cache->sets[setIndex][insertIdx].tag = tag;
