@@ -33,7 +33,7 @@ char *get_page(struct memory *mem, int addr) {
 char* find_block(struct memory *mem, int addr, uint32_t block_size) {
   // TODO: This definitely needs some testing
   char* page = get_page(mem, addr);
-  int block_offset_bit_length = (int)pow(2, log2(block_size));
+  int block_offset_bit_length = (int)log2(block_size);
   addr = (addr >> block_offset_bit_length) << block_offset_bit_length; // Masking out block offset bits
   int page_offset = addr & 0x0ffff;
   return &page[page_offset];

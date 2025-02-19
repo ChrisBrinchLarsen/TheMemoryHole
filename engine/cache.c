@@ -70,7 +70,7 @@ void cache_wr_b(Cache_t *cache, int addr, uint8_t data) {
 }
 
 int cache_rd_w(Cache_t *cache, struct memory *mem, int addr) {
-    char* block = FetchBlock(cache, addr, BLOCK_SIZE, mem);
+    char* block = FetchBlock(cache, addr, mem);
 
     uint32_t blockOffset = getBlockOffset(cache, addr);
 
@@ -79,7 +79,7 @@ int cache_rd_w(Cache_t *cache, struct memory *mem, int addr) {
 }
 
 int cache_rd_h(Cache_t *cache, struct memory *mem, int addr) {
-    char* block = FetchBlock(cache, addr, BLOCK_SIZE, mem);
+    char* block = FetchBlock(cache, addr, mem);
 
     uint32_t blockOffset = getBlockOffset(cache, addr);
 
@@ -87,7 +87,7 @@ int cache_rd_h(Cache_t *cache, struct memory *mem, int addr) {
 }
 
 int cache_rd_b(Cache_t *cache, struct memory *mem, int addr) {
-    char* block = FetchBlock(cache, addr, BLOCK_SIZE, mem);
+    char* block = FetchBlock(cache, addr, mem);
 
     uint32_t blockOffset = getBlockOffset(cache, addr);
 
@@ -117,7 +117,7 @@ uint32_t getBlockOffset(Cache_t *cache, int addr) {
 //     return block[blockOffset * WORD_SIZE];
 // }
 
-char* FetchBlock(Cache_t* cache, uint32_t addr, uint32_t blockSize, struct memory *mem) {
+char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem) {
 
     /// separate the address to parts
     uint32_t blockOffset;
@@ -159,20 +159,28 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, uint32_t blockSize, struct memor
 
         if (cache->childCache != NULL) {
             // recursive call
-            block = FetchBlock(cache->childCache, addr, BLOCK_SIZE, mem);
+            block = FetchBlock(cache->childCache, addr, mem);
 
         }
         else { // TODO : fetch block from main memory
-            
-            block = find_block(mem, addr, BLOCK_SIZE);
+            block = find_block(mem, addr, cache->blockSize);
         }
-        cache->sets[setIndex][lineIndex].block = block;
-        InsertLineInSet(cache, setIndex, tag, block);
+
+        // the cache below returns its entire block, we need to know which part of that cache is our block (since it might be smaller)
+        uint32_t blockidx = addr;
+        // mask out the top and bottom bits. If L1 uses 00000011 and L2 uses 00001111, the block_idx after shifting and masking will be 00001100
+        blockidx = (blockidx >> cache->blockOffsetBitLength) << cache->blockOffsetBitLength;
+        uint32_t mask = ((uint32_t)pow(2,cache->childCache->blockOffsetBitLength)-1);
+        blockidx = blockidx & mask;
+
+        // copy and insert block
+        InsertLineInSet(cache, setIndex, tag, block[blockidx]);
     }
     // HIT
     else {
         // count cache hits
     }
+    
     return cache->sets[setIndex][lineIndex].block;
 }
 
@@ -229,9 +237,13 @@ void InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* bloc
     // writeback to lower cache
 
     // insert
-    CacheLine_t c = CacheLine_new(1, tag, 0, block);
+    //CacheLine_t c = CacheLine_new(1, tag, 0, block);
 
-    cache->sets[setIndex][insertIdx] = c;
+    cache->sets[setIndex][insertIdx].valid = 1;
+    cache->sets[setIndex][insertIdx].tag = tag;
+    cache->sets[setIndex][insertIdx].LRU = 0;
+    memcpy(cache->sets[setIndex][insertIdx].block, block, cache->blockSize); // block_size * word_size????? idk
+
 }
 
 void UpdateCacheSet(Cache_t* cache, uint32_t setIndex) {

@@ -61,6 +61,8 @@ typedef struct Cache {
     uint32_t SetBitLength;
     uint32_t TagBitLength;
 
+    uint32_t blockSize;
+
     struct Cache* childCache;
 
     CacheLine_t **sets;
@@ -80,6 +82,7 @@ Cache_t* Cache_new(uint32_t cacheSize, uint32_t associativity) {
     c->SetBitLength = log2(c->setCount);
     c->TagBitLength = ADDR_LEN - c->blockOffsetBitLength - c->SetBitLength; // TODO ASSUMES VALID BIT LENGTH = 1 AND ADDRESS LENGTH = 32
     
+    c->blockSize = BLOCK_SIZE;
 
     // TODO : Call CacheLine_t constructor 
     c->sets = (CacheLine_t**)(c->setCount * sizeof(CacheLine_t*));
@@ -105,7 +108,7 @@ void Cache_free(Cache_t* c) {
 void init_cache(int argc, char** argv);
 uint32_t getBlockOffset(Cache_t *cache, int addr);
 //char ReadData(Cache_t* cache, uint32_t address);
-char* FetchBlock(Cache_t* cache, uint32_t addr, uint32_t blockSize, struct memory *mem);
+char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem);
 int GetLineIndexFromTag(Cache_t* cache, uint32_t setIndex, uint32_t tag);
 void InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* block);
 void UpdateCacheSet(Cache_t* cache, uint32_t setIndex);
