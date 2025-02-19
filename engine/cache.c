@@ -126,6 +126,8 @@ uint32_t getBlockOffset(Cache_t *cache, int addr) {
 char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem) {
 
     printf("called FetchBlock on address %x\n", addr);
+
+    uint32_t address = addr;
     /// separate the address to parts
     uint32_t blockOffset;
     uint32_t setIndex;
@@ -136,21 +138,21 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem) {
     mask = ~0;
     mask = mask << cache->blockOffsetBitLength;
     mask = ~mask;
-    blockOffset = addr & mask;
+    blockOffset = address & mask;
 
     // set index
-    addr = addr >> cache->blockOffsetBitLength;
+    address = address >> cache->blockOffsetBitLength;
     mask = ~0;
     mask = mask << cache->SetBitLength;
     mask = ~mask;
-    setIndex = addr & mask;
+    setIndex = address & mask;
 
     // tag
-    addr = addr >> cache->SetBitLength;
+    address = address >> cache->SetBitLength;
     mask = ~0;
     mask = mask << cache->TagBitLength;
     mask = ~mask;
-    tag = addr & mask;
+    tag = address & mask;
 
     printf("tag: %x\nsetIndex: %x\nblockOffset: %x\n", tag, setIndex, blockOffset);
 
@@ -174,7 +176,7 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem) {
 
         }
         else { // TODO : fetch block from main memory
-            printf("no more cache layers. Calling find_block in main memory.");
+            printf("no more cache layers. Calling find_block in main memory.\n");
             block = find_block(mem, addr, cache->blockSize);
         }
 
