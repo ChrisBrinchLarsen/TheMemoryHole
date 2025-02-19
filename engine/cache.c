@@ -64,14 +64,30 @@ void init_cache(int argc, char** argv) {
 }
 
 
-void cache_wr_w(Cache_t *cache, int addr, uint32_t data) {
+void cache_wr_w(Cache_t *cache, struct memory *mem, int addr, uint32_t data) {
+    // TODO : Check if address is word-aligned
+    char* block = FetchBlock(cache, addr, mem);
 
+    uint32_t blockOffset = getBlockOffset(cache, addr);
+
+    memcpy(&block[blockOffset], &data, sizeof(uint32_t));
 }
 
-void cache_wr_h(Cache_t *cache, int addr, uint16_t data) {
+void cache_wr_h(Cache_t *cache, struct memory *mem, int addr, uint16_t data) {
+    // TODO : Check if address in half-aligned
+    char* block = FetchBlock(cache, addr, mem);
+
+    uint32_t blockOffset = getBlockOffset(cache, addr);
+
+    memcpy(&block[blockOffset], &data, sizeof(uint16_t));
 }
 
-void cache_wr_b(Cache_t *cache, int addr, uint8_t data) {
+void cache_wr_b(Cache_t *cache, struct memory *mem, int addr, uint8_t data) {
+    char* block = FetchBlock(cache, addr, mem);
+
+    uint32_t blockOffset = getBlockOffset(cache, addr);
+
+    memcpy(&block[blockOffset], &data, sizeof(uint8_t));
 }
 
 int cache_rd_w(Cache_t *cache, struct memory *mem, int addr) {
@@ -80,7 +96,6 @@ int cache_rd_w(Cache_t *cache, struct memory *mem, int addr) {
     uint32_t blockOffset = getBlockOffset(cache, addr);
 
     return (int)(*(uint32_t*)&block[blockOffset]);
-
 }
 
 int cache_rd_h(Cache_t *cache, struct memory *mem, int addr) {
