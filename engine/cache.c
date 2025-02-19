@@ -74,7 +74,7 @@ int cache_rd_w(Cache_t *cache, struct memory *mem, int addr) {
 
     uint32_t blockOffset = getBlockOffset(cache, addr);
 
-    return (uint32_t*) block[blockOffset * WORD_SIZE];
+    return (int)(*(uint32_t*)&block[blockOffset]);
 
 }
 
@@ -83,7 +83,7 @@ int cache_rd_h(Cache_t *cache, struct memory *mem, int addr) {
 
     uint32_t blockOffset = getBlockOffset(cache, addr);
 
-    return (uint16_t*) block[blockOffset * WORD_SIZE];
+    return (int)(*(uint16_t*)&block[blockOffset]);
 }
 
 int cache_rd_b(Cache_t *cache, struct memory *mem, int addr) {
@@ -91,7 +91,7 @@ int cache_rd_b(Cache_t *cache, struct memory *mem, int addr) {
 
     uint32_t blockOffset = getBlockOffset(cache, addr);
 
-    return (uint8_t*) block[blockOffset * WORD_SIZE];
+    return (int)block[blockOffset];
 }
 
 
@@ -183,7 +183,7 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem) {
         blockidx = blockidx & mask;
 
         // copy and insert block
-        InsertLineInSet(cache, setIndex, tag, block[blockidx]);
+        InsertLineInSet(cache, setIndex, tag, &block[blockidx]);
     }
     // HIT
     else {
