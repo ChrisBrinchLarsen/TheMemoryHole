@@ -195,7 +195,7 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem) {
         printf("inserting cache line into cache\n");
 
         // copy and insert block
-        InsertLineInSet(cache, setIndex, tag, &block[blockidx]);
+        lineIndex = InsertLineInSet(cache, setIndex, tag, &block[blockidx]);
 
     }
     // HIT
@@ -204,7 +204,7 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem) {
         printf("cache hit!");
     }
     
-    printf("returning block to previous cache layer");
+    printf("returning block to previous cache layer.\n");
     return cache->sets[setIndex][lineIndex].block;
 }
 
@@ -218,20 +218,20 @@ int GetLineIndexFromTag(Cache_t* cache, uint32_t setIndex, uint32_t tag) {
     return -1;
 }
 
-void InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* block) {
+int InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* block) {
 
     printf("begin inserting\n");
     // first check if there's room anywhere.
-    int32_t insertIdx = -1;
+    int32_t lineIdx = -1;
     for (uint32_t i = 0; i < cache->associativity; i++) {
         if (!cache->sets[setIndex][i].valid) {
-            insertIdx = i;
+            lineIdx = i;
             break;
         }
     }
 
     // if no room, find room based on replacement policy
-    if (insertIdx == -1) {
+    if (lineIdx == -1) {
         printf("cache is full, another line needs to be evicted\n");
         switch (ACTIVE_REPLACEMENT_POLICY)
         {
@@ -240,7 +240,7 @@ void InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* bloc
                     uint32_t maxval = 0;
                     for (uint32_t i = 0; i < cache->associativity; i++) {
                         if (cache->sets[setIndex][i].LRU >= maxval) {
-                            insertIdx = i;
+                            lineIdx = i;
                             maxval = cache->sets[setIndex][i].LRU;
                         }
                         
@@ -250,7 +250,7 @@ void InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* bloc
 
             
             case RANDOM_REPLACEMENT_POLICY:
-                insertIdx = 0;
+                lineIdx = 0;
                 /* code */
                 break;
             
@@ -263,13 +263,15 @@ void InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* bloc
 
     // insert
     //CacheLine_t c = CacheLine_new(1, tag, 0, block);
-    printf("insertIdx: %u\n", insertIdx);
+    printf("lineIdx: %u\n", lineIdx);
 
-    cache->sets[setIndex][insertIdx].valid = 1;
-    cache->sets[setIndex][insertIdx].tag = tag;
-    cache->sets[setIndex][insertIdx].LRU = 0;
-    memcpy(cache->sets[setIndex][insertIdx].block, block, cache->blockSize); // block_size * word_size????? idk
+    cache->sets[setIndex][lineIdx].valid = 1;
+    cache->sets[setIndex][lineIdx].tag = tag;
+    cache->sets[setIndex][lineIdx].LRU = 0;
 
+    memcpy(cache->sets[setIndex][lineIdx].block, block, cache->blockSize); // block_size * word_size????? idk
+
+    return lineIdx;
 }
 
 // TODO : better name

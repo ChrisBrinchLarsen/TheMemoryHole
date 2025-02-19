@@ -47,7 +47,7 @@ uint32_t getBlockOffset(Cache_t *cache, int addr);
 //char ReadData(Cache_t* cache, uint32_t address);
 char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem);
 int GetLineIndexFromTag(Cache_t* cache, uint32_t setIndex, uint32_t tag);
-void InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* block);
+int InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* block);
 void UpdateCacheSet(Cache_t* cache, uint32_t setIndex);
 
 //void printBits(size_t const size, void const * const ptr);
