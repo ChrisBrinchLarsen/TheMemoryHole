@@ -119,12 +119,13 @@ uint32_t getBlockOffset(Cache_t *cache, int addr) {
 
 char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem) {
 
+    printf("called FetchBlock on address %x\n", addr);
     /// separate the address to parts
     uint32_t blockOffset;
     uint32_t setIndex;
     uint32_t tag;
     uint32_t mask;
-    
+
     // block offset
     mask = ~0;
     mask = mask << cache->blockOffsetBitLength;
@@ -145,26 +146,33 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem) {
     mask = ~mask;
     tag = addr & mask;
 
-    UpdateCacheSet(cache, setIndex);
+    printf("tag: %x\nsetIndex: %x\nblockOffset: %x\n", tag, setIndex, blockOffset);
 
+    UpdateCacheSet(cache, setIndex);
 
     int lineIndex = GetLineIndexFromTag(cache, setIndex, tag);
 
     // check if line is already in set, otherwise add it. CACHE HIT/MISS
     // MISS
     if (lineIndex == -1) {
+        printf("cache miss!\n");
+
         char* block = NULL;
 
         // count cache misses
 
         if (cache->childCache != NULL) {
             // recursive call
+            printf("calling FetchBlock on next layer of cache,\n")
             block = FetchBlock(cache->childCache, addr, mem);
 
         }
         else { // TODO : fetch block from main memory
+            printf("no more cache layers. Calling find_block in main memory.");
             block = find_block(mem, addr, cache->blockSize);
         }
+
+        printf("inserting cache line into cache");
 
         // the cache below returns its entire block, we need to know which part of that cache is our block (since it might be smaller)
         uint32_t blockidx = addr;
@@ -179,8 +187,10 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem) {
     // HIT
     else {
         // count cache hits
+        printf("cache hit!");
     }
     
+    printf("returning block to previous cache layer");
     return cache->sets[setIndex][lineIndex].block;
 }
 
@@ -246,6 +256,7 @@ void InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* bloc
 
 }
 
+// TODO : better name
 void UpdateCacheSet(Cache_t* cache, uint32_t setIndex) {
     for (int i = 0; i < cache->associativity; i++) {
         cache->sets[setIndex][i].LRU++;
