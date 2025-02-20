@@ -9,12 +9,13 @@
 
 typedef struct CacheLine {
     bool valid;
+    bool dirty;
     uint32_t tag;
     uint32_t LRU;
     char* block;
 } CacheLine_t;
 
-CacheLine_t CacheLine_new(bool valid, uint32_t tag, uint32_t LRU, char* block);
+CacheLine_t CacheLine_new(bool valid, bool dirty, uint32_t tag, uint32_t LRU, char* block);
 
 void CacheLine_free(CacheLine_t* l);
 
@@ -42,13 +43,24 @@ Cache_t* Cache_new(uint32_t cacheSize, uint32_t associativity);
 
 void Cache_free(Cache_t* c);
 
+typedef struct Address {
+    uint32_t fullAddr;
+    uint32_t tag;
+    uint32_t setIndex;
+    uint32_t blockOffset;
+} Address_t;
+
+Address_t GetAddress(Cache_t* cache, uint32_t address);
+
+
 void init_cache(int argc, char** argv);
-uint32_t getBlockOffset(Cache_t *cache, int addr);
+//uint32_t getBlockOffset(Cache_t *cache, int addr);
 //char ReadData(Cache_t* cache, uint32_t address);
-char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem);
+char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDirty);
 int GetLineIndexFromTag(Cache_t* cache, uint32_t setIndex, uint32_t tag);
-int InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* block);
+int GetReplacementLineIndex(Cache_t* cache, uint32_t setIndex);
 void UpdateCacheSet(Cache_t* cache, uint32_t setIndex);
+void EvictCacheLine(Cache_t* cache, uint32_t addr, uint32_t setIndex, uint32_t lineIndex, struct memory *mem);
 
 //void printBits(size_t const size, void const * const ptr);
 void CacheSetToString(Cache_t* cache, int setIndex, char* out);
@@ -60,6 +72,8 @@ uint64_t BinStrToNum(char* num, int n);
 void ParseMemoryRequests(char* path);
 
 Cache_t** ParseCPUArchitecture(char* path);
+
+void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSize);
 
 
 // skriv word/halfword/byte til lager
