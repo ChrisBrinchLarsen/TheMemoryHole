@@ -65,13 +65,13 @@ void init_cache(int argc, char** argv) {
 void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSize) {
     // NOTE: This function
 
-    printf("Began writing back to next layer of cache");
+    printf("Began writing back to next layer of cache\n");
 
     Address_t a = GetAddress(cache, addr);
     int lineIndex = GetLineIndexFromTag(cache, a.setIndex, a.tag);
 
     if (lineIndex == -1) {
-        printf("WARNING: cacheline in set %x, lineindex %x, (tag: %x) was not found. Cache inclusivity might not've been held");
+        printf("WARNING: cacheline in set %x, lineindex %x, (tag: %x) was not found. Cache inclusivity might not've been held\n", a.setIndex, lineIndex, a.tag);
     }
 
     char* block = cache->sets[a.setIndex][lineIndex].block;
@@ -192,7 +192,6 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
             block = find_block(mem, addr, cache->blockSize);
 
             // when fetching from main memory, the blockidx will just be 0, since we've already requested our specific size.
-            
         }
 
         printf("inserting cache line into cache\n");
@@ -200,7 +199,9 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
         lineIndex = GetReplacementLineIndex(cache, a.setIndex);
         
         // evict
-        EvictCacheLine(cache, addr, a.setIndex, lineIndex, mem);
+        if (cache->sets[a.setIndex][lineIndex].valid) {
+            EvictCacheLine(cache, addr, a.setIndex, lineIndex, mem);
+        }
 
         // update line
         cache->sets[a.setIndex][lineIndex].valid = 1;
