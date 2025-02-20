@@ -173,6 +173,9 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
 
     int lineIndex = GetLineIndexFromTag(cache, a.setIndex, a.tag);
 
+    cache->sets[a.setIndex][lineIndex].LRU = 0; // least recently used; just now
+
+
     // check if line is already in set, otherwise add it. CACHE HIT/MISS
     // MISS
     if (lineIndex == -1) {
@@ -242,7 +245,6 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
 int GetLineIndexFromTag(Cache_t* cache, uint32_t setIndex, uint32_t tag) {
     for (uint32_t i = 0; i < cache->associativity; i++) {
         if (cache->sets[setIndex][i].tag == tag && cache->sets[setIndex][i].valid) {
-            cache->sets[setIndex][i].LRU = 0; // least recently used; just now
             return i;
         }
     }
