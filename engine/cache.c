@@ -216,7 +216,7 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
         cache->sets[a.setIndex][lineIndex].tag = a.tag;
         cache->sets[a.setIndex][lineIndex].LRU = 0;
         // copy and insert block
-        memcpy(cache->sets[a.setIndex][lineIndex].block, block, cache->blockSize); // block_size * word_size????? idk
+        memcpy(cache->sets[a.setIndex][lineIndex].block, &block[blockidx], cache->blockSize); // block_size * word_size????? idk
 
     }
     // HIT
