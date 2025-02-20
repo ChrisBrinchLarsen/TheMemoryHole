@@ -72,7 +72,7 @@ void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSiz
     int lineIndex = GetLineIndexFromTag(cache, a.setIndex, a.tag);
 
     if (lineIndex == -1) {
-        printf("ERROR: cacheline in set 0x%x, lineindex 0x%x, (tag: 0x%x) was not found. Cache inclusivity might not've been held\n", a.setIndex, lineIndex, a.tag);
+        printf("ERROR: cacheline in set 0b%s, lineindex %u, (tag: 0b%s) was not found. Cache inclusivity might not've been held\n", toBinaryString(a.setIndex), lineIndex, toBinaryString(a.tag));
         PrintCache(recieve_cache());
         PrintCache(cache);
         exit(-1);
@@ -86,7 +86,7 @@ void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSiz
 }
 
 void cache_wr_w(Cache_t *cache, struct memory *mem, int addr, uint32_t data) {
-    printf("Attempting to write a word to address 0x%x\n", addr);
+    printf("Attempting to write a word to address 0b%s\n", toBinaryString(addr));
     // TODO : Check if address is word-aligned
     char* block = FetchBlock(cache, addr, mem, true);
 
@@ -96,7 +96,7 @@ void cache_wr_w(Cache_t *cache, struct memory *mem, int addr, uint32_t data) {
 }
 
 void cache_wr_h(Cache_t *cache, struct memory *mem, int addr, uint16_t data) {
-    printf("Attempting to write a half to address 0x%x\n", addr);
+    printf("Attempting to write a half to address 0b%s\n", toBinaryString(addr));
     // TODO : Check if address in half-aligned
     char* block = FetchBlock(cache, addr, mem, true);
 
@@ -106,7 +106,7 @@ void cache_wr_h(Cache_t *cache, struct memory *mem, int addr, uint16_t data) {
 }
 
 void cache_wr_b(Cache_t *cache, struct memory *mem, int addr, uint8_t data) {
-    printf("Attempting to write a byte to address 0x%x\n", addr);
+    printf("Attempting to write a byte to address 0b%s\n", toBinaryString(addr));
     char* block = FetchBlock(cache, addr, mem, true);
 
     Address_t a = GetAddress(cache, addr);
@@ -115,7 +115,7 @@ void cache_wr_b(Cache_t *cache, struct memory *mem, int addr, uint8_t data) {
 }
 
 int cache_rd_w(Cache_t *cache, struct memory *mem, int addr) {
-    printf("Attempting to read a word from address 0x%x\n", addr);
+    printf("Attempting to read a word from address 0b%s\n", toBinaryString(addr));
     char* block = FetchBlock(cache, addr, mem, false);
 
     Address_t a = GetAddress(cache, addr);
@@ -124,7 +124,7 @@ int cache_rd_w(Cache_t *cache, struct memory *mem, int addr) {
 }
 
 int cache_rd_h(Cache_t *cache, struct memory *mem, int addr) {
-    printf("Attempting to read a half from address 0x%x\n", addr);
+    printf("Attempting to read a half from address 0b%s\n", toBinaryString(addr));
     char* block = FetchBlock(cache, addr, mem, false);
 
     Address_t a = GetAddress(cache, addr);
@@ -133,7 +133,7 @@ int cache_rd_h(Cache_t *cache, struct memory *mem, int addr) {
 }
 
 int cache_rd_b(Cache_t *cache, struct memory *mem, int addr) {
-    printf("Attempting to read a byte from address 0x%x\n", addr);
+    printf("Attempting to read a byte from address 0b%s\n", toBinaryString(addr));
     char* block = FetchBlock(cache, addr, mem, false);
 
     Address_t a = GetAddress(cache, addr);
@@ -167,11 +167,11 @@ int cache_rd_b(Cache_t *cache, struct memory *mem, int addr) {
 
 char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDirty) {
 
-    printf("called FetchBlock on address 0x%x\n", addr);
+    printf("called FetchBlock on address 0b%s\n", toBinaryString(addr));
 
     Address_t a = GetAddress(cache, addr);
 
-    printf("tag: 0x%x\nsetIndex: 0x%x\nblockOffset: 0x%x\n", a.tag, a.setIndex, a.blockOffset);
+    printf("tag: 0b%s\nsetIndex: %u\nblockOffset: 0b%s\n", toBinaryString(a.tag), a.setIndex, toBinaryString(a.blockOffset));
 
     UpdateCacheSet(cache, a.setIndex);
 
@@ -218,7 +218,7 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
             // Here we need to find the address of the cacheline to be able to find it in the lower cache, otherwise we don't know where to evict it to.
             printf("Tag: %x, SetIdx: %x\n", cache->sets[a.setIndex][lineIndex].tag, a.setIndex);
             uint32_t evictAddr = (cache->sets[a.setIndex][lineIndex].tag << (cache->SetBitLength + cache->blockOffsetBitLength)) | (a.setIndex << cache->blockOffsetBitLength);
-            printf("Evict address: 0x%x\n", evictAddr);
+            printf("Evict address: 0b%s\n", toBinaryString(evictAddr));
             EvictCacheLine(cache, evictAddr, &cache->sets[a.setIndex][lineIndex], mem);
         }
 
@@ -527,4 +527,18 @@ CacheLine_t CacheLine_new(bool valid, bool dirty, uint32_t tag, uint32_t LRU, ch
 void CacheLine_free(CacheLine_t* l) {
     free(l->block);
     free(l);
+}
+
+char* toBinaryString(uint32_t n) {
+  uint32_t num_bits = sizeof(uint32_t) * 8;
+  char *string = malloc(num_bits + 1);
+  if (!string) {
+    return NULL;
+  }
+  for (uint32_t i = num_bits - 1; i >= 0; i--) {
+    string[i] = (n & 1) + '0';
+    n >>= 1;
+  }
+  string[num_bits] = '\0';
+  return string;
 }

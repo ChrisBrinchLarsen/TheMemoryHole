@@ -86,4 +86,6 @@ int cache_rd_w(Cache_t *cache, struct memory *mem, int addr);
 int cache_rd_h(Cache_t *cache, struct memory *mem, int addr);
 int cache_rd_b(Cache_t *cache, struct memory *mem, int addr);
 
+char* toBinaryString(uint32_t n);
+
 #endif
