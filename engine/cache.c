@@ -62,67 +62,83 @@ void init_cache(int argc, char** argv) {
     return;
 }
 
+void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSize) {
+    // NOTE: This function
+
+    printf("Began writing back to next layer of cache");
+
+    Address_t a = GetAddress(cache, addr);
+    int lineIndex = GetLineIndexFromTag(cache, a.setIndex, a.tag);
+
+    if (lineIndex == -1) {
+        printf("WARNING: cacheline in set %x, lineindex %x, (tag: %x) was not found. Cache inclusivity might not've been held");
+    }
+
+    char* block = cache->sets[a.setIndex][lineIndex].block;
+
+    memcpy(&block[a.blockOffset], &data, blockSize); // note blocksize was given from the cache above in case it's smaller
+}
 
 void cache_wr_w(Cache_t *cache, struct memory *mem, int addr, uint32_t data) {
     // TODO : Check if address is word-aligned
-    char* block = FetchBlock(cache, addr, mem);
+    char* block = FetchBlock(cache, addr, mem, true);
 
-    uint32_t blockOffset = getBlockOffset(cache, addr);
+    Address_t a = GetAddress(cache, addr);
 
-    memcpy(&block[blockOffset], &data, sizeof(uint32_t));
+    memcpy(&block[a.blockOffset], &data, sizeof(uint32_t));
 }
 
 void cache_wr_h(Cache_t *cache, struct memory *mem, int addr, uint16_t data) {
     // TODO : Check if address in half-aligned
-    char* block = FetchBlock(cache, addr, mem);
+    char* block = FetchBlock(cache, addr, mem, true);
 
-    uint32_t blockOffset = getBlockOffset(cache, addr);
+    Address_t a = GetAddress(cache, addr);
 
-    memcpy(&block[blockOffset], &data, sizeof(uint16_t));
+    memcpy(&block[a.blockOffset], &data, sizeof(uint16_t));
 }
 
 void cache_wr_b(Cache_t *cache, struct memory *mem, int addr, uint8_t data) {
-    char* block = FetchBlock(cache, addr, mem);
+    char* block = FetchBlock(cache, addr, mem, true);
 
-    uint32_t blockOffset = getBlockOffset(cache, addr);
+    Address_t a = GetAddress(cache, addr);
 
-    memcpy(&block[blockOffset], &data, sizeof(uint8_t));
+    memcpy(&block[a.blockOffset], &data, sizeof(uint8_t));
 }
 
 int cache_rd_w(Cache_t *cache, struct memory *mem, int addr) {
-    char* block = FetchBlock(cache, addr, mem);
+    char* block = FetchBlock(cache, addr, mem, false);
 
-    uint32_t blockOffset = getBlockOffset(cache, addr);
+    Address_t a = GetAddress(cache, addr);
 
-    return (int)(*(uint32_t*)&block[blockOffset]);
+    return (int)(*(uint32_t*)&block[a.blockOffset]);
 }
 
 int cache_rd_h(Cache_t *cache, struct memory *mem, int addr) {
-    char* block = FetchBlock(cache, addr, mem);
+    char* block = FetchBlock(cache, addr, mem, false);
 
-    uint32_t blockOffset = getBlockOffset(cache, addr);
+    Address_t a = GetAddress(cache, addr);
 
-    return (int)(*(uint16_t*)&block[blockOffset]);
+    return (int)(*(uint16_t*)&block[a.blockOffset]);
 }
 
 int cache_rd_b(Cache_t *cache, struct memory *mem, int addr) {
-    char* block = FetchBlock(cache, addr, mem);
+    char* block = FetchBlock(cache, addr, mem, false);
 
-    uint32_t blockOffset = getBlockOffset(cache, addr);
+    Address_t a = GetAddress(cache, addr);
 
-    return (int)block[blockOffset];
+    return (int)block[a.blockOffset];
 }
 
 
-uint32_t getBlockOffset(Cache_t *cache, int addr) {
-    uint32_t mask;
-    uint32_t blockOffset;
-    mask = ~0;
-    mask = mask << cache->blockOffsetBitLength;
-    mask = ~mask;
-    blockOffset = addr & mask;
-    return blockOffset;
-}
+// uint32_t getBlockOffset(Cache_t *cache, int addr) {
+//     uint32_t mask;
+//     uint32_t blockOffset;
+//     mask = ~0;
+//     mask = mask << cache->blockOffsetBitLength;
+//     mask = ~mask;
+//     blockOffset = addr & mask;
+//     return blockOffset;
+// }
 
 // char ReadData(Cache_t* cache, uint32_t address) {
 //     char* block = FetchBlock(cache, address);
@@ -137,49 +153,22 @@ uint32_t getBlockOffset(Cache_t *cache, int addr) {
 //     return block[blockOffset * WORD_SIZE];
 // }
 
-char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem) {
+char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDirty) {
 
     printf("called FetchBlock on address %x\n", addr);
 
-    uint32_t address = addr;
-    /// separate the address to parts
-    uint32_t blockOffset;
-    uint32_t setIndex;
-    uint32_t tag;
-    uint32_t mask;
+    Address_t a = GetAddress(cache, addr);
 
-    // block offset
-    mask = ~0;
-    mask = mask << cache->blockOffsetBitLength;
-    mask = ~mask;
-    blockOffset = address & mask;
+    printf("tag: %x\nsetIndex: %x\nblockOffset: %x\n", a.tag, a.setIndex, a.blockOffset);
 
-    // set index
-    address = address >> cache->blockOffsetBitLength;
-    mask = ~0;
-    mask = mask << cache->SetBitLength;
-    mask = ~mask;
-    setIndex = address & mask;
+    UpdateCacheSet(cache, a.setIndex);
 
-    // tag
-    address = address >> cache->SetBitLength;
-    mask = ~0;
-    mask = mask << cache->TagBitLength;
-    mask = ~mask;
-    tag = address & mask;
-
-    printf("tag: %x\nsetIndex: %x\nblockOffset: %x\n", tag, setIndex, blockOffset);
-
-    UpdateCacheSet(cache, setIndex);
-
-    int lineIndex = GetLineIndexFromTag(cache, setIndex, tag);
+    int lineIndex = GetLineIndexFromTag(cache, a.setIndex, a.tag);
 
     // check if line is already in set, otherwise add it. CACHE HIT/MISS
     // MISS
     if (lineIndex == -1) {
         printf("cache miss!\n");
-
-
 
         // the cache below returns its entire block, we need to know which part of that cache is our block (since it might be smaller)
         char* block = NULL;
@@ -188,7 +177,7 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem) {
         if (cache->childCache != NULL) {
             // recursive call
             printf("calling FetchBlock on next layer of cache,\n");
-            block = FetchBlock(cache->childCache, addr, mem);
+            block = FetchBlock(cache->childCache, addr, mem, false);
 
             // in case were getting stuff from another layer of cache, we need to find the offset within the block we've been given
 
@@ -208,8 +197,19 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem) {
 
         printf("inserting cache line into cache\n");
 
+        lineIndex = GetReplacementLineIndex(cache, a.setIndex);
+        
+        // evict
+        EvictCacheLine(cache, addr, a.setIndex, lineIndex, mem);
+
+        // update line
+        cache->sets[a.setIndex][lineIndex].valid = 1;
+        cache->sets[a.setIndex][lineIndex].tag = a.tag;
+        cache->sets[a.setIndex][lineIndex].LRU = 0;
+
         // copy and insert block
-        lineIndex = InsertLineInSet(cache, setIndex, tag, &block[blockidx]);
+        memcpy(cache->sets[a.setIndex][lineIndex].block, block, cache->blockSize); // block_size * word_size????? idk
+
 
     }
     // HIT
@@ -218,8 +218,14 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem) {
         printf("cache hit!\n");
     }
     
+    if (markDirty) {
+        printf("marking cache line as dirty\n");
+        cache->sets[a.setIndex][lineIndex].dirty = true;
+    }
+
     printf("returning block to previous cache layer.\n");
-    return cache->sets[setIndex][lineIndex].block;
+
+    return cache->sets[a.setIndex][lineIndex].block;
 }
 
 int GetLineIndexFromTag(Cache_t* cache, uint32_t setIndex, uint32_t tag) {
@@ -232,20 +238,20 @@ int GetLineIndexFromTag(Cache_t* cache, uint32_t setIndex, uint32_t tag) {
     return -1;
 }
 
-int InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* block) {
+int GetReplacementLineIndex(Cache_t* cache, uint32_t setIndex) {
 
-    printf("begin inserting\n");
+    printf("finding line index\n");
     // first check if there's room anywhere.
-    int32_t lineIdx = -1;
+    int32_t lineIndex = -1;
     for (uint32_t i = 0; i < cache->associativity; i++) {
         if (!cache->sets[setIndex][i].valid) {
-            lineIdx = i;
+            lineIndex = i;
             break;
         }
     }
 
     // if no room, find room based on replacement policy
-    if (lineIdx == -1) {
+    if (lineIndex == -1) {
         printf("cache is full, another line needs to be evicted\n");
         switch (ACTIVE_REPLACEMENT_POLICY)
         {
@@ -254,7 +260,7 @@ int InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* block
                     uint32_t maxval = 0;
                     for (uint32_t i = 0; i < cache->associativity; i++) {
                         if (cache->sets[setIndex][i].LRU >= maxval) {
-                            lineIdx = i;
+                            lineIndex = i;
                             maxval = cache->sets[setIndex][i].LRU;
                         }
                         
@@ -264,7 +270,7 @@ int InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* block
 
             
             case RANDOM_REPLACEMENT_POLICY:
-                lineIdx = 0;
+                lineIndex = 0;
                 /* code */
                 break;
             
@@ -273,20 +279,33 @@ int InsertLineInSet(Cache_t* cache, uint32_t setIndex, uint32_t tag, char* block
         }
     }
 
-    // writeback to lower cache
-
     // insert
     //CacheLine_t c = CacheLine_new(1, tag, 0, block);
-    printf("lineIdx: %u\n", lineIdx);
-
-    cache->sets[setIndex][lineIdx].valid = 1;
-    cache->sets[setIndex][lineIdx].tag = tag;
-    cache->sets[setIndex][lineIdx].LRU = 0;
-
-    memcpy(cache->sets[setIndex][lineIdx].block, block, cache->blockSize); // block_size * word_size????? idk
-
-    return lineIdx;
+    printf("lineIndex: %u\n", lineIndex);
+    return lineIndex;
 }
+
+void EvictCacheLine(Cache_t* cache, uint32_t addr, uint32_t setIndex, uint32_t lineIndex, struct memory *mem) {
+    printf("evicting cache line.\n");
+    CacheLine_t cacheLine = cache->sets[setIndex][lineIndex];
+    if (cacheLine.dirty) {
+
+        if (cache->childCache == NULL) {
+            printf("writing back to main memory.\n");
+            memory_write_back(mem, addr, cacheLine.block, cache->blockSize);
+        }
+        printf("writing back to next layer of cache.\n");
+        cache_writeback_block(cache->childCache, addr, cacheLine.block, cache->blockSize);
+    }
+
+    // dunno if this is needed, but it probably saves us from some headaches. Maybe not super accurate to real life though
+    cacheLine.valid = false;
+    cacheLine.dirty = false;
+    cacheLine.tag = 0;
+    cacheLine.LRU = 0;
+    cacheLine.block = NULL;
+}
+
 
 // TODO : better name
 void UpdateCacheSet(Cache_t* cache, uint32_t setIndex) {
@@ -413,6 +432,35 @@ uint64_t BinStrToNum(char* num, int n) {
     return result;
 }
 
+Address_t GetAddress(Cache_t* cache, uint32_t address) {
+    
+    Address_t ad;
+    ad.fullAddr = address;
+
+    uint32_t mask;
+    // block offset
+    mask = ~0;
+    mask = mask << cache->blockOffsetBitLength;
+    mask = ~mask;
+    ad.blockOffset = address & mask;
+
+    // set index
+    address = address >> cache->blockOffsetBitLength;
+    mask = ~0;
+    mask = mask << cache->SetBitLength;
+    mask = ~mask;
+    ad.setIndex = address & mask;
+
+    // tag
+    address = address >> cache->SetBitLength;
+    mask = ~0;
+    mask = mask << cache->TagBitLength;
+    mask = ~mask;
+    ad.tag = address & mask;
+
+    return ad;
+}
+
 
 Cache_t* Cache_new(uint32_t cacheSize, uint32_t associativity) {
     Cache_t* c = (Cache_t*)malloc(sizeof(Cache_t));
@@ -435,6 +483,7 @@ Cache_t* Cache_new(uint32_t cacheSize, uint32_t associativity) {
         c->sets[i] = (CacheLine_t*)malloc(c->associativity * sizeof(CacheLine_t));
         for (uint32_t j = 0; j < c->associativity; j++) {
             c->sets[i][j].valid = 0;
+            c->sets[i][j].dirty = 0;
             c->sets[i][j].LRU = 0;
             c->sets[i][j].tag = 0;
             c->sets[i][j].block = (char*)malloc(BLOCK_SIZE * sizeof(char)); // NULL
@@ -450,9 +499,10 @@ void Cache_free(Cache_t* c) {
     free(c);
 }
 
-CacheLine_t CacheLine_new(bool valid, uint32_t tag, uint32_t LRU, char* block) {
+CacheLine_t CacheLine_new(bool valid, bool dirty, uint32_t tag, uint32_t LRU, char* block) {
     CacheLine_t l;
     l.valid = valid;
+    l.dirty = dirty;
     l.tag = tag;
     l.LRU = LRU;
     l.block = block;
