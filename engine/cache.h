@@ -60,7 +60,7 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
 int GetLineIndexFromTag(Cache_t* cache, uint32_t setIndex, uint32_t tag);
 int GetReplacementLineIndex(Cache_t* cache, uint32_t setIndex);
 void UpdateCacheSet(Cache_t* cache, uint32_t setIndex);
-void EvictCacheLine(Cache_t* cache, uint32_t addr, uint32_t setIndex, uint32_t lineIndex, struct memory *mem);
+void EvictCacheLine(Cache_t* cache, uint32_t addr, CacheLine_t* evict_line, struct memory *mem);
 
 //void printBits(size_t const size, void const * const ptr);
 void CacheSetToString(Cache_t* cache, int setIndex, char* out);

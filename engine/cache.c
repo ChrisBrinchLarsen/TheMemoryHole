@@ -209,8 +209,10 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
         // evict
         if (cache->sets[a.setIndex][lineIndex].valid) {
             // Here we need to find the address of the cacheline to be able to find it in the lower cache, otherwise we don't know where to evict it to.
-            uint32_t evictAddr = cache->sets[a.setIndex][lineIndex].tag << (cache->SetBitLength + cache->blockOffsetBitLength) & (a.setIndex << cache->blockOffsetBitLength);
-            EvictCacheLine(cache, evictAddr, lineIndex, mem);
+            printf("Tag: %x, SetIdx: %x\n", cache->sets[a.setIndex][lineIndex].tag, a.setIndex);
+            uint32_t evictAddr = (cache->sets[a.setIndex][lineIndex].tag << (cache->SetBitLength + cache->blockOffsetBitLength)) | (a.setIndex << cache->blockOffsetBitLength);
+            printf("Evict address: 0x%x\n", evictAddr);
+            EvictCacheLine(cache, evictAddr, &cache->sets[a.setIndex][lineIndex], mem);
         }
 
         // update line
@@ -294,26 +296,22 @@ int GetReplacementLineIndex(Cache_t* cache, uint32_t setIndex) {
     return lineIndex;
 }
 
-void EvictCacheLine(Cache_t* cache, uint32_t addr, uint32_t setIndex, uint32_t lineIndex, struct memory *mem) {
+void EvictCacheLine(Cache_t* cache, uint32_t addr, CacheLine_t* evict_line, struct memory *mem) {
     printf("evicting cache line.\n");
-    CacheLine_t cacheLine = cache->sets[setIndex][lineIndex];
 
-    if (cacheLine.dirty) {
+    if (evict_line->dirty) {
 
         if (cache->childCache == NULL) {
             printf("writing back to main memory.\n");
-            memory_write_back(mem, addr, cacheLine.block, cache->blockSize);
+            memory_write_back(mem, addr, evict_line->block, cache->blockSize);
         }
         printf("writing back to next layer of cache.\n");
-        cache_writeback_block(cache->childCache, addr, cacheLine.block, cache->blockSize);
+        cache_writeback_block(cache->childCache, addr, evict_line->block, cache->blockSize);
     }
 
     // dunno if this is needed, but it probably saves us from some headaches. Maybe not super accurate to real life though
-    cacheLine.valid = false;
-    cacheLine.dirty = false;
-    cacheLine.tag = 0;
-    cacheLine.LRU = 0;
-    cacheLine.block = NULL;
+    evict_line->valid = false;
+    evict_line->dirty = false;
 }
 
 
