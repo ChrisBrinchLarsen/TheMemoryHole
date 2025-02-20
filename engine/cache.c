@@ -63,7 +63,7 @@ void init_cache(int argc, char** argv) {
 }
 
 void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSize) {
-    // NOTE: This function
+    // NOTE: This function assumes that cache inclusivity holds
 
     printf("Began writing back to next layer of cache\n");
 
@@ -76,7 +76,9 @@ void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSiz
 
     char* block = cache->sets[a.setIndex][lineIndex].block;
 
-    memcpy(&block[a.blockOffset], &data, blockSize); // note blocksize was given from the cache above in case it's smaller
+    // note right now this only works if we writeback to a cache with the same blocksize
+    memcpy(block, data, blockSize);
+    //memcpy(&block[a.blockOffset], &data, blockSize); // note blocksize was given from the cache above in case it's smaller
 }
 
 void cache_wr_w(Cache_t *cache, struct memory *mem, int addr, uint32_t data) {
@@ -85,7 +87,7 @@ void cache_wr_w(Cache_t *cache, struct memory *mem, int addr, uint32_t data) {
 
     Address_t a = GetAddress(cache, addr);
 
-    memcpy(&block[a.blockOffset], &data, sizeof(uint32_t));
+    memcpy(&block[a.blockOffset], data, sizeof(uint32_t));
 }
 
 void cache_wr_h(Cache_t *cache, struct memory *mem, int addr, uint16_t data) {
@@ -94,7 +96,7 @@ void cache_wr_h(Cache_t *cache, struct memory *mem, int addr, uint16_t data) {
 
     Address_t a = GetAddress(cache, addr);
 
-    memcpy(&block[a.blockOffset], &data, sizeof(uint16_t));
+    memcpy(&block[a.blockOffset], data, sizeof(uint16_t));
 }
 
 void cache_wr_b(Cache_t *cache, struct memory *mem, int addr, uint8_t data) {
@@ -102,7 +104,7 @@ void cache_wr_b(Cache_t *cache, struct memory *mem, int addr, uint8_t data) {
 
     Address_t a = GetAddress(cache, addr);
 
-    memcpy(&block[a.blockOffset], &data, sizeof(uint8_t));
+    memcpy(&block[a.blockOffset], data, sizeof(uint8_t));
 }
 
 int cache_rd_w(Cache_t *cache, struct memory *mem, int addr) {
@@ -210,7 +212,6 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
 
         // copy and insert block
         memcpy(cache->sets[a.setIndex][lineIndex].block, block, cache->blockSize); // block_size * word_size????? idk
-
 
     }
     // HIT
