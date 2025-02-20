@@ -30,7 +30,7 @@ int main() {
     PrintCache(caches[1]);
 
 
-    int val = cache_rd_w(L1, memory, 0b01000000000000000000000000000000);
+    int val = cache_rd_w(L1, memory, 0b10000000000000000000000000000000);
     printf("\nL1:\n");
     PrintCache(L1);
     printf("L2:\n");
