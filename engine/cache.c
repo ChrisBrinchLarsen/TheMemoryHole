@@ -80,6 +80,7 @@ void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSiz
 }
 
 void cache_wr_w(Cache_t *cache, struct memory *mem, int addr, uint32_t data) {
+    printf("Attempting to write a word to address 0x%x\n", addr);
     // TODO : Check if address is word-aligned
     char* block = FetchBlock(cache, addr, mem, true);
 
@@ -89,6 +90,7 @@ void cache_wr_w(Cache_t *cache, struct memory *mem, int addr, uint32_t data) {
 }
 
 void cache_wr_h(Cache_t *cache, struct memory *mem, int addr, uint16_t data) {
+    printf("Attempting to write a half to address 0x%x\n", addr);
     // TODO : Check if address in half-aligned
     char* block = FetchBlock(cache, addr, mem, true);
 
@@ -98,6 +100,7 @@ void cache_wr_h(Cache_t *cache, struct memory *mem, int addr, uint16_t data) {
 }
 
 void cache_wr_b(Cache_t *cache, struct memory *mem, int addr, uint8_t data) {
+    printf("Attempting to write a byte to address 0x%x\n", addr);
     char* block = FetchBlock(cache, addr, mem, true);
 
     Address_t a = GetAddress(cache, addr);
@@ -106,6 +109,7 @@ void cache_wr_b(Cache_t *cache, struct memory *mem, int addr, uint8_t data) {
 }
 
 int cache_rd_w(Cache_t *cache, struct memory *mem, int addr) {
+    printf("Attempting to read a word from address 0x%x\n", addr);
     char* block = FetchBlock(cache, addr, mem, false);
 
     Address_t a = GetAddress(cache, addr);
@@ -114,6 +118,7 @@ int cache_rd_w(Cache_t *cache, struct memory *mem, int addr) {
 }
 
 int cache_rd_h(Cache_t *cache, struct memory *mem, int addr) {
+    printf("Attempting to read a half from address 0x%x\n", addr);
     char* block = FetchBlock(cache, addr, mem, false);
 
     Address_t a = GetAddress(cache, addr);
@@ -122,6 +127,7 @@ int cache_rd_h(Cache_t *cache, struct memory *mem, int addr) {
 }
 
 int cache_rd_b(Cache_t *cache, struct memory *mem, int addr) {
+    printf("Attempting to read a byte from address 0x%x\n", addr);
     char* block = FetchBlock(cache, addr, mem, false);
 
     Address_t a = GetAddress(cache, addr);
