@@ -10,14 +10,11 @@ prototype: prototype.c prototype.h
 unit: cache.o memory.o unit.o 
 	$(CC) $(CFLAGS) cache.o memory.o unit.o -o unit.exe 
 
-memory.o: memory.c memory.h
-	$(CC) $(CFLAGS) -c memory.c -o memory.o
+%.o: %.c %.h
+	$(CC) $(CFLAGS) -c $< -o $@
 
-cache.o: cache.c cache.h
-	$(CC) $(CFLAGS) -c cache.c -o cache.o
-
-unit.o: unit.c
-	$(CC) $(CFLAGS) -c unit.c -o unit.o
+simsim: assembly.o cache.o main.o memory.o mmu.o read_exec.o simulate.o
+	$(CC) $(CFLAGS) assembly.o cache.o main.o memory.o mmu.o read_exec.o simulate.o -o sim
 
 %.riscv: %.c lib.c Makefile
 	/opt/riscv/bin/riscv32-unknown-elf-gcc  -march=rv32im -mabi=ilp32 -fno-tree-loop-distribute-patterns -mno-relax -O1 $< lib.c -static -nostartfiles -nostdlib -o $@
