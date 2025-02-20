@@ -208,7 +208,9 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
         
         // evict
         if (cache->sets[a.setIndex][lineIndex].valid) {
-            EvictCacheLine(cache, addr, a.setIndex, lineIndex, mem);
+            // Here we need to find the address of the cacheline to be able to find it in the lower cache, otherwise we don't know where to evict it to.
+            uint32_t evictAddr = cache->sets[a.setIndex][lineIndex].tag << (cache->SetBitLength + cache->blockOffsetBitLength) & (a.setIndex << cache->blockOffsetBitLength);
+            EvictCacheLine(cache, evictAddr, lineIndex, mem);
         }
 
         // update line
