@@ -71,7 +71,8 @@ void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSiz
     int lineIndex = GetLineIndexFromTag(cache, a.setIndex, a.tag);
 
     if (lineIndex == -1) {
-        printf("WARNING: cacheline in set 0x%x, lineindex 0x%x, (tag: 0x%x) was not found. Cache inclusivity might not've been held\n", a.setIndex, lineIndex, a.tag);
+        printf("ERROR: cacheline in set 0x%x, lineindex 0x%x, (tag: 0x%x) was not found. Cache inclusivity might not've been held\n", a.setIndex, lineIndex, a.tag);
+        exit(-1);
     }
 
     char* block = cache->sets[a.setIndex][lineIndex].block;
