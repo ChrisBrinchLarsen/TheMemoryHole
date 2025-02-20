@@ -16,7 +16,7 @@ void supply_cache(Cache_t* cache) {
 
 void memory_wr_w(struct memory *mem, int addr, uint32_t data) {
     FILE* accesses = fopen("accesses", "a");
-    fprintf(accesses, "Writing a word to 0x%x (%d)\n", addr, data);
+    fprintf(accesses, "memory_wr_w(memory, 0x%x, %d);\n", addr, data);
     if (addr & 0b11)
     {
         printf("Unaligned word write to %x\n", addr);
@@ -29,7 +29,7 @@ void memory_wr_w(struct memory *mem, int addr, uint32_t data) {
 
 void memory_wr_h(struct memory *mem, int addr, uint16_t data) {
     FILE* accesses = fopen("accesses", "a");
-    fprintf(accesses, "Writing a half to 0x%x (%d)\n", addr, data);
+    fprintf(accesses, "memory_wr_h(memory, 0x%x, %d);\n", addr, data);
     if (addr & 0b1)
     {
         printf("Unaligned word write to %x\n", addr);
@@ -42,7 +42,7 @@ void memory_wr_h(struct memory *mem, int addr, uint16_t data) {
 
 void memory_wr_b(struct memory *mem, int addr, uint8_t data) {
     FILE* accesses = fopen("accesses", "a");
-    fprintf(accesses, "Writing a byte to 0x%x (%d)\n", addr, data);
+    fprintf(accesses, "memory_wr_b(memory, 0x%x, %d);\n", addr, data);
     cache_wr_b(TOP_LEVEL_CACHE, mem, addr, data);
     print_all_caches(accesses);
     fclose(accesses);
@@ -50,7 +50,7 @@ void memory_wr_b(struct memory *mem, int addr, uint8_t data) {
 
 int memory_rd_w(struct memory *mem, int addr) {
     FILE* accesses = fopen("accesses", "a");
-    fprintf(accesses, "Reading a word from 0x%x\n", addr);
+    fprintf(accesses, "memory_rd_w(memory, 0x%x);\n", addr);
     if (addr & 0b11)
     {
         printf("Unaligned word write to %x\n", addr);
@@ -64,6 +64,7 @@ int memory_rd_w(struct memory *mem, int addr) {
 
 int memory_rd_h(struct memory *mem, int addr) {
     FILE* accesses = fopen("accesses", "a");
+    fprintf(accesses, "memory_rd_h(memory, 0x%x);\n", addr);
     fprintf(accesses, "Reading a half from 0x%x\n", addr);
     if (addr & 0b1)
     {
@@ -78,7 +79,7 @@ int memory_rd_h(struct memory *mem, int addr) {
 
 int memory_rd_b(struct memory *mem, int addr) {
     FILE* accesses = fopen("accesses", "a");
-    fprintf(accesses, "Reading a byte from 0x%x\n", addr);
+    fprintf(accesses, "memory_rd_b(memory, 0x%x);\n", addr);
     int result = cache_rd_b(TOP_LEVEL_CACHE, mem, addr);
     print_all_caches(accesses);
     fclose(accesses);
@@ -89,9 +90,8 @@ void print_all_caches(FILE* file) {
     Cache_t* cache = TOP_LEVEL_CACHE;
     int i = 1;
     do {
-        fprintf(file, "\nL%d:\n", i);
-        fprintf(file, "%s", PrintCache(cache));
+        PrintCache(cache);
         cache = cache->childCache;
+        i++;
     } while (cache);
-    fprintf(file, "\n");
 }

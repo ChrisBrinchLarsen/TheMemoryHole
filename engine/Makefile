@@ -7,8 +7,8 @@ CFLAGS= -std=c23 -g3 -Wextra -Wall -lm #-pedantic -std=gnu11
 prototype: prototype.c prototype.h
 	$(CC) $(CFLAGS) prototype.h prototype.c -o prototype.exe
 
-unit: cache.o memory.o unit.o 
-	$(CC) $(CFLAGS) cache.o memory.o unit.o -o unit.exe 
+unit: cache.o memory.o mmu.o unit.o 
+	$(CC) $(CFLAGS) cache.o memory.o mmu.o unit.o -o unit.exe 
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c $< -o $@
