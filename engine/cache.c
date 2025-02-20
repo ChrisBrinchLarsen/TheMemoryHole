@@ -306,9 +306,10 @@ void EvictCacheLine(Cache_t* cache, uint32_t addr, CacheLine_t* evict_line, stru
         if (cache->childCache == NULL) {
             printf("writing back to main memory.\n");
             memory_write_back(mem, addr, evict_line->block, cache->blockSize);
+        } else {
+            printf("writing back to next layer of cache.\n");
+            cache_writeback_block(cache->childCache, addr, evict_line->block, cache->blockSize);
         }
-        printf("writing back to next layer of cache.\n");
-        cache_writeback_block(cache->childCache, addr, evict_line->block, cache->blockSize);
     }
 
     // dunno if this is needed, but it probably saves us from some headaches. Maybe not super accurate to real life though
