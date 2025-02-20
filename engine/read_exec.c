@@ -1,5 +1,6 @@
 #include "read_exec.h"
 #include "assembly.h"
+#include "mmu.h"
 
 #include <stdio.h>
 #include <stdlib.h>

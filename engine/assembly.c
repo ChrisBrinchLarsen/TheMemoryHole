@@ -59,7 +59,7 @@ void assembly_grow_and_rehash(struct assembly *as)
   do
   {
     done = 1;
-    as->lookup_table = calloc(sizeof(struct entry), new_size);
+    as->lookup_table = calloc(new_size, sizeof(struct entry));
     // printf("Growing assembly size to %d with table at %p\n", new_size, as->lookup_table);
     as->table_size = new_size;
     for (int i = 0; i < old_size; ++i)
@@ -117,7 +117,7 @@ struct assembly *assembly_create()
   struct assembly *as = (struct assembly *)malloc(sizeof(struct assembly));
   int size = 4;
   as->table_size = size;
-  struct entry *table = calloc(sizeof(struct entry), size);
+  struct entry *table = calloc(size, sizeof(struct entry));
   as->lookup_table = table;
   return as;
 }

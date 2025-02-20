@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <math.h>
+#include "mmu.h"
 
 // Cache architecture
 // const uint32_t CACHE_SIZE = 1024;          // Amount of bytes in cache
@@ -72,6 +73,8 @@ void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSiz
 
     if (lineIndex == -1) {
         printf("ERROR: cacheline in set 0x%x, lineindex 0x%x, (tag: 0x%x) was not found. Cache inclusivity might not've been held\n", a.setIndex, lineIndex, a.tag);
+        PrintCache(recieve_cache());
+        PrintCache(cache);
         exit(-1);
     }
 

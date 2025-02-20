@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 {
   struct memory *mem = memory_create();
   Cache_t** caches = ParseCPUArchitecture(argv[1]);
-  TOP_LEVEL_CACHE = caches[0]; // Letting MMU know which cache should be checked first
+  supply_cache(caches[0]); // Letting MMU know which cache should be checked first
   argc = pass_args_to_program(mem, argc, argv);
   if (argc == 3 || argc == 5)
   {

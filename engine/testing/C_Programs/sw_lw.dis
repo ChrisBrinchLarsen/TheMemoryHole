@@ -1,0 +1,23 @@
+
+sw_lw.riscv:     file format elf32-littleriscv
+
+Contents of section .text:
+ 10074 b7020020 13031000 23a06200 83a30200  ... ....#.b.....
+ 10084 93083000 73000000                    ..0.s...        
+Contents of section .riscv.attributes:
+ 0000 41270000 00726973 63760001 1d000000  A'...riscv......
+ 0010 05727633 32693270 315f6d32 70305f7a  .rv32i2p1_m2p0_z
+ 0020 6d6d756c 31703000                    mmul1p0.        
+
+sw_lw.riscv:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00010074 <_start>:
+   10074:	200002b7          	lui	t0,0x20000
+   10078:	00100313          	li	t1,1
+   1007c:	0062a023          	sw	t1,0(t0) # 20000000 <__global_pointer$+0x1ffee774>
+   10080:	0002a383          	lw	t2,0(t0)
+   10084:	00300893          	li	a7,3
+   10088:	00000073          	ecall

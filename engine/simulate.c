@@ -1,4 +1,5 @@
 #include "simulate.h"
+#include "mmu.h"
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -33,6 +34,8 @@ void wrInstToLog(struct assembly *as, int jump);      // Writes information abou
 
 // Simulates provided RISC-V assembly instructions.
 long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE *log_file) {
+    printf("\n\nSTARTING SIMULATION\n\n");
+
     PC = start_addr;                                  // Initializing PC
     uint32_t prevPC = PC-4;                           // Used for keeping track of if we jumped or not
     int instructionCount = 0;                         // Instruction count for return value
