@@ -71,7 +71,7 @@ void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSiz
     int lineIndex = GetLineIndexFromTag(cache, a.setIndex, a.tag);
 
     if (lineIndex == -1) {
-        printf("WARNING: cacheline in set %x, lineindex %x, (tag: %x) was not found. Cache inclusivity might not've been held\n", a.setIndex, lineIndex, a.tag);
+        printf("WARNING: cacheline in set 0x%x, lineindex 0x%x, (tag: 0x%x) was not found. Cache inclusivity might not've been held\n", a.setIndex, lineIndex, a.tag);
     }
 
     char* block = cache->sets[a.setIndex][lineIndex].block;
@@ -87,7 +87,7 @@ void cache_wr_w(Cache_t *cache, struct memory *mem, int addr, uint32_t data) {
 
     Address_t a = GetAddress(cache, addr);
 
-    memcpy(&block[a.blockOffset], data, sizeof(uint32_t));
+    memcpy(&block[a.blockOffset], &data, sizeof(uint32_t));
 }
 
 void cache_wr_h(Cache_t *cache, struct memory *mem, int addr, uint16_t data) {
@@ -96,7 +96,7 @@ void cache_wr_h(Cache_t *cache, struct memory *mem, int addr, uint16_t data) {
 
     Address_t a = GetAddress(cache, addr);
 
-    memcpy(&block[a.blockOffset], data, sizeof(uint16_t));
+    memcpy(&block[a.blockOffset], &data, sizeof(uint16_t));
 }
 
 void cache_wr_b(Cache_t *cache, struct memory *mem, int addr, uint8_t data) {
@@ -104,7 +104,7 @@ void cache_wr_b(Cache_t *cache, struct memory *mem, int addr, uint8_t data) {
 
     Address_t a = GetAddress(cache, addr);
 
-    memcpy(&block[a.blockOffset], data, sizeof(uint8_t));
+    memcpy(&block[a.blockOffset], &data, sizeof(uint8_t));
 }
 
 int cache_rd_w(Cache_t *cache, struct memory *mem, int addr) {
@@ -157,11 +157,11 @@ int cache_rd_b(Cache_t *cache, struct memory *mem, int addr) {
 
 char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDirty) {
 
-    printf("called FetchBlock on address %x\n", addr);
+    printf("called FetchBlock on address 0x%x\n", addr);
 
     Address_t a = GetAddress(cache, addr);
 
-    printf("tag: %x\nsetIndex: %x\nblockOffset: %x\n", a.tag, a.setIndex, a.blockOffset);
+    printf("tag: 0x%x\nsetIndex: 0x%x\nblockOffset: 0x%x\n", a.tag, a.setIndex, a.blockOffset);
 
     UpdateCacheSet(cache, a.setIndex);
 
@@ -179,7 +179,7 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
         if (cache->childCache != NULL) {
             // recursive call
             printf("calling FetchBlock on next layer of cache,\n");
-            block = FetchBlock(cache->childCache, addr, mem, false);
+            block = FetchBlock(cache->childCache, addr, mem, markDirty);
 
             // in case were getting stuff from another layer of cache, we need to find the offset within the block we've been given
 
@@ -209,7 +209,6 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
         cache->sets[a.setIndex][lineIndex].valid = 1;
         cache->sets[a.setIndex][lineIndex].tag = a.tag;
         cache->sets[a.setIndex][lineIndex].LRU = 0;
-
         // copy and insert block
         memcpy(cache->sets[a.setIndex][lineIndex].block, block, cache->blockSize); // block_size * word_size????? idk
 
@@ -290,6 +289,7 @@ int GetReplacementLineIndex(Cache_t* cache, uint32_t setIndex) {
 void EvictCacheLine(Cache_t* cache, uint32_t addr, uint32_t setIndex, uint32_t lineIndex, struct memory *mem) {
     printf("evicting cache line.\n");
     CacheLine_t cacheLine = cache->sets[setIndex][lineIndex];
+
     if (cacheLine.dirty) {
 
         if (cache->childCache == NULL) {
