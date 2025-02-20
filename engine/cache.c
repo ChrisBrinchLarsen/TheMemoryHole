@@ -16,9 +16,8 @@
 
 // shouldn't need to be exposed actually
 int ADDR_LEN;
-int WORD_SIZE;
-int BLOCK_SIZE;
 int N_CACHE_LEVELS;
+int BLOCK_SIZE;
 
 // Policies
 #define LRU_REPLACEMENT_POLICY 0
@@ -368,14 +367,6 @@ Cache_t** ParseCPUArchitecture(char* path) {
     memset(buf, 0, sizeof(buf));
 
     fgets(buf, sizeof(buf), file);
-    WORD_SIZE = atoi(buf);
-    memset(buf, 0, sizeof(buf));
-
-    fgets(buf, sizeof(buf), file);
-    BLOCK_SIZE = atoi(buf);
-    memset(buf, 0, sizeof(buf));
-
-    fgets(buf, sizeof(buf), file);
     N_CACHE_LEVELS = atoi(buf);
     memset(buf, 0, sizeof(buf));
     
@@ -384,15 +375,26 @@ Cache_t** ParseCPUArchitecture(char* path) {
     Cache_t** caches = malloc(N_CACHE_LEVELS * (sizeof(Cache_t*)));
 
     for (int i = 0; i < N_CACHE_LEVELS; i++) {
+        // size = 2^p * q
+        // block_size = 2^k
         fgets(buf, sizeof(buf), file); // Name
         memset(buf, 0, sizeof(buf));
-        fgets(buf, sizeof(buf), file); // Size
-        uint32_t size = atoi(buf);
+        fgets(buf, sizeof(buf), file); // p
+        uint32_t p = atoi(buf);
         memset(buf, 0, sizeof(buf));
-        fgets(buf, sizeof(buf), file); // Associativity
+        fgets(buf, sizeof(buf), file); // q
+        uint32_t q = atoi(buf);
+        memset(buf, 0, sizeof(buf));
+        fgets(buf, sizeof(buf), file); // k
+        uint32_t k = atoi(buf);
+        memset(buf, 0, sizeof(buf));
+        fgets(buf, sizeof(buf), file); // associativity
         uint32_t associativity = atoi(buf);
 
-        caches[i] = Cache_new(size, associativity);
+
+        BLOCK_SIZE = (int)pow(2, k);
+        uint32_t cache_size = (uint32_t)(pow(2,p) * q);
+        caches[i] = Cache_new(cache_size, associativity);
     }
 
     fclose(file);
@@ -466,7 +468,7 @@ Cache_t* Cache_new(uint32_t cacheSize, uint32_t associativity) {
     c->cacheSize = cacheSize;
     c->associativity = associativity;
 
-    c->setCount = c->cacheSize / (c->associativity * BLOCK_SIZE);
+    c->setCount = (c->cacheSize / (c->associativity * BLOCK_SIZE));
 
     c->blockOffsetBitLength = log2(BLOCK_SIZE);
 
@@ -484,7 +486,7 @@ Cache_t* Cache_new(uint32_t cacheSize, uint32_t associativity) {
             c->sets[i][j].dirty = 0;
             c->sets[i][j].LRU = 0;
             c->sets[i][j].tag = 0;
-            c->sets[i][j].block = (char*)malloc(BLOCK_SIZE * WORD_SIZE * sizeof(char)); // NULL
+            c->sets[i][j].block = (char*)malloc(BLOCK_SIZE * sizeof(char)); // NULL
         };
     };
 
