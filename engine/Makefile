@@ -13,7 +13,7 @@ unit: cache.o memory.o mmu.o unit.o
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-simsim: assembly.o cache.o main.o memory.o mmu.o read_exec.o simulate.o
+sim: assembly.o cache.o main.o memory.o mmu.o read_exec.o simulate.o
 	$(CC) $(CFLAGS) assembly.o cache.o main.o memory.o mmu.o read_exec.o simulate.o -o sim
 
 %.riscv: %.c lib.c Makefile
@@ -25,10 +25,6 @@ simsim: assembly.o cache.o main.o memory.o mmu.o read_exec.o simulate.o
 
 all: sim
 rebuild: clean all
-
-# sim uses simulate
-sim: *.c 
-	$(CC) $(CFLAGS) *.c -o sim 
 
 %.riscv: %.c lib.c Makefile
 	/opt/riscv/bin/riscv32-unknown-elf-gcc-12.1.0 -march=rv32im -mabi=ilp32 -fno-tree-loop-distribute-patterns -mno-relax -O2 $< lib.c -static -nostartfiles -nostdlib -o $@
@@ -45,3 +41,5 @@ clean:
 	rm -f *.o
 	rm -f file
 	rm -f accesses
+	rm -f sim
+	rm -f loggers

@@ -75,6 +75,23 @@ int main(int argc, char *argv[])
     clock_t before = clock();
     long int num_insns = simulate(mem, as, start_addr, log_file);
     clock_t after = clock();
+    
+    int N_CACHE_LAYERS = get_cache_layer_count();
+    int misses, hits, total_hits;
+    for (int i = 0; i < N_CACHE_LAYERS; i++) {
+      misses = get_misses_at_layer(i);
+      hits = get_hits_at_layer(i);
+      total_hits += hits;
+      printf("L%d - Hit: %d - Miss: %d - Hit-rate: %0.3f - Miss-rate %0.3f\n",
+                i+1,
+                hits,
+                misses,
+                (float)hits/(hits + misses),
+                (float)misses/(hits + misses));
+    }
+    printf("In total handled %d memory accesses.\n", total_hits + get_misses_at_layer(N_CACHE_LAYERS-1));
+    printf("Total cache hit-rate: %0.3f\n", (float)total_hits/(total_hits + get_misses_at_layer(N_CACHE_LAYERS-1)));
+
     int ticks = after - before;
     double mips = (1.0 * num_insns * CLOCKS_PER_SEC) / ticks / 1000000;
     if (argc == 5 && !strcmp(argv[3], "-s"))

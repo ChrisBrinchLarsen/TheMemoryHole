@@ -53,10 +53,9 @@ typedef struct Address {
 Address_t GetAddress(Cache_t* cache, uint32_t address);
 
 
-void init_cache(int argc, char** argv);
 //uint32_t getBlockOffset(Cache_t *cache, int addr);
 //char ReadData(Cache_t* cache, uint32_t address);
-char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDirty);
+char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDirty, int layer);
 int GetLineIndexFromTag(Cache_t* cache, uint32_t setIndex, uint32_t tag);
 int GetReplacementLineIndex(Cache_t* cache, uint32_t setIndex);
 void UpdateCacheSet(Cache_t* cache, uint32_t setIndex);
@@ -85,5 +84,9 @@ void cache_wr_b(Cache_t *cache, struct memory *mem, int addr, uint8_t data);
 int cache_rd_w(Cache_t *cache, struct memory *mem, int addr);
 int cache_rd_h(Cache_t *cache, struct memory *mem, int addr);
 int cache_rd_b(Cache_t *cache, struct memory *mem, int addr);
+
+int get_cache_layer_count();
+int get_misses_at_layer(int layer);
+int get_hits_at_layer(int layer);
 
 #endif

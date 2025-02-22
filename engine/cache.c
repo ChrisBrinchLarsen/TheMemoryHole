@@ -20,48 +20,17 @@ int ADDR_LEN;
 int N_CACHE_LEVELS;
 int BLOCK_SIZE;
 
+// if misses[0] = 20 that means that the first layer of cache experienced 20 misses
+uint32_t* MISSES;
+// if hits[2] = 14 that means that the third layer of cache experienced 14 misses
+uint32_t* HITS;
+
 // Policies
 #define LRU_REPLACEMENT_POLICY 0
 #define RANDOM_REPLACEMENT_POLICY 1
 const uint32_t ACTIVE_REPLACEMENT_POLICY = LRU_REPLACEMENT_POLICY;
 
 Cache_t* L1;
-
-void init_cache(int argc, char** argv) {
-
-    // We perform unit tests if no additional arguments are provided
-    if (argc == 1) {
-        Cache_t** caches = ParseCPUArchitecture("./testing/Architectures/SimpleCPU.md");
-        L1 = caches[0];
-        printf("L1:\n");
-        for (uint32_t i = 0; i < L1->setCount; i++) {
-            PrintSet(L1, i);
-        }
-        printf("L2:\n");
-        for (uint32_t i = 0; i < L1->childCache->setCount; i++) {
-            PrintSet(L1->childCache, i);
-        }
-        
-        //ParseMemoryRequests("./testing/Instructions/Simple.md");
-
-        printf("L1:\n");
-        for (uint32_t i = 0; i < L1->setCount; i++) {
-            PrintSet(L1, i);
-        }
-        printf("L2:\n");
-        for (uint32_t i = 0; i < L1->childCache->setCount; i++) {
-            PrintSet(L1->childCache, i);
-        }
-        return;
-    }
-
-    Cache_t** caches = ParseCPUArchitecture(argv[1]);
-    //ParseMemoryRequests(argv[2]);
-
-    L1 = caches[0];
-    
-    return;
-}
 
 void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSize) {
     // NOTE: This function assumes that cache inclusivity holds
@@ -88,7 +57,7 @@ void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSiz
 void cache_wr_w(Cache_t *cache, struct memory *mem, int addr, uint32_t data) {
     printf("Attempting to write a word to address 0x%x\n", addr);
     // TODO : Check if address is word-aligned
-    char* block = FetchBlock(cache, addr, mem, true);
+    char* block = FetchBlock(cache, addr, mem, true, 1);
 
     Address_t a = GetAddress(cache, addr);
 
@@ -98,7 +67,7 @@ void cache_wr_w(Cache_t *cache, struct memory *mem, int addr, uint32_t data) {
 void cache_wr_h(Cache_t *cache, struct memory *mem, int addr, uint16_t data) {
     printf("Attempting to write a half to address 0x%x\n", addr);
     // TODO : Check if address in half-aligned
-    char* block = FetchBlock(cache, addr, mem, true);
+    char* block = FetchBlock(cache, addr, mem, true, 1);
 
     Address_t a = GetAddress(cache, addr);
 
@@ -107,7 +76,7 @@ void cache_wr_h(Cache_t *cache, struct memory *mem, int addr, uint16_t data) {
 
 void cache_wr_b(Cache_t *cache, struct memory *mem, int addr, uint8_t data) {
     printf("Attempting to write a byte to address 0x%x\n", addr);
-    char* block = FetchBlock(cache, addr, mem, true);
+    char* block = FetchBlock(cache, addr, mem, true, 1);
 
     Address_t a = GetAddress(cache, addr);
 
@@ -116,7 +85,7 @@ void cache_wr_b(Cache_t *cache, struct memory *mem, int addr, uint8_t data) {
 
 int cache_rd_w(Cache_t *cache, struct memory *mem, int addr) {
     printf("Attempting to read a word from address 0x%x\n", addr);
-    char* block = FetchBlock(cache, addr, mem, false);
+    char* block = FetchBlock(cache, addr, mem, false, 1);
 
     Address_t a = GetAddress(cache, addr);
 
@@ -125,7 +94,7 @@ int cache_rd_w(Cache_t *cache, struct memory *mem, int addr) {
 
 int cache_rd_h(Cache_t *cache, struct memory *mem, int addr) {
     printf("Attempting to read a half from address 0x%x\n", addr);
-    char* block = FetchBlock(cache, addr, mem, false);
+    char* block = FetchBlock(cache, addr, mem, false, 1);
 
     Address_t a = GetAddress(cache, addr);
 
@@ -134,7 +103,7 @@ int cache_rd_h(Cache_t *cache, struct memory *mem, int addr) {
 
 int cache_rd_b(Cache_t *cache, struct memory *mem, int addr) {
     printf("Attempting to read a byte from address 0x%x\n", addr);
-    char* block = FetchBlock(cache, addr, mem, false);
+    char* block = FetchBlock(cache, addr, mem, false, 1);
 
     Address_t a = GetAddress(cache, addr);
 
@@ -142,48 +111,23 @@ int cache_rd_b(Cache_t *cache, struct memory *mem, int addr) {
 }
 
 
-// uint32_t getBlockOffset(Cache_t *cache, int addr) {
-//     uint32_t mask;
-//     uint32_t blockOffset;
-//     mask = ~0;
-//     mask = mask << cache->blockOffsetBitLength;
-//     mask = ~mask;
-//     blockOffset = addr & mask;
-//     return blockOffset;
-// }
+char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDirty, int layer) {
 
-// char ReadData(Cache_t* cache, uint32_t address) {
-//     char* block = FetchBlock(cache, address);
-
-//     uint32_t mask;
-//     uint32_t blockOffset;
-//     mask = ~0;
-//     mask = mask << cache->blockOffsetBitLength;
-//     mask = ~mask;
-//     blockOffset = address & mask;
-
-//     return block[blockOffset * WORD_SIZE];
-// }
-
-char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDirty) {
-
-    printf("called FetchBlock on address 0x%x\n", addr);
+    printf("Layer %d now looking for 0x%x\n", layer, addr);
 
     Address_t a = GetAddress(cache, addr);
 
-    printf("tag: 0x%x\nsetIndex: 0x%x\nblockOffset: 0x%x\n", a.tag, a.setIndex, a.blockOffset);
+    printf("Tag: 0x%x\nSet Index: 0x%x\nBlock Offset: 0x%x\n", a.tag, a.setIndex, a.blockOffset);
 
-    UpdateCacheSet(cache, a.setIndex);
+    UpdateCacheSet(cache, a.setIndex); // Updating LRU fields
 
     int lineIndex = GetLineIndexFromTag(cache, a.setIndex, a.tag);
-
-    cache->sets[a.setIndex][lineIndex].LRU = 0; // least recently used; just now
-
 
     // check if line is already in set, otherwise add it. CACHE HIT/MISS
     // MISS
     if (lineIndex == -1) {
-        printf("cache miss!\n");
+        printf("Cache miss in layer %d!\n", layer);
+        MISSES[layer-1]++;
 
         // the cache below returns its entire block, we need to know which part of that cache is our block (since it might be smaller)
         char* block = NULL;
@@ -191,8 +135,8 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
 
         if (cache->childCache != NULL) {
             // recursive call
-            printf("calling FetchBlock on next layer of cache,\n");
-            block = FetchBlock(cache->childCache, addr, mem, markDirty);
+            printf("Asking layer %d for address 0x%x\n", layer, addr);
+            block = FetchBlock(cache->childCache, addr, mem, markDirty, layer+1);
 
             // in case were getting stuff from another layer of cache, we need to find the offset within the block we've been given
 
@@ -203,22 +147,22 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
 
         }
         else {
-            printf("no more cache layers. Calling find_block in main memory.\n");
+            printf("In last cache at layer %d, asking main memory for address 0x%x\n", layer, addr);
             block = find_block(mem, addr, cache->blockSize);
 
             // when fetching from main memory, the blockidx will just be 0, since we've already requested our specific size.
         }
 
-        printf("inserting cache line into cache\n");
+        printf("Cache level %d recieved block and is trying to insert it\n", layer);
 
         lineIndex = GetReplacementLineIndex(cache, a.setIndex);
         
         // evict
         if (cache->sets[a.setIndex][lineIndex].valid) {
+            printf("Inserting 0x%x caused a collision, we need to evict first\n", addr);
             // Here we need to find the address of the cacheline to be able to find it in the lower cache, otherwise we don't know where to evict it to.
-            printf("Tag: %x, SetIdx: %x\n", cache->sets[a.setIndex][lineIndex].tag, a.setIndex);
             uint32_t evictAddr = (cache->sets[a.setIndex][lineIndex].tag << (cache->SetBitLength + cache->blockOffsetBitLength)) | (a.setIndex << cache->blockOffsetBitLength);
-            printf("Evict address: 0x%x\n", evictAddr);
+            printf("Evicting address: 0x%x\n", evictAddr);
             EvictCacheLine(cache, evictAddr, &cache->sets[a.setIndex][lineIndex], mem);
         }
 
@@ -233,15 +177,17 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
     // HIT
     else {
         // count cache hits
-        printf("cache hit!\n");
+        cache->sets[a.setIndex][lineIndex].LRU = 0; // least recently used; just now
+        printf("Cache hit!\n");
+        HITS[layer-1]++;
     }
     
     if (markDirty) {
-        printf("marking cache line as dirty\n");
+        printf("Marking cache line as dirty\n");
         cache->sets[a.setIndex][lineIndex].dirty = true;
     }
 
-    printf("returning block to previous cache layer.\n");
+    printf("Passing data upwards\n");
 
     return cache->sets[a.setIndex][lineIndex].block;
 }
@@ -384,6 +330,8 @@ Cache_t** ParseCPUArchitecture(char* path) {
     fgets(buf, sizeof(buf), file);
     N_CACHE_LEVELS = atoi(buf);
     memset(buf, 0, sizeof(buf));
+    HITS =   malloc(N_CACHE_LEVELS * sizeof(uint32_t));
+    MISSES = malloc(N_CACHE_LEVELS * sizeof(uint32_t));
     
     printf("During architecture parsing, we just finished reading globals\n");
 
@@ -528,3 +476,7 @@ void CacheLine_free(CacheLine_t* l) {
     free(l->block);
     free(l);
 }
+
+int get_cache_layer_count() {return N_CACHE_LEVELS;}
+int get_misses_at_layer(int layer) {return MISSES[layer];}
+int get_hits_at_layer(int layer) {return HITS[layer];}
