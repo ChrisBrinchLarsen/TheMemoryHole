@@ -4,6 +4,7 @@
 #include "memory.h"
 #include <stdbool.h> 
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
@@ -88,5 +89,9 @@ int cache_rd_b(Cache_t *cache, struct memory *mem, int addr);
 int get_cache_layer_count();
 int get_misses_at_layer(int layer);
 int get_hits_at_layer(int layer);
+
+void initialize_cache();
+void finalize_cache();
+FILE* get_cache_log();
 
 #endif

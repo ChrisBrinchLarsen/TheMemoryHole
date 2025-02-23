@@ -18,6 +18,4 @@ int memory_rd_w(struct memory *mem, int addr);
 int memory_rd_h(struct memory *mem, int addr);
 int memory_rd_b(struct memory *mem, int addr);
 
-void print_all_caches(FILE* file);
-
 #endif

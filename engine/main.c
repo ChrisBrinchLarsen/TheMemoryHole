@@ -56,6 +56,7 @@ int pass_args_to_program(struct memory* mem, int argc, char* argv[]) {
 int main(int argc, char *argv[])
 {
   struct memory *mem = memory_create();
+  initialize_cache();
   Cache_t** caches = ParseCPUArchitecture(argv[1]);
   supply_cache(caches[0]); // Letting MMU know which cache should be checked first
   argc = pass_args_to_program(mem, argc, argv);
@@ -75,7 +76,7 @@ int main(int argc, char *argv[])
     clock_t before = clock();
     long int num_insns = simulate(mem, as, start_addr, log_file);
     clock_t after = clock();
-    
+    finalize_cache();
     int N_CACHE_LAYERS = get_cache_layer_count();
     int misses, hits, total_hits;
     for (int i = 0; i < N_CACHE_LAYERS; i++) {

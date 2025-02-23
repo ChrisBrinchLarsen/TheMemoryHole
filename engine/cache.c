@@ -25,6 +25,8 @@ uint32_t* MISSES;
 // if hits[2] = 14 that means that the third layer of cache experienced 14 misses
 uint32_t* HITS;
 
+FILE* CACHE_LOG;
+
 // Policies
 #define LRU_REPLACEMENT_POLICY 0
 #define RANDOM_REPLACEMENT_POLICY 1
@@ -56,6 +58,8 @@ void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSiz
 
 void cache_wr_w(Cache_t *cache, struct memory *mem, int addr, uint32_t data) {
     printf("Attempting to write a word to address 0x%x\n", addr);
+    fprintf(CACHE_LOG, "ww 0x%x <- %d\n", addr, data);
+
     // TODO : Check if address is word-aligned
     char* block = FetchBlock(cache, addr, mem, true, 1);
 
@@ -66,6 +70,7 @@ void cache_wr_w(Cache_t *cache, struct memory *mem, int addr, uint32_t data) {
 
 void cache_wr_h(Cache_t *cache, struct memory *mem, int addr, uint16_t data) {
     printf("Attempting to write a half to address 0x%x\n", addr);
+    fprintf(CACHE_LOG, "wh 0x%x <- %d\n", addr, data);
     // TODO : Check if address in half-aligned
     char* block = FetchBlock(cache, addr, mem, true, 1);
 
@@ -76,6 +81,7 @@ void cache_wr_h(Cache_t *cache, struct memory *mem, int addr, uint16_t data) {
 
 void cache_wr_b(Cache_t *cache, struct memory *mem, int addr, uint8_t data) {
     printf("Attempting to write a byte to address 0x%x\n", addr);
+    fprintf(CACHE_LOG, "wb 0x%x <- %d\n", addr, data);
     char* block = FetchBlock(cache, addr, mem, true, 1);
 
     Address_t a = GetAddress(cache, addr);
@@ -85,6 +91,7 @@ void cache_wr_b(Cache_t *cache, struct memory *mem, int addr, uint8_t data) {
 
 int cache_rd_w(Cache_t *cache, struct memory *mem, int addr) {
     printf("Attempting to read a word from address 0x%x\n", addr);
+    fprintf(CACHE_LOG, "rw 0x%x\n", addr);
     char* block = FetchBlock(cache, addr, mem, false, 1);
 
     Address_t a = GetAddress(cache, addr);
@@ -94,6 +101,7 @@ int cache_rd_w(Cache_t *cache, struct memory *mem, int addr) {
 
 int cache_rd_h(Cache_t *cache, struct memory *mem, int addr) {
     printf("Attempting to read a half from address 0x%x\n", addr);
+    fprintf(CACHE_LOG, "rh 0x%x\n", addr);
     char* block = FetchBlock(cache, addr, mem, false, 1);
 
     Address_t a = GetAddress(cache, addr);
@@ -103,6 +111,7 @@ int cache_rd_h(Cache_t *cache, struct memory *mem, int addr) {
 
 int cache_rd_b(Cache_t *cache, struct memory *mem, int addr) {
     printf("Attempting to read a byte from address 0x%x\n", addr);
+    fprintf(CACHE_LOG, "rb 0x%x\n", addr);
     char* block = FetchBlock(cache, addr, mem, false, 1);
 
     Address_t a = GetAddress(cache, addr);
@@ -127,6 +136,7 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
     // MISS
     if (lineIndex == -1) {
         printf("Cache miss in layer %d!\n", layer);
+        fprintf(CACHE_LOG, "L%d miss in set %d\n", layer, a.setIndex);
         MISSES[layer-1]++;
 
         // the cache below returns its entire block, we need to know which part of that cache is our block (since it might be smaller)
@@ -148,6 +158,7 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
         }
         else {
             printf("In last cache at layer %d, asking main memory for address 0x%x\n", layer, addr);
+            fprintf(CACHE_LOG, "RAM contacted\n");
             block = find_block(mem, addr, cache->blockSize);
 
             // when fetching from main memory, the blockidx will just be 0, since we've already requested our specific size.
@@ -180,6 +191,8 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
         cache->sets[a.setIndex][lineIndex].LRU = 0; // least recently used; just now
         printf("Cache hit!\n");
         HITS[layer-1]++;
+
+        fprintf(CACHE_LOG, "L%d hit in set %d\n", layer, a.setIndex);
     }
     
     if (markDirty) {
@@ -335,6 +348,11 @@ Cache_t** ParseCPUArchitecture(char* path) {
     
     printf("During architecture parsing, we just finished reading globals\n");
 
+    // Logging info about the general cache architecture
+    fprintf(CACHE_LOG, "--- Architecture ---\n");
+    fprintf(CACHE_LOG, "Addr_len: %d\n", ADDR_LEN);
+    fprintf(CACHE_LOG, "Cache Layers: %d\n", N_CACHE_LEVELS);
+
     Cache_t** caches = malloc(N_CACHE_LEVELS * (sizeof(Cache_t*)));
 
     for (int i = 0; i < N_CACHE_LEVELS; i++) {
@@ -358,6 +376,9 @@ Cache_t** ParseCPUArchitecture(char* path) {
         BLOCK_SIZE = (int)pow(2, k);
         uint32_t cache_size = (uint32_t)(pow(2,p) * q);
         caches[i] = Cache_new(cache_size, associativity);
+
+        // Logging info about this cache layer
+        fprintf(CACHE_LOG, "-- L%d --\nSize: %0.0f\nBlock size: %0.0f\nAssociativity: %d-way\n", i+1, pow(2, p) * q, pow(2, k), associativity);
     }
 
     fclose(file);
@@ -366,7 +387,7 @@ Cache_t** ParseCPUArchitecture(char* path) {
     for (int i = 0; i < (N_CACHE_LEVELS-1); i++) {
         caches[i]->childCache = caches[i+1]; // L1 -> L2 -> L3 -> NULL (since children are set to NULL in constructor)
     }
-
+    fprintf(CACHE_LOG, "--- Program ---\n");
     return caches;
 }
 
@@ -476,6 +497,16 @@ void CacheLine_free(CacheLine_t* l) {
     free(l->block);
     free(l);
 }
+
+void initialize_cache() {
+    CACHE_LOG = fopen("cache_log", "w");
+}
+
+void finalize_cache() {
+    fclose(CACHE_LOG);
+}
+
+FILE* get_cache_log() {return CACHE_LOG;}
 
 int get_cache_layer_count() {return N_CACHE_LEVELS;}
 int get_misses_at_layer(int layer) {return MISSES[layer];}

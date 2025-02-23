@@ -32,9 +32,12 @@ void ProcessU_A(int instruction);                     // Add unsigned immediate 
 void PrintRegisters();                                // Function that prints register overview for debugging
 void wrInstToLog(struct assembly *as, int jump);      // Writes information about the current instruction to a log file
 
+FILE* CACHE_LOG_POINTER;
+
 // Simulates provided RISC-V assembly instructions.
 long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE *log_file) {
     printf("\n\nSTARTING SIMULATION\n\n");
+    CACHE_LOG_POINTER = get_cache_log();
 
     PC = start_addr;                                  // Initializing PC
     uint32_t prevPC = PC-4;                           // Used for keeping track of if we jumped or not
@@ -52,6 +55,7 @@ long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE 
         // Read next instruction
         int instructionInt = memory_rd_w(mem, PC);
 
+        fprintf(CACHE_LOG_POINTER, "- instr: %d -\n", instructionInt);
 
         // Least significant 6 bits of instruction make up the OPCODE
         uint32_t OPCODE = instructionInt & 0x7F; 
@@ -81,7 +85,14 @@ long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE 
 // We always use this setter to write to registers so that we don't overwrite x0
 void wrReg(int registerID, int data) {
     if (registerID == 0) {return;}
+    fprintf(CACHE_LOG_POINTER, "w reg %d <- %d\n", registerID, data);
     R[registerID] = data;
+}
+
+// TODO: All significant reads in the rest of this program need to be using this function instead 
+int rdReg(int registerID) {
+    fprintf(CACHE_LOG_POINTER, "r reg %d\n", registerID);
+    return R[registerID];
 }
 
 // This function takes an OPCODE and a full instruction integer and delegates to
