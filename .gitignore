@@ -4,5 +4,5 @@
 *.o
 accesses
 loggers
-cache_log.md
+cache_log
 sim
