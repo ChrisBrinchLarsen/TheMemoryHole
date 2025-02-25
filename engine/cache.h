@@ -91,7 +91,7 @@ int get_misses_at_layer(int layer);
 int get_hits_at_layer(int layer);
 
 void initialize_cache();
-void finalize_cache();
+uint32_t finalize_cache();
 FILE* get_cache_log();
 
 #endif

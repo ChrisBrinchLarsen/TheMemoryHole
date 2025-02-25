@@ -20,6 +20,11 @@ int ADDR_LEN;
 int N_CACHE_LEVELS;
 int BLOCK_SIZE;
 
+// Some premade set clock cycle delays for hitting
+const int HIT_DELAYS[4] = {2, 10, 20, 50};
+const int RAM_DELAY = 100;
+uint32_t CYCLES = 0;
+
 // if misses[0] = 20 that means that the first layer of cache experienced 20 misses
 uint32_t* MISSES;
 // if hits[2] = 14 that means that the third layer of cache experienced 14 misses
@@ -159,6 +164,7 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
         else {
             printf("In last cache at layer %d, asking main memory for address 0x%x\n", layer, addr);
             fprintf(CACHE_LOG, "RAM contacted\n");
+            CYCLES += RAM_DELAY;
             block = find_block(mem, addr, cache->blockSize);
 
             // when fetching from main memory, the blockidx will just be 0, since we've already requested our specific size.
@@ -191,6 +197,7 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
         cache->sets[a.setIndex][lineIndex].LRU = 0; // least recently used; just now
         printf("Cache hit!\n");
         HITS[layer-1]++;
+        CYCLES += HIT_DELAYS[layer-1];
 
         fprintf(CACHE_LOG, "L%d hit in set %d\n", layer, a.setIndex);
     }
@@ -502,8 +509,10 @@ void initialize_cache() {
     CACHE_LOG = fopen("cache_log", "w");
 }
 
-void finalize_cache() {
+// Returns amount of cycles spent on memory accesses
+uint32_t finalize_cache() {
     fclose(CACHE_LOG);
+    return CYCLES;
 }
 
 FILE* get_cache_log() {return CACHE_LOG;}
