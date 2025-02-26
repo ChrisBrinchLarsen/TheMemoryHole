@@ -42,8 +42,6 @@ Cache_t* L1;
 void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSize) {
     // NOTE: This function assumes that cache inclusivity holds
 
-    printf("Began writing back to next layer of cache\n");
-
     Address_t a = GetAddress(cache, addr);
     int lineIndex = GetLineIndexFromTag(cache, a.setIndex, a.tag);
 
@@ -62,7 +60,6 @@ void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSiz
 }
 
 void cache_wr_w(Cache_t *cache, struct memory *mem, int addr, uint32_t data) {
-    printf("Attempting to write a word to address 0x%x\n", addr);
     fprintf(CACHE_LOG, "ww 0x%x <- %d\n", addr, data);
 
     // TODO : Check if address is word-aligned
@@ -74,7 +71,6 @@ void cache_wr_w(Cache_t *cache, struct memory *mem, int addr, uint32_t data) {
 }
 
 void cache_wr_h(Cache_t *cache, struct memory *mem, int addr, uint16_t data) {
-    printf("Attempting to write a half to address 0x%x\n", addr);
     fprintf(CACHE_LOG, "wh 0x%x <- %d\n", addr, data);
     // TODO : Check if address in half-aligned
     char* block = FetchBlock(cache, addr, mem, true, 1);
@@ -85,7 +81,6 @@ void cache_wr_h(Cache_t *cache, struct memory *mem, int addr, uint16_t data) {
 }
 
 void cache_wr_b(Cache_t *cache, struct memory *mem, int addr, uint8_t data) {
-    printf("Attempting to write a byte to address 0x%x\n", addr);
     fprintf(CACHE_LOG, "wb 0x%x <- %d\n", addr, data);
     char* block = FetchBlock(cache, addr, mem, true, 1);
 
@@ -95,7 +90,6 @@ void cache_wr_b(Cache_t *cache, struct memory *mem, int addr, uint8_t data) {
 }
 
 int cache_rd_w(Cache_t *cache, struct memory *mem, int addr) {
-    printf("Attempting to read a word from address 0x%x\n", addr);
     fprintf(CACHE_LOG, "rw 0x%x\n", addr);
     char* block = FetchBlock(cache, addr, mem, false, 1);
 
@@ -105,7 +99,6 @@ int cache_rd_w(Cache_t *cache, struct memory *mem, int addr) {
 }
 
 int cache_rd_h(Cache_t *cache, struct memory *mem, int addr) {
-    printf("Attempting to read a half from address 0x%x\n", addr);
     fprintf(CACHE_LOG, "rh 0x%x\n", addr);
     char* block = FetchBlock(cache, addr, mem, false, 1);
 
@@ -115,7 +108,6 @@ int cache_rd_h(Cache_t *cache, struct memory *mem, int addr) {
 }
 
 int cache_rd_b(Cache_t *cache, struct memory *mem, int addr) {
-    printf("Attempting to read a byte from address 0x%x\n", addr);
     fprintf(CACHE_LOG, "rb 0x%x\n", addr);
     char* block = FetchBlock(cache, addr, mem, false, 1);
 
@@ -127,11 +119,9 @@ int cache_rd_b(Cache_t *cache, struct memory *mem, int addr) {
 
 char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDirty, int layer) {
 
-    printf("Layer %d now looking for 0x%x\n", layer, addr);
-
     Address_t a = GetAddress(cache, addr);
 
-    printf("Tag: 0x%x\nSet Index: 0x%x\nBlock Offset: 0x%x\n", a.tag, a.setIndex, a.blockOffset);
+    //printf("Tag: 0x%x\nSet Index: 0x%x\nBlock Offset: 0x%x\n", a.tag, a.setIndex, a.blockOffset);
 
     UpdateCacheSet(cache, a.setIndex); // Updating LRU fields
 
@@ -140,7 +130,6 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
     // check if line is already in set, otherwise add it. CACHE HIT/MISS
     // MISS
     if (lineIndex == -1) {
-        printf("Cache miss in layer %d!\n", layer);
         fprintf(CACHE_LOG, "L%d miss in set %d\n", layer, a.setIndex);
         MISSES[layer-1]++;
 
@@ -150,7 +139,6 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
 
         if (cache->childCache != NULL) {
             // recursive call
-            printf("Asking layer %d for address 0x%x\n", layer, addr);
             block = FetchBlock(cache->childCache, addr, mem, markDirty, layer+1);
 
             // in case were getting stuff from another layer of cache, we need to find the offset within the block we've been given
@@ -162,7 +150,6 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
 
         }
         else {
-            printf("In last cache at layer %d, asking main memory for address 0x%x\n", layer, addr);
             fprintf(CACHE_LOG, "RAM contacted\n");
             CYCLES += RAM_DELAY;
             block = find_block(mem, addr, cache->blockSize);
@@ -170,17 +157,13 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
             // when fetching from main memory, the blockidx will just be 0, since we've already requested our specific size.
         }
 
-        printf("Cache level %d recieved block and is trying to insert it\n", layer);
-
         lineIndex = GetReplacementLineIndex(cache, a.setIndex);
         
         // evict
         if (cache->sets[a.setIndex][lineIndex].valid) {
             fprintf(CACHE_LOG, "Layer %d eviction in set %d\n", layer, a.setIndex);
-            printf("Inserting 0x%x caused a collision, we need to evict first\n", addr);
             // Here we need to find the address of the cacheline to be able to find it in the lower cache, otherwise we don't know where to evict it to.
             uint32_t evictAddr = (cache->sets[a.setIndex][lineIndex].tag << (cache->SetBitLength + cache->blockOffsetBitLength)) | (a.setIndex << cache->blockOffsetBitLength);
-            printf("Evicting address: 0x%x\n", evictAddr);
             EvictCacheLine(cache, evictAddr, &cache->sets[a.setIndex][lineIndex], mem);
         }
 
@@ -196,7 +179,6 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
     else {
         // count cache hits
         cache->sets[a.setIndex][lineIndex].LRU = 0; // least recently used; just now
-        printf("Cache hit!\n");
         HITS[layer-1]++;
         CYCLES += HIT_DELAYS[layer-1];
 
@@ -204,11 +186,8 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
     }
     
     if (markDirty) {
-        printf("Marking cache line as dirty\n");
         cache->sets[a.setIndex][lineIndex].dirty = true;
     }
-
-    printf("Passing data upwards\n");
 
     return cache->sets[a.setIndex][lineIndex].block;
 }
@@ -224,7 +203,6 @@ int GetLineIndexFromTag(Cache_t* cache, uint32_t setIndex, uint32_t tag) {
 
 int GetReplacementLineIndex(Cache_t* cache, uint32_t setIndex) {
 
-    printf("finding line index\n");
     // first check if there's room anywhere.
     int32_t lineIndex = -1;
     for (uint32_t i = 0; i < cache->associativity; i++) {
@@ -236,7 +214,6 @@ int GetReplacementLineIndex(Cache_t* cache, uint32_t setIndex) {
 
     // if no room, find room based on replacement policy
     if (lineIndex == -1) {
-        printf("cache is full, another line needs to be evicted\n");
         switch (ACTIVE_REPLACEMENT_POLICY)
         {
             case LRU_REPLACEMENT_POLICY:
@@ -265,20 +242,16 @@ int GetReplacementLineIndex(Cache_t* cache, uint32_t setIndex) {
 
     // insert
     //CacheLine_t c = CacheLine_new(1, tag, 0, block);
-    printf("lineIndex: %u\n", lineIndex);
     return lineIndex;
 }
 
 void EvictCacheLine(Cache_t* cache, uint32_t addr, CacheLine_t* evict_line, struct memory *mem) {
-    printf("evicting cache line.\n");
 
     if (evict_line->dirty) {
 
         if (cache->childCache == NULL) {
-            printf("writing back to main memory.\n");
             memory_write_back(mem, addr, evict_line->block, cache->blockSize);
         } else {
-            printf("writing back to next layer of cache.\n");
             cache_writeback_block(cache->childCache, addr, evict_line->block, cache->blockSize);
         }
     }
@@ -354,8 +327,6 @@ Cache_t** ParseCPUArchitecture(char* path) {
     HITS =   malloc(N_CACHE_LEVELS * sizeof(uint32_t));
     MISSES = malloc(N_CACHE_LEVELS * sizeof(uint32_t));
     
-    printf("During architecture parsing, we just finished reading globals\n");
-
     // Logging info about the general cache architecture
     fprintf(CACHE_LOG, "--- Architecture ---\n");
     fprintf(CACHE_LOG, "Addr_len: %d\n", ADDR_LEN);
@@ -390,7 +361,6 @@ Cache_t** ParseCPUArchitecture(char* path) {
     }
 
     fclose(file);
-    printf("We just finished reading info from the file\n");
 
     for (int i = 0; i < (N_CACHE_LEVELS-1); i++) {
         caches[i]->childCache = caches[i+1]; // L1 -> L2 -> L3 -> NULL (since children are set to NULL in constructor)

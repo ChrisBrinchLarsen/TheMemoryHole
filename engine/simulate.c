@@ -36,7 +36,6 @@ FILE* CACHE_LOG_POINTER;
 
 // Simulates provided RISC-V assembly instructions.
 long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE *log_file) {
-    printf("\n\nSTARTING SIMULATION\n\n");
     CACHE_LOG_POINTER = get_cache_log();
     fprintf(CACHE_LOG_POINTER, "---- PROGRAM START ----\n");
 

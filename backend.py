@@ -13,7 +13,7 @@ socketio = SocketIO(app)
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('visualizer.html')
 
 # TODO: Very important that we make the config and program filenames be unique
 # and random, as well as have them cleaned ud (deleted) after use. This is due

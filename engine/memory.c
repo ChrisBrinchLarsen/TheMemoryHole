@@ -23,22 +23,18 @@ void memory_delete(struct memory *mem) {
 }
 
 char *get_page(struct memory *mem, int addr) {
-  printf("Main memory fetching a page for address 0x%x\n", addr);
   int page_number = (addr >> 16) & 0x0ffff;
   if (mem->pages[page_number] == NULL) {
     mem->pages[page_number] = calloc(65536, 1);
   }
   return mem->pages[page_number];
-  printf("Main memory found the corresponding page at page nr %d", page_number);
 }
 
 char* find_block(struct memory *mem, int addr, uint32_t block_size) {
-  printf("Main memory recieved request for finding block for address 0x%x\n", addr);
   char* page = get_page(mem, addr);
   int block_offset_bit_length = (int)log2(block_size);
   addr = (addr >> block_offset_bit_length) << block_offset_bit_length; // Masking out block offset bits
   int page_offset = addr & 0x0ffff;
-  printf("Main memory found block at page offset %d and is sending it back to requesting cache\n", page_offset);
   return &page[page_offset];
 }
 

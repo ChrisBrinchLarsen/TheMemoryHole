@@ -44,3 +44,4 @@ clean:
 	rm -f sim
 	rm -f loggers
 	rm -f cache_log
+	rm -f output

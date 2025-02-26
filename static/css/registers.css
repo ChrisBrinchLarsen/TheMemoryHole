@@ -1,0 +1,23 @@
+#registers {
+    display: grid;
+    grid-template-columns: repeat(8, 64px); /* 10 columns, each 20px wide */
+    grid-template-rows: repeat(8, 64px); /* 10 rows, each 20px tall */
+    gap: 2px; /* Space between cells */
+}
+
+.register {
+    width: 64px;
+    height: 64px;
+    background-color: lightgray; /* Default color */
+    border: 1px solid #ccc;
+    text-align: center;
+    align-content: center;
+}
+
+.read-from {
+    background-color: blue;
+}
+
+.written-to {
+    background-color: green;
+}
