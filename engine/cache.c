@@ -176,6 +176,7 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
         
         // evict
         if (cache->sets[a.setIndex][lineIndex].valid) {
+            fprintf(CACHE_LOG, "Layer %d eviction in set %d\n", layer, a.setIndex);
             printf("Inserting 0x%x caused a collision, we need to evict first\n", addr);
             // Here we need to find the address of the cacheline to be able to find it in the lower cache, otherwise we don't know where to evict it to.
             uint32_t evictAddr = (cache->sets[a.setIndex][lineIndex].tag << (cache->SetBitLength + cache->blockOffsetBitLength)) | (a.setIndex << cache->blockOffsetBitLength);
