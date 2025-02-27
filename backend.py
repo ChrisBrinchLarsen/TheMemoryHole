@@ -24,9 +24,10 @@ def index():
 def handle_run_program(data):
     config = data["config"]
     program = data["program"]
+    args = ""
     id = uuid.uuid4()
-    architecture_file_name = f"architecture_{id}"
-    program_file_name = f"program_{id}"
+    architecture_file_name = f"./tmp/architecture_{id}"
+    program_file_name = f"./tmp/program_{id}"
     architecture_file_name = "./engine/testing/Architectures/SimpleCPU.md"
 
     # with open("config", "w") as file:
@@ -57,18 +58,12 @@ def handle_run_program(data):
 
     # Compile from C -> RISC-V
     os.system(f"./riscv/bin/riscv32-unknown-elf-gcc -march=rv32im -mabi=ilp32 -fno-tree-loop-distribute-patterns -mno-relax -O1 {program_file_name}.c lib.c -static -nostartfiles -nostdlib -o {program_file_name}.riscv")
-    #subprocess.run(["./riscv/bin/riscv32-unknown-elf-gcc", "-march=rv32im", "-mabi=ilp32", "-fno-tree-loop-distribute-patterns", "-mno-relax", "-O1", f"{program_file_name}.c", "lib.c", "-static", "-nostartfiles", "-nostdlib", "-o", f"{program_file_name}.riscv"])
     # Compile from RISC-V -> dis
     os.system(f"./riscv/bin/riscv32-unknown-elf-objdump -s -w {program_file_name}.riscv > {program_file_name}.dis")
-    #subprocess.run(["./riscv/bin/riscv32-unknown-elf-objdump", "-s", "-w", f"{program_file_name}.riscv", ">", f"{program_file_name}.dis"])
     os.system(f"./riscv/bin/riscv32-unknown-elf-objdump -S {program_file_name}.riscv >> {program_file_name}.dis")
 
-    args = "20"
     result = subprocess.run(["./engine/sim", architecture_file_name, f"{program_file_name}.dis", "--", f"{args}"], capture_output=True, text=True)
     print(result.stdout)
-
-
-    #result = subprocess.run([f"./Engine/prototype.exe", "./config", "./program"], capture_output=True, text=True)
     os.system(f"rm -f accesses cache_log {program_file_name}.riscv {program_file_name}.dis {program_file_name}.c")
 
 

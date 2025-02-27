@@ -83,12 +83,19 @@ int main(int argc, char *argv[])
       misses = get_misses_at_layer(i);
       hits = get_hits_at_layer(i);
       total_hits += hits;
-      printf("L%d - Hit: %d - Miss: %d - Hit-rate: %0.3f - Miss-rate %0.3f\n",
-                i+1,
-                hits,
-                misses,
-                (float)hits/(hits + misses),
-                (float)misses/(hits + misses));
+
+      printf("L%d - %0.3f (%d/%d)",
+              i+1,
+              (float)hits/(hits + misses),
+              hits,
+              hits + misses);
+
+      // printf("L%d - Hit: %d - Miss: %d - Hit-rate: %0.3f - Miss-rate %0.3f\n",
+      //           i+1,
+      //           hits,
+      //           misses,
+      //           (float)hits/(hits + misses),
+      //           (float)misses/(hits + misses));
     }
     printf("In total handled %d memory accesses.\n", total_hits + get_misses_at_layer(N_CACHE_LAYERS-1));
     printf("Total cache hit-rate: %0.3f\n", (float)total_hits/(total_hits + get_misses_at_layer(N_CACHE_LAYERS-1)));

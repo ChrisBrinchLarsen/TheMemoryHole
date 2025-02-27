@@ -2,7 +2,7 @@ function sendProgram() {
     programText = document.getElementById("programText").value;
     console.log(programText);
     document.getElementById("programText").value = "";
-    socket.emit("run_program", {program:programText, config:"Hey"})
+    socket.emit("run_program", {program:programText, config:"Hey", www:"gghvv"})
 }
 
 INSTR.innerHTML = "add 3 13 24"
