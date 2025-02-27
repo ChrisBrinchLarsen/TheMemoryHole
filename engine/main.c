@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
       hits = get_hits_at_layer(i);
       total_hits += hits;
 
-      printf("L%d - %0.3f (%d/%d)",
+      printf("L%d - %0.3f (%d/%d)\n",
               i+1,
               (float)hits/(hits + misses),
               hits,
