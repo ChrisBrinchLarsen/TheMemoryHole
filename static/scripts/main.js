@@ -1,3 +1,4 @@
+simpleCPU = [{p:6,q:1,k:4,a:1}, {p:7,q:1,k:4,a:2}]
 function sendProgram() {
     programText = document.getElementById("programText").value;
     console.log(programText);
@@ -7,7 +8,6 @@ function sendProgram() {
 
 INSTR.innerHTML = "add 3 13 24"
 add = {readers:[1, 2, 3], writers:[7, 8, 9]}
-simpleCPU = [{p:6,q:1,k:4,a:1}, {p:7,q:1,k:4,a:2}]
 
 visualizeInstr(add);
 

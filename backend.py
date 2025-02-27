@@ -24,36 +24,21 @@ def index():
 def handle_run_program(data):
     config = data["config"]
     program = data["program"]
-    print("what")
+    N_CACHE_LEVELS = len(config)
+    print(N_CACHE_LEVELS)
     args = ""
     id = uuid.uuid4()
     architecture_file_name = f"./tmp/architecture_{id}"
     program_file_name = f"./tmp/program_{id}"
-    architecture_file_name = "./engine/testing/Architectures/SimpleCPU.md"
 
-    # with open("config", "w") as file:
-    #     file.write(f"{config["addr_len"]}\n")
-    #     file.write(f"{config["word_size"]}\n")
-    #     file.write(f"{config["words_per_block"]}\n")
-    #     cache_levels: int = int(config["cache_levels"])
-    #     file.write(f"{cache_levels}\n")
-    #     for i in range(cache_levels):
-    #         file.write(f"{config["caches"][i]["name"]}\n")
-    #         file.write(f"{config["caches"][i]["size"]}\n")
-    #         file.write(f"{config["caches"][i]["associativity"]}\n")
-
-    # with open(architecture_file_name, "w") as file:
-    #     file.write(f"32\n")
-    #     file.write(f"1\n")
-    #     file.write(f"8\n")
-    #     cache_levels: int = 2
-    #     file.write(f"{cache_levels}\n")
-    #     file.write(f"L1\n")
-    #     file.write(f"128\n")
-    #     file.write(f"2\n")
-    #     file.write(f"L2\n")
-    #     file.write(f"256\n")
-    #     file.write(f"4\n")
+    with open(architecture_file_name, "w") as file:
+        file.write(f"{N_CACHE_LEVELS}\n")
+        for i in range(N_CACHE_LEVELS):
+            file.write(f"L{i+1}\n")
+            file.write(f"{config[i]["p"]}\n")
+            file.write(f"{config[i]["q"]}\n")
+            file.write(f"{config[i]["k"]}\n")
+            file.write(f"{config[i]["a"]}\n")
 
     with open(f"{program_file_name}.c", 'w') as file: file.write(program)
 
@@ -65,7 +50,10 @@ def handle_run_program(data):
 
     result = subprocess.run(["./engine/sim", architecture_file_name, f"{program_file_name}.dis", "--", f"{args}"], capture_output=True, text=True)
     print(result.stdout)
-    os.system(f"rm -f accesses cache_log {program_file_name}.riscv {program_file_name}.dis {program_file_name}.c")
+
+    # TODO: Add parsing and sending back each iteration from cache_log to frontend
+
+    os.system(f"rm -f accesses cache_log {program_file_name}.riscv {program_file_name}.dis {program_file_name}.c {architecture_file_name}")
 
 
 
