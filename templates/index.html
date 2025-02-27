@@ -19,10 +19,26 @@
     <div id="navbar" class="center">
       <h1>The Memory Hole</h1>
     </div>
-    <div id="architecture"></div>
-    <div id="program_side">
-        <textarea id="programText" rows="4" cols="50"></textarea><br>
-        <input type="submit" value="Submit Addresses" onclick="sendProgram()">
+    <div id="main-content">
+        <div id="architecture">
+            <div class="cache-container">
+                <h2 class="cache-title">L1</h2>
+                <div class="cache-setting">
+                    Cache size: 2^<input class="num-box" type="number"> * <input class="num-box" type="number"> bytes
+                </div>
+                <div class="cache-setting">
+                    Block size: 2^<input class="num-box" type="number"> bytes
+                </div>
+                <div class="cache-setting">
+                    Associativity: <input class="num-box" type="number">-way
+                </div>
+            </div>
+            <button>Add Cache +</button>
+        </div>
+        <div id="program_side">
+            <textarea id="programText" rows="4" cols="50"></textarea><br>
+            <input type="submit" value="Submit Addresses" onclick="sendProgram()">
+        </div>
     </div>
     
 </div>

@@ -2,14 +2,14 @@ function sendProgram() {
     programText = document.getElementById("programText").value;
     console.log(programText);
     document.getElementById("programText").value = "";
-    socket.emit("run_program", {program:programText, config:"Hey", www:"gghvv"})
+    socket.emit("run_program", {program:programText, config:simpleCPU})
 }
 
 INSTR.innerHTML = "add 3 13 24"
 add = {readers:[1, 2, 3], writers:[7, 8, 9]}
+simpleCPU = [{p:6,q:1,k:4,a:1}, {p:7,q:1,k:4,a:2}]
 
 visualizeInstr(add);
-
 
 function visualizeInstr(instruction) {
     clearRegisters();

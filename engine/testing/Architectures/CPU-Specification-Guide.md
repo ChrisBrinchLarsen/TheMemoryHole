@@ -1,6 +1,4 @@
 [Delete all lines covered in square brackets like this]
-[First specify whether the system is 32-bit or 64-bit]
-32
 [Now specify how many levels of cache you intend to have]
 3
 [Then specify some name of a top level cache]
@@ -30,7 +28,6 @@ The L1 cache has 4kb of space (2^10 * 4), has 8 bytes in each block (2^3), and i
 The L2 cache has 16kb of space (2^10 * 16), has 16 bytes in each block (2^4), and is 16 way associative.
 The L3 cache has 2mb of space (2^20 * 2), has 32 bytes in each block (2^5), and is 32 way associative.
 We could express this in an architecture file as:
-32
 3
 L1
 10

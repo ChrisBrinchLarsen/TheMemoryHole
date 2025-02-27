@@ -24,6 +24,7 @@ def index():
 def handle_run_program(data):
     config = data["config"]
     program = data["program"]
+    print("what")
     args = ""
     id = uuid.uuid4()
     architecture_file_name = f"./tmp/architecture_{id}"

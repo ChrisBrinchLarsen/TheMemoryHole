@@ -16,7 +16,7 @@
 // const uint32_t ADDR_LEN = 32;               // The address length, usually 32-bit or 64-bit
 
 // shouldn't need to be exposed actually
-int ADDR_LEN;
+int ADDR_LEN = 32;
 int N_CACHE_LEVELS;
 int BLOCK_SIZE;
 
@@ -318,10 +318,6 @@ Cache_t** ParseCPUArchitecture(char* path) {
     }
     char buf[64] = {0};
     fgets(buf, sizeof(buf), file);
-    ADDR_LEN = atoi(buf);
-    memset(buf, 0, sizeof(buf));
-
-    fgets(buf, sizeof(buf), file);
     N_CACHE_LEVELS = atoi(buf);
     memset(buf, 0, sizeof(buf));
     HITS =   malloc(N_CACHE_LEVELS * sizeof(uint32_t));
@@ -368,21 +364,6 @@ Cache_t** ParseCPUArchitecture(char* path) {
     fprintf(CACHE_LOG, "--- Program ---\n");
     return caches;
 }
-
-// void ParseMemoryRequests(char* path) {
-//     FILE* file = fopen(path, "r");
-//     if (!file) {
-//         printf("ERROR: Couldn't find file: '%s' when trying to parse a file of memory requests", path);
-//         exit(1);
-//     }
-
-//     char buf[65] = {0};
-//     while (fgets(buf, sizeof(buf), file)) {
-//         char type = buf[ADDR_LEN];
-
-//         ReadData(L1, BinStrToNum(buf, ADDR_LEN));
-//     }
-// }
 
 // Takes in a binary string, computes the value as an unsigned 64-bit integer
 // The input for n should usually be either 32 or 64
