@@ -29,6 +29,16 @@ body {
     border: 3px solid;
 }
 
+.cache-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.cache-header button {
+    background-color: red;
+}
+
 #navbar {
     display: flex;
     flex-direction: row;

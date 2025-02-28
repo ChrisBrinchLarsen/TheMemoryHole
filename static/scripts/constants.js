@@ -34,3 +34,5 @@ const R = [
 ];
 
 INSTR = document.getElementById("instr");
+ARCHITECTURE = document.getElementById("architecture")
+ADD_CACHE = document.getElementById("add-cache")

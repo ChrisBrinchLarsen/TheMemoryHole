@@ -21,19 +21,7 @@
     </div>
     <div id="main-content">
         <div id="architecture">
-            <div class="cache-container">
-                <h2 class="cache-title">L1</h2>
-                <div class="cache-setting">
-                    Cache size: 2^<input class="num-box" type="number"> * <input class="num-box" type="number"> bytes
-                </div>
-                <div class="cache-setting">
-                    Block size: 2^<input class="num-box" type="number"> bytes
-                </div>
-                <div class="cache-setting">
-                    Associativity: <input class="num-box" type="number">-way
-                </div>
-            </div>
-            <button>Add Cache +</button>
+            <button id="add-cache" onclick="addCache()">Add Cache +</button>
         </div>
         <div id="program_side">
             <textarea id="programText" rows="4" cols="50"></textarea><br>
@@ -43,5 +31,6 @@
     
 </div>
 
+<script src="{{ url_for('static', filename='scripts/constants.js') }}"></script>
 <script src="{{ url_for('static', filename='scripts/main.js') }}"></script>
 {% endblock %}
