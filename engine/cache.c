@@ -9,11 +9,12 @@
 #include <math.h>
 #include "mmu.h"
 
-// Cache architecture
-// const uint32_t CACHE_SIZE = 1024;          // Amount of bytes in cache
-// #define BLOCK_SIZE 8                       // Amount of bytes in a block
-// const uint32_t ASSOCIATIVITY = 4;           // How associative our cache is, determines how many lines are in each set
-// const uint32_t ADDR_LEN = 32;               // The address length, usually 32-bit or 64-bit
+typedef struct Address {
+    uint32_t fullAddr;
+    uint32_t tag;
+    uint32_t setIndex;
+    uint32_t blockOffset;
+} Address_t;
 
 // shouldn't need to be exposed actually
 int ADDR_LEN = 32;
@@ -38,6 +39,25 @@ FILE* CACHE_LOG;
 const uint32_t ACTIVE_REPLACEMENT_POLICY = LRU_REPLACEMENT_POLICY;
 
 Cache_t* L1;
+
+// Private function prototypes
+char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDirty, int layer);
+int GetLineIndexFromTag(Cache_t* cache, uint32_t setIndex, uint32_t tag);
+int GetReplacementLineIndex(Cache_t* cache, uint32_t setIndex);
+void UpdateCacheSet(Cache_t* cache, uint32_t setIndex);
+void EvictCacheLine(Cache_t* cache, uint32_t addr, CacheLine_t* evict_line, struct memory *mem);
+void CacheSetToString(Cache_t* cache, int setIndex, char* out);
+void CacheLineToString(Cache_t* cache, uint32_t setIndex, uint32_t lineIndex, char* out);
+void PrintSet(Cache_t* cache, uint32_t setIndex);
+void PrintCache(Cache_t* cache);
+void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSize);
+Address_t GetAddress(Cache_t* cache, uint32_t address);
+void Cache_free(Cache_t* c);
+uint64_t BinStrToNum(char* num, int n);
+Cache_t* Cache_new(uint32_t cacheSize, uint32_t associativity);
+CacheLine_t CacheLine_new(bool valid, bool dirty, uint32_t tag, uint32_t LRU, char* block);
+void CacheLine_free(CacheLine_t* l);
+
 
 void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSize) {
     // NOTE: This function assumes that cache inclusivity holds
