@@ -80,7 +80,7 @@ void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSiz
 }
 
 void cache_wr_w(Cache_t *cache, struct memory *mem, int addr, uint32_t data) {
-    fprintf(CACHE_LOG, "ww 0x%x <- %d\n", addr, data);
+    fprintf(CACHE_LOG, "ww 0x%x %d\n", addr, data);
 
     // TODO : Check if address is word-aligned
     char* block = FetchBlock(cache, addr, mem, true, 1);
@@ -91,7 +91,7 @@ void cache_wr_w(Cache_t *cache, struct memory *mem, int addr, uint32_t data) {
 }
 
 void cache_wr_h(Cache_t *cache, struct memory *mem, int addr, uint16_t data) {
-    fprintf(CACHE_LOG, "wh 0x%x <- %d\n", addr, data);
+    fprintf(CACHE_LOG, "wh 0x%x %d\n", addr, data);
     // TODO : Check if address in half-aligned
     char* block = FetchBlock(cache, addr, mem, true, 1);
 
@@ -101,7 +101,7 @@ void cache_wr_h(Cache_t *cache, struct memory *mem, int addr, uint16_t data) {
 }
 
 void cache_wr_b(Cache_t *cache, struct memory *mem, int addr, uint8_t data) {
-    fprintf(CACHE_LOG, "wb 0x%x <- %d\n", addr, data);
+    fprintf(CACHE_LOG, "wb 0x%x %d\n", addr, data);
     char* block = FetchBlock(cache, addr, mem, true, 1);
 
     Address_t a = GetAddress(cache, addr);
@@ -150,7 +150,7 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
     // check if line is already in set, otherwise add it. CACHE HIT/MISS
     // MISS
     if (lineIndex == -1) {
-        fprintf(CACHE_LOG, "L%d miss in set %d\n", layer, a.setIndex);
+        fprintf(CACHE_LOG, "%d M %d\n", layer, a.setIndex);
         MISSES[layer-1]++;
 
         // the cache below returns its entire block, we need to know which part of that cache is our block (since it might be smaller)
@@ -170,7 +170,7 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
 
         }
         else {
-            fprintf(CACHE_LOG, "RAM contacted\n");
+            fprintf(CACHE_LOG, "RAM\n");
             CYCLES += RAM_DELAY;
             block = find_block(mem, addr, cache->blockSize);
 
@@ -181,7 +181,7 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
         
         // evict
         if (cache->sets[a.setIndex][lineIndex].valid) {
-            fprintf(CACHE_LOG, "Layer %d eviction in set %d\n", layer, a.setIndex);
+            fprintf(CACHE_LOG, "%d E %d\n", layer, a.setIndex);
             // Here we need to find the address of the cacheline to be able to find it in the lower cache, otherwise we don't know where to evict it to.
             uint32_t evictAddr = (cache->sets[a.setIndex][lineIndex].tag << (cache->SetBitLength + cache->blockOffsetBitLength)) | (a.setIndex << cache->blockOffsetBitLength);
             EvictCacheLine(cache, evictAddr, &cache->sets[a.setIndex][lineIndex], mem);
@@ -202,7 +202,7 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
         HITS[layer-1]++;
         CYCLES += HIT_DELAYS[layer-1];
 
-        fprintf(CACHE_LOG, "L%d hit in set %d\n", layer, a.setIndex);
+        fprintf(CACHE_LOG, "%d H %d\n", layer, a.setIndex);
     }
     
     if (markDirty) {
@@ -344,10 +344,6 @@ Cache_t** ParseCPUArchitecture(char* path) {
     MISSES = malloc(N_CACHE_LEVELS * sizeof(uint32_t));
     
     // Logging info about the general cache architecture
-    fprintf(CACHE_LOG, "--- Architecture ---\n");
-    fprintf(CACHE_LOG, "Addr_len: %d\n", ADDR_LEN);
-    fprintf(CACHE_LOG, "Cache Layers: %d\n", N_CACHE_LEVELS);
-
     Cache_t** caches = malloc(N_CACHE_LEVELS * (sizeof(Cache_t*)));
 
     for (int i = 0; i < N_CACHE_LEVELS; i++) {
@@ -371,9 +367,6 @@ Cache_t** ParseCPUArchitecture(char* path) {
         BLOCK_SIZE = (int)pow(2, k);
         uint32_t cache_size = (uint32_t)(pow(2,p) * q);
         caches[i] = Cache_new(cache_size, associativity);
-
-        // Logging info about this cache layer
-        fprintf(CACHE_LOG, "-- L%d --\nSize: %0.0f\nBlock size: %0.0f\nAssociativity: %d-way\n", i+1, pow(2, p) * q, pow(2, k), associativity);
     }
 
     fclose(file);
@@ -381,7 +374,6 @@ Cache_t** ParseCPUArchitecture(char* path) {
     for (int i = 0; i < (N_CACHE_LEVELS-1); i++) {
         caches[i]->childCache = caches[i+1]; // L1 -> L2 -> L3 -> NULL (since children are set to NULL in constructor)
     }
-    fprintf(CACHE_LOG, "--- Program ---\n");
     return caches;
 }
 

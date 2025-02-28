@@ -22,4 +22,3 @@ int main(int argc, char* argv[]) {
   print_string("\n");
   return 0;
 }
-

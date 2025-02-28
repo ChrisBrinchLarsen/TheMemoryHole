@@ -53,9 +53,9 @@ long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE 
         }
 
         // Read next instruction
-        fprintf(CACHE_LOG_POINTER, "Fetching instruction: ");
+        fprintf(CACHE_LOG_POINTER, "fetch: ");
         int instructionInt = memory_rd_w(mem, PC);
-
+        fprintf(CACHE_LOG_POINTER, "endfetch\n");
 
         // Least significant 6 bits of instruction make up the OPCODE
         uint32_t OPCODE = instructionInt & 0x7F; 
@@ -70,7 +70,6 @@ long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE 
         if (log_enabled) {
             fprintf(log_file, "\n"); // End each instruction log with a newline
         }
-        fprintf(CACHE_LOG_POINTER, "--------\n");
         // Terminate if flag was turned on during instruction
         if (terminateFlag) {break;}
     }
@@ -85,13 +84,13 @@ long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE 
 // We always use this setter to write to registers so that we don't overwrite x0
 void wrReg(int registerID, int data) {
     if (registerID == 0) {return;}
-    fprintf(CACHE_LOG_POINTER, "w reg %d <- %d\n", registerID, data);
+    fprintf(CACHE_LOG_POINTER, "w %d %d\n", registerID, data);
     R[registerID] = data;
 }
 
 // TODO: All significant reads in the rest of this program need to be using this function instead 
 int rdReg(int registerID) {
-    fprintf(CACHE_LOG_POINTER, "r reg %d\n", registerID);
+    fprintf(CACHE_LOG_POINTER, "r %d\n", registerID);
     return R[registerID];
 }
 

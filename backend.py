@@ -1,5 +1,5 @@
-from flask import Flask, render_template
-from flask_socketio import SocketIO
+from flask import Flask, render_template, request
+from flask_socketio import SocketIO, emit
 import os
 import logging
 import uuid
@@ -8,13 +8,17 @@ import subprocess
 app = Flask(__name__)
 app.config['SECRET_KEY'] = uuid.uuid4().hex
 log = logging.getLogger('werkzeug')
-log.disabled = False
+log.disabled = True
 socketio = SocketIO(app)
 
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/visualizer')
+def visualizer():
+    return render_template('visualizer.html')
 
 # TODO: Very important that we make the config and program filenames be unique
 # and random, as well as have them cleaned ud (deleted) after use. This is due
@@ -25,9 +29,8 @@ def handle_run_program(data):
     config = data["config"]
     program = data["program"]
     N_CACHE_LEVELS = len(config)
-    print(N_CACHE_LEVELS)
     args = ""
-    id = uuid.uuid4()
+    id = uuid.uuid4().hex
     architecture_file_name = f"./tmp/architecture_{id}"
     program_file_name = f"./tmp/program_{id}"
 
@@ -52,8 +55,20 @@ def handle_run_program(data):
     print(result.stdout)
 
     # TODO: Add parsing and sending back each iteration from cache_log to frontend
+    loading_instr = []
+    executing_prog = []
+    with open("cache_log", "r") as log:
+        line = log.readline()
+        while (line != "---- PROGRAM START ----\n"): # Writing program to memory
+            line = log.readline()
+        while (line != ""): # Executing program
+            line = log.readline()
 
-    os.system(f"rm -f accesses cache_log {program_file_name}.riscv {program_file_name}.dis {program_file_name}.c {architecture_file_name}")
+    os.system(f"rm -f accesses {program_file_name}.riscv {program_file_name}.dis {program_file_name}.c {architecture_file_name}")
+
+
+
+    return loading_instr, executing_prog
 
 
 

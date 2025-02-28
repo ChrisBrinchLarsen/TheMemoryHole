@@ -79,6 +79,7 @@ int main(int argc, char *argv[])
     uint32_t mem_cycles = finalize_cache();
     int N_CACHE_LAYERS = get_cache_layer_count();
     int misses, hits, total_hits;
+    printf("-- Cache Summary --\n");
     for (int i = 0; i < N_CACHE_LAYERS; i++) {
       misses = get_misses_at_layer(i);
       hits = get_hits_at_layer(i);

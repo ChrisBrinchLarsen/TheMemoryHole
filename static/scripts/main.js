@@ -2,7 +2,13 @@ simpleCPU = [{p:6,q:1,k:4,a:1}, {p:7,q:1,k:4,a:2}]
 function sendProgram() {
     programText = document.getElementById("programText").value;
     document.getElementById("programText").value = "";
-    socket.emit("run_program", {program:programText, config:confirmArchitecture()})
+    socket.emit("run_program", {program:programText, config:confirmArchitecture()}, runCallback)
+}
+
+function runCallback(instr_load_log, execution_log) {
+    window.location.href = "/visualizer"
+    console.log(instr_load_log)
+    console.log(execution_log)
 }
 
 function confirmArchitecture() {
