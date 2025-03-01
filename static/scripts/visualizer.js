@@ -1,12 +1,17 @@
-function visualize(config, load_log, exec_log) {
-    visualizeStep(exec_log[0])
-    for (let i = 1; i < exec_log.length; i += 1) {
-        setTimeout(() => {
-            visualizeStep(exec_log[i]);
-        }, 250);
-    }
+let CONFIG = {}
+let LOAD_LOG = []
+let EXEC_LOG = []
+let TOTAL_STEPS = 0
+let CURRENT_STEP = 0
 
-    visualizeStep(exec_log[1])
+function visualize() {
+    console.log(CURRENT_STEP)
+    visualizeStep(EXEC_LOG[CURRENT_STEP])
+    CURRENT_STEP += 1
+    if (CURRENT_STEP == (TOTAL_STEPS - 1)) {return}
+    setTimeout(() => {
+        visualize();
+    }, 250);
 }
 
 function visualizeStep(step) {

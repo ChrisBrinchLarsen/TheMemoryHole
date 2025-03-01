@@ -8,7 +8,11 @@ function sendProgram() {
 function runCallback(config, load_log, exec_log) {
     INPUT_PAGE.style.display = "none";
     VISUALIZATION_PAGE.style.display = "flex";
-    visualize(config, load_log, exec_log)
+    CONFIG = config
+    LOAD_LOG = load_log
+    EXEC_LOG = exec_log
+    TOTAL_STEPS = load_log.length + exec_log.length
+    visualize()
 }
 
 function confirmArchitecture() {
