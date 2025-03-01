@@ -42,6 +42,7 @@ body {
 #navbar {
     display: flex;
     flex-direction: row;
+    justify-content: space-between;
     height: 3rem;
     background-color: darkgray;
 }

@@ -2,17 +2,17 @@
 
 int main(int argc, char* argv[]) {
   char buffer[20];
-  int matrix[100][100];
+  int matrix[25][25];
 
-  for (int j = 0; j < 100; j++) {
-    for (int i = 0; i < 100; i++) {
+  for (int j = 0; j < 25; j++) {
+    for (int i = 0; i < 25; i++) {
       matrix[i][j] = 1;
     }
   }
 
   unsigned int sum = 0;
-  for (int j = 0; j < 100; j++) {
-    for (int i = 0; i < 100; i++) {
+  for (int j = 0; j < 25; j++) {
+    for (int i = 0; i < 25; i++) {
       sum += matrix[i][j];
     }
   }

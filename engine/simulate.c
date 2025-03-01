@@ -154,19 +154,19 @@ void ProcessR(int instruction) {
                 fprintf(log_file_global, "R[%d] <- (%d - %d = %d)", rd, R[rs1], R[rs2], R[rs1] - R[rs2]);
             }
             fprintf(CACHE_LOG_POINTER, "SUB %d, %d, %d\n", rd, rs1, rs2);
-            wrReg(rd, R[rs1] - R[rs2]);
+            wrReg(rd, rdReg(rs1) - rdReg(rs2));
         } else if (funct7 == 0x00) { // Add
             if (log_enabled) {
                 fprintf(log_file_global, "R[%d] <- (%d + %d = %d)", rd, R[rs1], R[rs2], R[rs1] + R[rs2]);
             }
             fprintf(CACHE_LOG_POINTER, "ADD %d, %d, %d\n", rd, rs1, rs2);
-            wrReg(rd, R[rs1] + R[rs2]);
+            wrReg(rd, rdReg(rs1) + rdReg(rs2));
         } else if (funct7 == 0x01) { // Mul
             if (log_enabled) {
                 fprintf(log_file_global, "R[%d] <- (%d * %d = %d)", rd, R[rs1], R[rs2], R[rs1] * R[rs2]);
             }
             fprintf(CACHE_LOG_POINTER, "MUL %d, %d, %d\n", rd, rs1, rs2);
-            wrReg(rd, R[rs1] * R[rs2]);
+            wrReg(rd, rdReg(rs1) * rdReg(rs2));
         } else {
             printf("Unexpected funct7 value.\n");
         }
@@ -177,9 +177,11 @@ void ProcessR(int instruction) {
                 fprintf(log_file_global, "R[%d] <- (%d ^ %d = %d)", rd, R[rs1], R[rs2], R[rs1] ^ R[rs2]);
             }
             fprintf(CACHE_LOG_POINTER, "XOR %d, %d, %d\n", rd, rs1, rs2);
-            wrReg(rd, R[rs1] ^ R[rs2]);
+            wrReg(rd, rdReg(rs1) ^ rdReg(rs2));
         } else if (funct7 == 0x01) { // Div
             fprintf(CACHE_LOG_POINTER, "DIV %d, %d, %d\n", rd, rs1, rs2);
+            rdReg(rs1);
+            rdReg(rs2);
             if (R[rs2] == 0) { // Division by zero
                 wrReg(rd, -1);
             } else if (R[rs1] == (int)pow(-2, 31) && R[rs2] == -1) { // Signed overflow
@@ -200,9 +202,11 @@ void ProcessR(int instruction) {
                 fprintf(log_file_global, "R[%d] <- (%d | %d = %d)", rd, R[rs1], R[rs2], R[rs1] | R[rs2]);
             }
             fprintf(CACHE_LOG_POINTER, "OR %d, %d, %d\n", rd, rs1, rs2);
-            wrReg(rd, R[rs1] | R[rs2]);
+            wrReg(rd, rdReg(rs1) | rdReg(rs2));
         } else if (funct7 == 0x01) { // Remainder
             fprintf(CACHE_LOG_POINTER, "REM %d, %d, %d\n", rd, rs1, rs2);
+            rdReg(rs1);
+            rdReg(rs2);
             if (R[rs2] == 0) { // Division by zero
                 wrReg(rd, R[rs1]);
             } else if (R[rs1] == (int)pow(-2, 31) && R[rs2] == -1) { // Signed overflow
@@ -220,8 +224,11 @@ void ProcessR(int instruction) {
     case 0x7: // AND and Remainder (U)
         if (funct7 == 0x00) { // AND
             fprintf(CACHE_LOG_POINTER, "ANDU %d, %d, %d\n", rd, rs1, rs2);
-            wrReg(rd, R[rs1] & R[rs2]);
+            wrReg(rd, rdReg(rs1) & rdReg(rs2));
         } else if (funct7 == 0x01) { // Remainder (U)
+            fprintf(CACHE_LOG_POINTER, "REMU %d, %d, %d\n", rd, rs1, rs2);
+            rdReg(rs1);
+            rdReg(rs2);
             if (R[rs2] == 0) { // Division by zero
                 wrReg(rd, R[rs1]);
             } else {
@@ -230,7 +237,6 @@ void ProcessR(int instruction) {
                 if (log_enabled) {
                     fprintf(log_file_global, "R[%d] <- (%u mod %u = %d)", rd, u1, u2, u1 % u2);
                 }
-                fprintf(CACHE_LOG_POINTER, "REMU %d, %d, %d\n", rd, rs1, rs2);
                 wrReg(rd, u1 % u2);
             }
         } else {
@@ -243,7 +249,7 @@ void ProcessR(int instruction) {
                 fprintf(log_file_global, "R[%d] <- (%d << %d = %d)", rd, R[rs1], R[rs2], R[rs1] << R[rs2]);
             }
             fprintf(CACHE_LOG_POINTER, "SLL %d, %d, %d\n", rd, rs1, rs2);
-            wrReg(rd, R[rs1] << R[rs2]);
+            wrReg(rd, rdReg(rs1) << rdReg(rs2));
         } else {
             printf("Unexpected funct7 value.\n");
         }
@@ -254,15 +260,18 @@ void ProcessR(int instruction) {
                 fprintf(log_file_global, "R[%d] <- (%d >> %d = %d)", rd, R[rs1], R[rs2], R[rs1] >> R[rs2]);
             }
             fprintf(CACHE_LOG_POINTER, "SRA %d, %d, %d\n", rd, rs1, rs2);
-            wrReg(rd, R[rs1] >> R[rs2]); // Arithmetic
+            wrReg(rd, rdReg(rs1) >> rdReg(rs2)); // Arithmetic
         } else if (funct7 == 0x00) {
-            unsigned int u1 = (unsigned int)R[rs1];
+            unsigned int u1 = (unsigned int)rdReg(rs1);
             if (log_enabled) {
                 fprintf(log_file_global, "R[%d] <- (%d >> %d = %d)", rd, u1, R[rs2], (int)((u1) >> R[rs2]));
             }
             fprintf(CACHE_LOG_POINTER, "SRL %d, %d, %d\n", rd, rs1, rs2);
-            wrReg(rd, (int)((u1) >> R[rs2])); // Logical
+            wrReg(rd, (int)((u1) >> rdReg(rs2))); // Logical
         } else if (funct7 == 0x01) { // Div (U)
+            fprintf(CACHE_LOG_POINTER, "DIVU %d, %d, %d\n", rd, rs1, rs2);
+            rdReg(rs1);
+            rdReg(rs2);
             if (R[rs2] == 0) { // Division by zero
                 wrReg(rd, UINT32_MAX);
             } else {
@@ -271,7 +280,6 @@ void ProcessR(int instruction) {
                 if (log_enabled) {
                     fprintf(log_file_global, "R[%d] <- (%d / %d = %d)", rd, u1, u2, u1 / u2);
                 }
-                fprintf(CACHE_LOG_POINTER, "DIVU %d, %d, %d\n", rd, rs1, rs2);
                 wrReg(rd, u1 / u2); 
             }
         } else {
@@ -281,15 +289,15 @@ void ProcessR(int instruction) {
     case 0x2: // Set if LT
         if (funct7 == 0x00) {
             fprintf(CACHE_LOG_POINTER, "SLT %d, %d, %d\n", rd, rs1, rs2);
-            wrReg(rd, (R[rs1] < R[rs2])?1:0);
+            wrReg(rd, (rdReg(rs1) < rdReg(rs2))?1:0);
         } else {
             printf("Unexpected funct7 value.\n");
         }
         break;
     case 0x3: // Set if LT (U)
         if (funct7 == 0x00) {
-            unsigned int u1 = (unsigned int)R[rs1];
-            unsigned int u2 = (unsigned int)R[rs2];
+            unsigned int u1 = (unsigned int)rdReg(rs1);
+            unsigned int u2 = (unsigned int)rdReg(rs2);
             fprintf(CACHE_LOG_POINTER, "SLTU %d, %d, %d\n", rd, rs1, rs2);
             wrReg(rd, (u1 < u2)?1:0);
         } else {
@@ -317,35 +325,35 @@ void ProcessI_A(int instruction) {
     case 0x0:; // ADD Immediate // The semi colon on this line supresses a warning
         int rs1Val = R[rs1];
         fprintf(CACHE_LOG_POINTER, "ADDI %d, %d, %d\n", rd, rs1, imm);
-        wrReg(rd, R[rs1] + imm);
+        wrReg(rd, rdReg(rs1) + imm);
         if (log_enabled) {
             fprintf(log_file_global, "R[%d] <- (%d + %d = %d)", rd, rs1Val, imm, rs1Val + imm);
         }
         break;
     case 0x4: // XOR Immediate
         fprintf(CACHE_LOG_POINTER, "XORI %d, %d, %d\n", rd, rs1, imm);
-        wrReg(rd, R[rs1] ^ imm);
+        wrReg(rd, rdReg(rs1) ^ imm);
         if (log_enabled) {
             fprintf(log_file_global, "R[%d] <- (%d ^ %d = %d)", rd, R[rs1], imm, R[rs1] ^ imm);
         }
         break;
     case 0x6: // OR Immediate
         fprintf(CACHE_LOG_POINTER, "ORI %d, %d, %d\n", rd, rs1, imm);
-        wrReg(rd, R[rs1] | imm);
+        wrReg(rd, rdReg(rs1) | imm);
         if (log_enabled) {
             fprintf(log_file_global, "R[%d] <- (%d | %d = %d)", rd, R[rs1], imm, R[rs1] | imm);
         }
         break;
     case 0x7: // AND Immediate
         fprintf(CACHE_LOG_POINTER, "ANDI %d, %d, %d\n", rd, rs1, imm);
-        wrReg(rd, R[rs1] & imm);
+        wrReg(rd, rdReg(rs1) & imm);
         if (log_enabled) {
             fprintf(log_file_global, "R[%d] <- (%d & %d = %d)", rd, R[rs1], imm, R[rs1] & imm);
         }
         break;
     case 0x1: // Shift Left Logical Immediate
         if (funct7 == 0x00) {
-            unsigned int u1 = (unsigned int)R[rs1];
+            unsigned int u1 = (unsigned int)rdReg(rs1);
             fprintf(CACHE_LOG_POINTER, "SLLI %d, %d, %d\n", rd, rs1, shiftValue);
             wrReg(rd, (int)((u1) << shiftValue));
             if (log_enabled) {
@@ -357,7 +365,7 @@ void ProcessI_A(int instruction) {
         break;
     case 0x5: // Shift Right Logical/Arithmetic Immediate
         if (funct7 == 0x00) { // Logical
-            unsigned int u1 = (unsigned int)R[rs1];
+            unsigned int u1 = (unsigned int)rdReg(rs1);
             fprintf(CACHE_LOG_POINTER, "SRLI %d, %d, %d\n", rd, rs1, shiftValue);
             wrReg(rd, (int)((u1) >> shiftValue));
             if (log_enabled) {
@@ -365,7 +373,7 @@ void ProcessI_A(int instruction) {
             }
         } else if (funct7 == 0x20) { // Arithmetic
             fprintf(CACHE_LOG_POINTER, "SRAI %d, %d, %d\n", rd, rs1, shiftValue);
-            wrReg(rd, R[rs1] >> shiftValue);
+            wrReg(rd, rdReg(rs1) >> shiftValue);
             if (log_enabled) {
                 fprintf(log_file_global, "R[%d] <- (%d >> %d = %d)", rd, R[rs1], shiftValue, R[rd]);
             }
@@ -378,11 +386,11 @@ void ProcessI_A(int instruction) {
             fprintf(log_file_global, "R[%d] <- (%d < %d = %d)", rd, R[rs1], imm, (R[rs1] < imm)?1:0);
         }
         fprintf(CACHE_LOG_POINTER, "SLTI %d, %d, %d\n", rd, rs1, imm);
-        wrReg(rd, (R[rs1] < imm)?1:0);
+        wrReg(rd, (rdReg(rs1) < imm)?1:0);
         
         break;
     case 0x3:; // Set Less Than Immediate (U) // The semi-colon on this line supresses an error
-        unsigned int u1 = (unsigned int)R[rs1];
+        unsigned int u1 = (unsigned int)rdReg(rs1);
         unsigned int uImm = (unsigned int)imm;
         if (log_enabled) {
             fprintf(log_file_global, "R[%d] <- (%u < %u = %d)", rd, u1, uImm, (u1 < uImm)?1:0);
@@ -409,7 +417,7 @@ void ProcessI_L(int instruction, struct memory *mem) {
 
     switch (funct3) {
         case 0x0: // Load Byte
-            valueToSave = memory_rd_b(mem, R[rs1] + imm);
+            valueToSave = memory_rd_b(mem, rdReg(rs1) + imm);
             valueToSaveSE = (valueToSave << 24) >> 24;
             if (log_enabled) {
                 fprintf(log_file_global, "Load %d into R[%d] from %x", valueToSaveSE, rd, R[rs1] + imm);
@@ -418,7 +426,7 @@ void ProcessI_L(int instruction, struct memory *mem) {
             wrReg(rd, valueToSaveSE);
             break;
         case 0x1: // Load Half
-            valueToSave = memory_rd_h(mem, R[rs1] + imm);
+            valueToSave = memory_rd_h(mem, rdReg(rs1) + imm);
             valueToSaveSE = (valueToSave << 16) >> 16;
             if (log_enabled) {
                 fprintf(log_file_global, "Load %d into R[%d] from %x", valueToSaveSE, rd, R[rs1] + imm);
@@ -429,7 +437,7 @@ void ProcessI_L(int instruction, struct memory *mem) {
         case 0x2: // Load Word
             log_offset = R[rs1] + imm;
             fprintf(CACHE_LOG_POINTER, "LW %d, %d(%d)\n", rd, imm, rs1);
-            wrReg(rd, memory_rd_w(mem, R[rs1] + imm));
+            wrReg(rd, memory_rd_w(mem, rdReg(rs1) + imm));
             if (log_enabled) {
                 fprintf(log_file_global, "Load %d into R[%d] from %x", R[rd], rd, log_offset);
             }
@@ -437,7 +445,7 @@ void ProcessI_L(int instruction, struct memory *mem) {
         case 0x4: // Load Byte (U)
             log_offset = R[rs1] + imm;
             fprintf(CACHE_LOG_POINTER, "LBU %d, %d(%d)\n", rd, imm, rs1);
-            wrReg(rd, memory_rd_b(mem, R[rs1] + imm));
+            wrReg(rd, memory_rd_b(mem, rdReg(rs1) + imm));
             if (log_enabled) {
                 fprintf(log_file_global, "Load %d into R[%d] from %x", R[rd], rd, log_offset);
             }
@@ -445,7 +453,7 @@ void ProcessI_L(int instruction, struct memory *mem) {
         case 0x5: // Load Half (U)
             log_offset = R[rs1] + imm;
             fprintf(CACHE_LOG_POINTER, "LHU %d, %d(%d)\n", rd, imm, rs1);
-            wrReg(rd, memory_rd_h(mem, R[rs1] + imm));
+            wrReg(rd, memory_rd_h(mem, rdReg(rs1) + imm));
             if (log_enabled) {
                 fprintf(log_file_global, "Load %d into R[%d] from %x", R[rd], rd, log_offset);
             }
@@ -461,7 +469,9 @@ void ProcessI_E(int instruction) {
     int imm = instruction & 0xFFF00000;
     imm = imm >> 20;
 
-    int callType = R[A7]; // A7
+
+    fprintf(CACHE_LOG_POINTER, "ecall\n");
+    int callType = rdReg(A7); // A7
 
     switch (callType) {
         case 1: // return getchar() in A0
@@ -474,7 +484,7 @@ void ProcessI_E(int instruction) {
             if (log_enabled) {
                 fprintf(log_file_global, "Wrote '%c' to user", R[A0]);
             }
-            putchar(R[A0]);
+            putchar(rdReg(A0));
             break;
         case 3: // terminate simulation
         case 93:
@@ -498,11 +508,11 @@ void ProcessI_J(int instruction) {
     imm = imm >> 20;
 
     if (funct3 == 0x0) { // Jump And Link Register
-        int offset = R[rs1];
+        fprintf(CACHE_LOG_POINTER, "JALR %d, %d, %d\n", rd, rs1, imm);
+        int offset = rdReg(rs1);
         if (log_enabled) {
             fprintf(log_file_global, "Jump %x -> %x", PC, offset + imm);
         }
-        fprintf(CACHE_LOG_POINTER, "JALR %d, %d, %d\n", rd, rs1, imm);
         wrReg(rd, PC+4);
         PC = offset + imm;
         advancePC = 0;
@@ -525,7 +535,7 @@ void ProcessS(int instruction, struct memory *mem) {
     switch (funct3) {
     case 0x0: // Store Byte
         fprintf(CACHE_LOG_POINTER, "SB %d, %d(%d)\n", rs2, imm, rs1);
-        memory_wr_b(mem, R[rs1] + imm, R[rs2]);
+        memory_wr_b(mem, rdReg(rs1) + imm, rdReg(rs2));
         if (log_enabled) {
             fprintf(log_file_global, "(%x+%x=%x) <- %d", imm, R[rs1], R[rs1] + imm, R[rs2]);
         } 
@@ -535,14 +545,14 @@ void ProcessS(int instruction, struct memory *mem) {
             fprintf(log_file_global, "%x <- %d", R[rs1] + imm, R[rs2]);
         }
         fprintf(CACHE_LOG_POINTER, "SH %d, %d(%d)\n", rs2, imm, rs1);
-        memory_wr_h(mem, R[rs1] + imm, R[rs2]);
+        memory_wr_h(mem, rdReg(rs1) + imm, rdReg(rs2));
         break;
     case 0x2: // Store Word
         if (log_enabled) {
             fprintf(log_file_global, "%x <- %d", R[rs1] + imm, R[rs2]);
         }
         fprintf(CACHE_LOG_POINTER, "SW %d, %d(%d)\n", rs2, imm, rs1);
-        memory_wr_w(mem, R[rs1] + imm, R[rs2]);
+        memory_wr_w(mem, rdReg(rs1) + imm, rdReg(rs2));
         break;
     default:
         break;
@@ -570,45 +580,45 @@ void ProcessB(int instruction) {
             fprintf(log_file_global, "%d == %d = %d", R[rs1], R[rs2], R[rs1] == R[rs2]);
         }
         fprintf(CACHE_LOG_POINTER, "BEQ %d, %d, %d\n", rs1, rs2, imm);
-        if (R[rs1] == R[rs2]) {PC += imm; advancePC = 0;}
+        if (rdReg(rs1) == rdReg(rs2)) {PC += imm; advancePC = 0;}
         break;
     case 0x1: // Branch !=
         if (log_enabled) {
             fprintf(log_file_global, "%d != %d = %d", R[rs1], R[rs2], R[rs1] != R[rs2]);
         }
         fprintf(CACHE_LOG_POINTER, "BNE %d, %d, %d\n", rs1, rs2, imm);
-        if (R[rs1] != R[rs2]) {PC += imm; advancePC = 0;}
+        if (rdReg(rs1) != rdReg(rs2)) {PC += imm; advancePC = 0;}
         break;
     case 0x4: // Branch <
         if (log_enabled) {
             fprintf(log_file_global, "%d < %d = %d", R[rs1], R[rs2], R[rs1] < R[rs2]);
         }
         fprintf(CACHE_LOG_POINTER, "BLT %d, %d, %d\n", rs1, rs2, imm);
-        if (R[rs1] < R[rs2]) {PC += imm; advancePC = 0;}
+        if (rdReg(rs1) < rdReg(rs2)) {PC += imm; advancePC = 0;}
         break;
     case 0x5: // Branch >=
         if (log_enabled) {
             fprintf(log_file_global, "%d >= %d = %d", R[rs1], R[rs2], R[rs1] >= R[rs2]);
         }
         fprintf(CACHE_LOG_POINTER, "BGE %d, %d, %d\n", rs1, rs2, imm);
-        if (R[rs1] >= R[rs2]) {PC += imm; advancePC = 0;}
+        if (rdReg(rs1) >= rdReg(rs2)) {PC += imm; advancePC = 0;}
         break;
     case 0x6: // Branch < (U)
-        u1 = (unsigned int)R[rs1];
-        u2 = (unsigned int)R[rs2];
+        fprintf(CACHE_LOG_POINTER, "BLTU %d, %d, %d\n", rs1, rs2, imm);
+        u1 = (unsigned int)rdReg(rs1);
+        u2 = (unsigned int)rdReg(rs2);
         if (log_enabled) {
             fprintf(log_file_global, "%u < %u = %d", u1, u2, u1 < u2);
         }
-        fprintf(CACHE_LOG_POINTER, "BLTU %d, %d, %d\n", rs1, rs2, imm);
         if (u1 < u2) {PC += imm; advancePC = 0;}
         break;
     case 0x7: // Branch >= (U)
-        u1 = (unsigned int)R[rs1];
-        u2 = (unsigned int)R[rs2];
+        fprintf(CACHE_LOG_POINTER, "BGEU %d, %d, %d\n", rs1, rs2, imm);
+        u1 = (unsigned int)rdReg(rs1);
+        u2 = (unsigned int)rdReg(rs2);
         if (log_enabled) {
             fprintf(log_file_global, "%u >= %u = %d", u1, u2, u1 >= u2);
         }
-        fprintf(CACHE_LOG_POINTER, "BGEU %d, %d, %d\n", rs1, rs2, imm);
         if (u1 >= u2) {PC += imm; advancePC = 0;}
         break;
     default:

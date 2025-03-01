@@ -40,3 +40,4 @@ const R = [
 ];
 
 const INSTR = document.getElementById("instr");
+const INSTR_COUNTER = document.getElementById("instr_counter")

@@ -3,21 +3,30 @@ let LOAD_LOG = []
 let EXEC_LOG = []
 let TOTAL_STEPS = 0
 let CURRENT_STEP = 0
+const DELAY = 0
+
 
 function visualize() {
-    console.log(CURRENT_STEP)
     visualizeStep(EXEC_LOG[CURRENT_STEP])
     CURRENT_STEP += 1
-    if (CURRENT_STEP == (TOTAL_STEPS - 1)) {return}
+    if (CURRENT_STEP == (TOTAL_STEPS - 1)) {
+        setTimeout(() => {
+            visualizeStep(EXEC_LOG[CURRENT_STEP]);
+        }, DELAY);
+        return
+    }
     setTimeout(() => {
         visualize();
-    }, 250);
+    }, DELAY);
 }
 
 function visualizeStep(step) {
-    console.log(step)
-    document.getElementById("instr").innerHTML = step["title"]
+    INSTR_COUNTER.innerHTML = "(" + (CURRENT_STEP+1) + "/" + TOTAL_STEPS + ") "
+    INSTR.innerHTML = step["title"]
     visualizeInstr(step["readers"], step["writers"])
+    if (CURRENT_STEP == TOTAL_STEPS - 1) {
+        EXEC_LOG = []
+    }
 }
 
 function visualizeInstr(readers, writers) {
