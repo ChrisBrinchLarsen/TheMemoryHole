@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, session
 from flask_socketio import SocketIO, emit
 import os
 import logging
@@ -19,6 +19,10 @@ def index():
 @app.route('/visualizer')
 def visualizer():
     return render_template('visualizer.html')
+
+@app.route("/get_logs")
+def get_logs():
+    return [[], session["loading_prog"], session["executing_prog"]]
 
 # TODO: Very important that we make the config and program filenames be unique
 # and random, as well as have them cleaned ud (deleted) after use. This is due
@@ -58,7 +62,7 @@ def handle_run_program(data):
         while (line != "---- PROGRAM START ----\n"): # Writing program to memory
             line = log.readline()
         while (True): # Executing program
-            step = {"type":"", "title":"", "ram":False, "hits":[], "misses":[]}
+            step = {"type":"", "title":"", "ram":False, "hits":[], "misses":[], "readers":[], "writers":[]}
             line = log.readline()
             if (not line): break
             tokens = line.split()
@@ -85,8 +89,8 @@ def handle_run_program(data):
                         tokens = line.split()
                 case "instr:":
                     step["type"] = "instr"
-                    step["title"] = log.readline() # This might have an \n at the end that we would want to trim off
-                    if (step["title"] == "endinstr\n"): continue
+                    step["title"] = log.readline()[:-1] # This might have an \n at the end that we would want to trim off
+                    if (step["title"] == "endinstr"): continue
                     line =  log.readline()
                     tokens = line.split()
                     while (line != "endinstr\n"):
@@ -102,6 +106,12 @@ def handle_run_program(data):
                                 step["misses"].append((tokens[0], tokens[2]))
                             case "E":
                                 pass
+                            case _:
+                                match tokens[0]:
+                                    case "r":
+                                        step["readers"].append(tokens[1])
+                                    case "w":
+                                        step["writers"].append(tokens[1])
                         # Since there's no default case, stuff like 'ww 0xffa630 1' is actually ignored since the results of that operation are implicitly known by the cache misses and hits
                         line = log.readline()
                         tokens = line.split()
@@ -109,7 +119,7 @@ def handle_run_program(data):
 
     os.system(f"rm -f accesses {program_file_path}.riscv {program_file_path}.dis {program_file_path}.c {architecture_file_name}")
 
-    return loading_instr, executing_prog
+    return [], loading_instr, executing_prog
 
 
 def C_to_dis(program_file_path):

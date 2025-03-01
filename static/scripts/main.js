@@ -5,10 +5,10 @@ function sendProgram() {
     socket.emit("run_program", {program:programText, config:confirmArchitecture()}, runCallback)
 }
 
-function runCallback(log1, log2) {
-    window.location.href = "/visualizer"
-    console.log(log1)
-    console.log(log2)
+function runCallback(config, load_log, exec_log) {
+    INPUT_PAGE.style.display = "none";
+    VISUALIZATION_PAGE.style.display = "flex";
+    visualize(config, load_log, exec_log)
 }
 
 function confirmArchitecture() {
@@ -23,24 +23,6 @@ function confirmArchitecture() {
                     ,a:settings[3].value})
     })
     return config
-}
-
-INSTR.innerHTML = "add 3 13 24"
-add = {readers:[1, 2, 3], writers:[7, 8, 9]}
-
-visualizeInstr(add);
-
-function visualizeInstr(instruction) {
-    clearRegisters();
-    instruction.readers.forEach(reader => {R[reader].classList.toggle("read-from");});
-    instruction.writers.forEach(writer => {R[writer].classList.toggle("written-to");});
-}
-
-function clearRegisters() {
-    R.forEach(reg => {
-        reg.classList.remove("read-from");
-        reg.classList.remove("written-to");
-    });
 }
 
 function renameCaches() {

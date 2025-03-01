@@ -7,7 +7,7 @@ body {
     width: 100vw;
   }
 
-#full-container {
+.full-container {
     display: flex;
     flex-direction: column;
     height: 100%;

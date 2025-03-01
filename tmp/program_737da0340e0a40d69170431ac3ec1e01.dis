@@ -1,5 +1,5 @@
 
-matrix_good.riscv:     file format elf32-littleriscv
+./tmp/program_737da0340e0a40d69170431ac3ec1e01.riscv:     file format elf32-littleriscv
 
 Contents of section .text:
  10094 13010181 2326117e 2324817e b772ffff  ....#&.~#$.~.r..
@@ -87,7 +87,7 @@ Contents of section .riscv.attributes:
  0010 04100572 76333269 3270315f 6d327030  ...rv32i2p1_m2p0
  0020 5f7a6d6d 756c3170 3000               _zmmul1p0.      
 
-matrix_good.riscv:     file format elf32-littleriscv
+./tmp/program_737da0340e0a40d69170431ac3ec1e01.riscv:     file format elf32-littleriscv
 
 
 Disassembly of section .text:

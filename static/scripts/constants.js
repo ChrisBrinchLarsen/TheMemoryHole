@@ -1,3 +1,9 @@
+const INPUT_PAGE = document.getElementsByClassName("full-container")[0]
+const VISUALIZATION_PAGE = document.getElementsByClassName("full-container")[1]
+
+const ARCHITECTURE = document.getElementById("architecture")
+const ADD_CACHE = document.getElementById("add-cache")
+
 const R = [
     document.getElementById("r0"),
     document.getElementById("r1"),
@@ -33,6 +39,4 @@ const R = [
     document.getElementById("r31")
 ];
 
-INSTR = document.getElementById("instr");
-ARCHITECTURE = document.getElementById("architecture")
-ADD_CACHE = document.getElementById("add-cache")
+const INSTR = document.getElementById("instr");
