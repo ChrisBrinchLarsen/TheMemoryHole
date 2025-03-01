@@ -57,10 +57,13 @@ long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE 
         int instructionInt = memory_rd_w(mem, PC);
         fprintf(CACHE_LOG_POINTER, "endfetch\n");
 
+        fprintf(CACHE_LOG_POINTER, "instr:\n");
         // Least significant 6 bits of instruction make up the OPCODE
         uint32_t OPCODE = instructionInt & 0x7F; 
         ExecuteInstruction(OPCODE, instructionInt, mem); // Perform current instruction
+        fprintf(CACHE_LOG_POINTER, "endinstr\n");
         
+
         // Increment PC and instruction count
         prevPC = PC;
         PC += advancePC ? stepSize : 0;

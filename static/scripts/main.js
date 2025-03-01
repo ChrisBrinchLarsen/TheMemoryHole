@@ -5,10 +5,10 @@ function sendProgram() {
     socket.emit("run_program", {program:programText, config:confirmArchitecture()}, runCallback)
 }
 
-function runCallback(instr_load_log, execution_log) {
+function runCallback(log1, log2) {
     window.location.href = "/visualizer"
-    console.log(instr_load_log)
-    console.log(execution_log)
+    console.log(log1)
+    console.log(log2)
 }
 
 function confirmArchitecture() {
