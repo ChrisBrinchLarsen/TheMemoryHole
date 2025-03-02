@@ -54,12 +54,12 @@ def handle_run_program(data):
     result = subprocess.run(["./engine/sim", architecture_file_name, f"{program_file_path}.dis", "--", f"{args}"], capture_output=True, text=True)
     print(result.stdout)
 
-    # TODO: Add parsing and sending back each iteration from cache_log to frontend
     loading_instr = []
     executing_prog = []
     with open("cache_log", "r") as log:
         line = log.readline()
         while (line != "---- PROGRAM START ----\n"): # Writing program to memory
+            # TODO: This entire parsing of the loading instructions part of the cache_log
             line = log.readline()
         while (True): # Executing program
             step = {"type":"", "title":"", "ram":False, "hits":[], "misses":[], "readers":[], "writers":[]}
@@ -119,6 +119,8 @@ def handle_run_program(data):
 
     os.system(f"rm -f accesses {program_file_path}.riscv {program_file_path}.dis {program_file_path}.c {architecture_file_name}")
 
+    # TODO: Needs to return meta config information as well
+    # TODO: Probably needs to return the summary information from stdout as well
     return [], loading_instr, executing_prog
 
 

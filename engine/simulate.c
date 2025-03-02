@@ -91,7 +91,6 @@ void wrReg(int registerID, int data) {
     R[registerID] = data;
 }
 
-// TODO: All significant reads in the rest of this program need to be using this function instead 
 int rdReg(int registerID) {
     fprintf(CACHE_LOG_POINTER, "r %d\n", registerID);
     return R[registerID];
