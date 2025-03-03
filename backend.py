@@ -33,6 +33,7 @@ def handle_run_program(data):
     config = data["config"]
     program = data["program"]
     N_CACHE_LEVELS = len(config)
+    # TODO: Make it possible to send arguments from frontend to run the program with
     args = ""
     id = uuid.uuid4().hex
     architecture_file_name = f"./tmp/architecture_{id}"
