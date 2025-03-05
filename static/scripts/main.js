@@ -5,10 +5,10 @@ function sendProgram() {
     socket.emit("run_program", {program:programText, config:confirmArchitecture(), args:document.getElementById("args").value}, runCallback)
 }
 
-function runCallback(config, load_log, exec_log) {
+function runCallback(load_log, exec_log) {
+    create_caches()
     INPUT_PAGE.style.display = "none";
     VISUALIZATION_PAGE.style.display = "flex";
-    CONFIG = config
     LOAD_LOG = load_log
     EXEC_LOG = exec_log
     TOTAL_STEPS = load_log.length + exec_log.length
@@ -18,15 +18,19 @@ function runCallback(config, load_log, exec_log) {
 function confirmArchitecture() {
     cacheList = ARCHITECTURE.querySelectorAll(".cache-container");
     N_CACHE_LAYERS = cacheList.length
-    config = []
     cacheList.forEach(cache => {
         settings = cache.querySelectorAll(".num-box")
-        config.push({p:settings[0].value
+        CONFIG.push({p:settings[0].value
                     ,q:settings[1].value
                     ,k:settings[2].value
                     ,a:settings[3].value})
+        block_offset_len = Math.log2(Math.pow(2, settings[2].value))
+        set_len = Math.log2((Math.pow(2,settings[0].value) * settings[1].value) / (Math.pow(2, settings[2].value) * settings[3].value))
+        BIT_LENGTHS.push({s:set_len
+                         ,b:block_offset_len})
     })
-    return config
+
+    return CONFIG
 }
 
 function renameCaches() {

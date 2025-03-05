@@ -16,10 +16,6 @@ socketio = SocketIO(app)
 def index():
     return render_template('index.html')
 
-@app.route('/visualizer')
-def visualizer():
-    return render_template('visualizer.html')
-
 @app.route("/get_logs")
 def get_logs():
     return [[], session["loading_prog"], session["executing_prog"]]
@@ -123,8 +119,9 @@ def handle_run_program(data):
     os.system(f"rm -f accesses {program_file_path}.riscv {program_file_path}.dis {program_file_path}.c {architecture_file_name}")
 
     # TODO: Needs to return meta config information as well
+
     # TODO: Probably needs to return the summary information from stdout as well
-    return [], loading_instr, executing_prog
+    return loading_instr, executing_prog
 
 
 def C_to_dis(program_file_path):
