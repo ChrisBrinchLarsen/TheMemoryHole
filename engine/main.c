@@ -57,29 +57,63 @@ int pass_args_to_program(struct memory* mem, int argc, char* argv[]) {
 void createInstructionHashmap(const char *filename) {
   FILE *fp;
   fp = fopen(filename, "r");
-  char buffer[200];
+  char buffer[256];
 
+  int numbuffsize = 8;
+  char numbuffer[8];
 
+  regex_t lineRegex;
+  //char re[] = "\\/\\/\\[\\[(\\\d+)\\]\\]";
+  char linere[] = "\\[\\[([0-9]+)\\]\\]";
+  regcomp(&lineRegex, linere, REG_EXTENDED); //matches //[[(\d+)]] and gives \d+ out
   
-  // loop until we find start of program
-  // while (regcomp(buffer, ) != 0) {
+  regex_t pcRegex;
+  //char pcre[] = "([[:digit:]]+):";
+  char pcre[] = "([a-f0-9]+):";
+  regcomp(&pcRegex, pcre, REG_EXTENDED);
 
-  // }
 
-  char programstartStr[] = "// PROGRAM_START";
-  char programendStr[] = "// PROGRAM_END";
+  regmatch_t pmatches[2];
 
-  printf("started checking for comments");
-  while (fgets(buffer, sizeof(buffer), fp) != NULL) {
-    if (strcmp(buffer, programstartStr) == 0) {
-      printf("we hitttt");
-    }
-    else if (buffer[0] == '/') {
-      printf("%s", buffer);
+  int startLine;
+  int endLine;
+  int pc;
+
+  printf("started checking for comments\n");
+  while (fgets(buffer, sizeof(buffer), fp) != NULL) { 
+
+    // find a line number
+    if (regexec(&lineRegex, buffer, 2, pmatches, 0) == 0) {
+      memset(numbuffer, 0, numbuffsize);
+      memcpy(numbuffer, buffer + pmatches[1].rm_so, pmatches[1].rm_eo - pmatches[1].rm_so);
+      startLine = atoi(numbuffer); 
+      endLine = startLine;
+
+      // keep going until we find the next RISC-V line
+      while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+        // once we find a RISC-V line, we save the address / program counter:
+        if (regexec(&pcRegex, buffer, 2, pmatches, 0) == 0) {
+          memset(numbuffer, 0, numbuffsize);
+          memcpy(numbuffer, buffer + pmatches[1].rm_so, pmatches[1].rm_eo - pmatches[1].rm_so);
+          pc = (int)strtol(numbuffer, NULL, 16);
+          break;
+        }
+        // sometimes we might have multiple C lines in a row, in which case we update endline instead
+        if (regexec(&lineRegex, buffer, 2, pmatches, 0) == 0) {
+          memset(numbuffer, 0, numbuffsize);
+          memcpy(numbuffer, buffer + pmatches[1].rm_so, pmatches[1].rm_eo - pmatches[1].rm_so);
+          endLine = atoi(numbuffer);
+          continue;
+        }
+
+      }
+      printf("start: %d, end: %d, pc: %d\n", startLine, endLine, pc);
+      // back to finding start lines again
     }
   }
-  printf("end of checking for comments");
+  printf("end of checking for comments\n");
 
+  fclose(fp);
 }
 
 int main(int argc, char *argv[])
