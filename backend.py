@@ -48,6 +48,8 @@ def handle_run_program(data):
             file.write(f"{config[i]['k']}\n")
             file.write(f"{config[i]['a']}\n")
 
+    program = addDebugComments(program)
+
     with open(f"{program_file_path}.c", 'w') as file: file.write(program)
 
     C_to_dis(program_file_path)
@@ -127,10 +129,18 @@ def handle_run_program(data):
 
 def C_to_dis(program_file_path):
      # Compile from C -> RISC-V
-    os.system(f"./riscv/bin/riscv32-unknown-elf-gcc -march=rv32im -mabi=ilp32 -fno-tree-loop-distribute-patterns -mno-relax -O1 {program_file_path}.c lib.c -static -nostartfiles -nostdlib -o {program_file_path}.riscv")
+    os.system(f"./riscv/bin/riscv32-unknown-elf-gcc -march=rv32im -mabi=ilp32 -fno-tree-loop-distribute-patterns -mno-relax -O1 {program_file_path}.c lib.c -static -nostartfiles -nostdlib -o {program_file_path}.riscv -g")
     # Compile from RISC-V -> dis
     os.system(f"./riscv/bin/riscv32-unknown-elf-objdump -s -w {program_file_path}.riscv > {program_file_path}.dis")
     os.system(f"./riscv/bin/riscv32-unknown-elf-objdump -S {program_file_path}.riscv >> {program_file_path}.dis")
+
+def addDebugComments(program:str):
+    outstr = "//PROGRAM_START\n";
+    lines = program.splitlines();
+    for i in range(len(lines)):
+        outstr += f"// [[{i}]]\n" + lines[i] + "\n";
+    outstr += "//PROGRAM_END\n"
+    return outstr;
 
 ### MAIN
 if __name__ == "__main__":
