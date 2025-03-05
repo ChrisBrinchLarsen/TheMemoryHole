@@ -138,8 +138,9 @@ def addDebugComments(program:str):
     outstr = "//PROGRAM_START\n";
     lines = program.splitlines();
     for i in range(len(lines)):
-        outstr += f"// [[{i}]]\n" + lines[i] + "\n";
+        outstr += lines[i] + f"//[[{i}]]\n";
     outstr += "//PROGRAM_END\n"
+    print(outstr);
     return outstr;
 
 ### MAIN
