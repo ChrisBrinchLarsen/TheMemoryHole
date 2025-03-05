@@ -34,7 +34,7 @@ def handle_run_program(data):
     program = data["program"]
     N_CACHE_LEVELS = len(config)
     # TODO: Make it possible to send arguments from frontend to run the program with
-    args = ""
+    args = data["args"].split(" ")
     id = uuid.uuid4().hex
     architecture_file_name = f"./tmp/architecture_{id}"
     program_file_path = f"./tmp/program_{id}"
@@ -43,16 +43,16 @@ def handle_run_program(data):
         file.write(f"{N_CACHE_LEVELS}\n")
         for i in range(N_CACHE_LEVELS):
             file.write(f"L{i+1}\n")
-            file.write(f"{config[i]["p"]}\n")
-            file.write(f"{config[i]["q"]}\n")
-            file.write(f"{config[i]["k"]}\n")
-            file.write(f"{config[i]["a"]}\n")
+            file.write(f"{config[i]['p']}\n")
+            file.write(f"{config[i]['q']}\n")
+            file.write(f"{config[i]['k']}\n")
+            file.write(f"{config[i]['a']}\n")
 
     with open(f"{program_file_path}.c", 'w') as file: file.write(program)
 
     C_to_dis(program_file_path)
 
-    result = subprocess.run(["./engine/sim", architecture_file_name, f"{program_file_path}.dis", "--", f"{args}"], capture_output=True, text=True)
+    result = subprocess.run(["./engine/sim", architecture_file_name, f"{program_file_path}.dis", "--", *args], capture_output=True, text=True)
     print(result.stdout)
 
     loading_instr = []

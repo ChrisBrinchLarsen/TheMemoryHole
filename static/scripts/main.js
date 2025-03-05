@@ -2,7 +2,7 @@ simpleCPU = [{p:6,q:1,k:4,a:1}, {p:7,q:1,k:4,a:2}]
 function sendProgram() {
     programText = document.getElementById("programText").value;
     document.getElementById("programText").value = "";
-    socket.emit("run_program", {program:programText, config:confirmArchitecture()}, runCallback)
+    socket.emit("run_program", {program:programText, config:confirmArchitecture(), args:document.getElementById("args").value}, runCallback)
 }
 
 function runCallback(config, load_log, exec_log) {
