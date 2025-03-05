@@ -1,7 +1,7 @@
 CC=gcc -g
 
 # All the flags in the (CompSys) world
-CFLAGS= -std=c23 -g3 -Wextra -Wall -lm #-pedantic -std=gnu11
+CFLAGS= -std=gnu11 -g3 -Wextra -Wall -lm #-pedantic -std=gnu11
 
 # Compile your program (make og make file)
 prototype: prototype.c prototype.h
