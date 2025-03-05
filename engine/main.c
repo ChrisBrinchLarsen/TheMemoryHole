@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <regex.h>
 #include "cache.h"
 #include "mmu.h"
 
@@ -53,8 +54,38 @@ int pass_args_to_program(struct memory* mem, int argc, char* argv[]) {
   return seperator_position;
 }
 
+void createInstructionHashmap(const char *filename) {
+  FILE *fp;
+  fp = fopen(filename, "r");
+  char buffer[200];
+
+
+  
+  // loop until we find start of program
+  // while (regcomp(buffer, ) != 0) {
+
+  // }
+
+  char programstartStr[] = "// PROGRAM_START";
+  char programendStr[] = "// PROGRAM_END";
+
+  printf("started checking for comments");
+  while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+    if (strcmp(buffer, programstartStr) == 0) {
+      printf("we hitttt");
+    }
+    else if (buffer[0] == '/') {
+      printf("%s", buffer);
+    }
+  }
+  printf("end of checking for comments");
+
+}
+
 int main(int argc, char *argv[])
 {
+  createInstructionHashmap(argv[2]);
+
   struct memory *mem = memory_create();
   initialize_cache();
   Cache_t** caches = ParseCPUArchitecture(argv[1]);
