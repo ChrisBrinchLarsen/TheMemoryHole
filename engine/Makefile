@@ -1,20 +1,20 @@
 CC=gcc -g
 
 # All the flags in the (CompSys) world
-CFLAGS= -std=gnu11 -g3 -Wextra -Wall -lm #-pedantic -std=gnu11
+CFLAGS= -std=gnu11 -g3 -Wextra -Wall #-pedantic -std=gnu11
 
 # Compile your program (make og make file)
 prototype: prototype.c prototype.h
 	$(CC) $(CFLAGS) prototype.h prototype.c -o prototype.exe
 
 unit: cache.o memory.o mmu.o unit.o 
-	$(CC) $(CFLAGS) cache.o memory.o mmu.o unit.o -o unit.exe 
+	$(CC) $(CFLAGS) cache.o memory.o mmu.o unit.o -o unit.exe -lm
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 sim: assembly.o cache.o main.o memory.o mmu.o read_exec.o simulate.o
-	$(CC) $(CFLAGS) assembly.o cache.o main.o memory.o mmu.o read_exec.o simulate.o -o sim
+	$(CC) $(CFLAGS) assembly.o cache.o main.o memory.o mmu.o read_exec.o simulate.o -o sim -lm
 
 %.riscv: %.c lib.c Makefile
 	/opt/riscv/bin/riscv32-unknown-elf-gcc  -march=rv32im -mabi=ilp32 -fno-tree-loop-distribute-patterns -mno-relax -O1 $< lib.c -static -nostartfiles -nostdlib -o $@
