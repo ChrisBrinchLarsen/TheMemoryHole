@@ -321,7 +321,7 @@ void CacheLineToString(Cache_t* cache, uint32_t setIndex, uint32_t lineIndex, ch
 void PrintSet(Cache_t* cache, uint32_t setIndex) {
     char buff[400] = {0};
     CacheSetToString(cache, setIndex, buff);
-    printf(buff);
+    printf("%s", buff);
 }
 void PrintCache(Cache_t* cache) {
     for (uint32_t i = 0; i < cache->setCount; i++) {
