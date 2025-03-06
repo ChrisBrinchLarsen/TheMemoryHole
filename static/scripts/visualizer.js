@@ -3,8 +3,10 @@ let LOAD_LOG = []
 let EXEC_LOG = []
 let TOTAL_STEPS = 0
 let CURRENT_STEP = 0
-const DELAY = 500
+const DELAY = 500;
 let BIT_LENGTHS = []
+let SPLIT_ADDRS = []
+let ADDRESS_OBJECTS = []
 let CACHES = []
 
 function visualize() {
@@ -24,6 +26,10 @@ function visualize() {
 function visualizeStep(step) {
     clear_sets()
     clear_lines()
+    for (let i = 0; i < CONFIG.length; i++) {
+        ADDRESS_OBJECTS[i].innerHTML = hex_to_string_addr(step["addr"], BIT_LENGTHS[i].s, BIT_LENGTHS[i].b);
+    }
+    document.querySelectorAll(".split-addr").forEach(addr => {addr.innerHTML = hex_to_string_addr(step["addr"],)})
     visualize_path(step["hits"], step["misses"], step["evict"], step["insert"])
     INSTR_COUNTER.innerHTML = "(" + (CURRENT_STEP+1) + "/" + TOTAL_STEPS + ") "
     INSTR.innerHTML = step["title"]
@@ -35,8 +41,14 @@ function visualizeStep(step) {
 
 function visualize_path(hits, misses, evictions, inserts) {
     hits.forEach(hit => {give_line_class("hit", hit[0], hit[1], hit[2])})
-    evictions.forEach(evictee => {give_line_class("evict", evictee[0], evictee[1], evictee[2])})
-    inserts.forEach(insertee => {give_line_class("insert", insertee[0], insertee[1], insertee[2])})
+    evictions.forEach(evictee => {
+        give_line_class("evict", evictee[0], evictee[1], evictee[2])
+        give_line_class("valid", evictee[0], evictee[1], evictee[2])
+    })
+    inserts.forEach(insertee => {
+        give_line_class("insert", insertee[0], insertee[1], insertee[2])
+        give_line_class("valid", insertee[0], insertee[1], insertee[2])
+    })
     misses.forEach(miss => {CACHES[miss[0]-1].children[1].children[1+Number(miss[1])].classList.add("miss")})
 }
 

@@ -81,6 +81,10 @@
     color: lightskyblue;
 }
 
+.valid {
+    background-color: dimgray;
+}
+
 .hit {
     background-color: greenyellow ;
 }

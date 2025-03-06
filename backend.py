@@ -35,6 +35,7 @@ def handle_run_program(data):
     id = uuid.uuid4().hex
     architecture_file_name = f"./tmp/architecture_{id}"
     program_file_path = f"./tmp/program_{id}"
+    active_lines = None
 
     with open(architecture_file_name, "w") as file:
         file.write(f"{N_CACHE_LEVELS}\n")
@@ -119,6 +120,8 @@ def handle_run_program(data):
                                         step["readers"].append(tokens[1])
                                     case "w":
                                         step["writers"].append(tokens[1])
+                                    case "pc":
+                                        pass
                         # Since there's no default case, stuff like 'ww 0xffa630 1' is actually ignored since the results of that operation are implicitly known by the cache misses and hits
                         line = log.readline()
                         tokens = line.split()
