@@ -26,6 +26,7 @@ def get_logs():
 # currently vulnurable to a race condition.
 @socketio.on("run_program")
 def handle_run_program(data):
+    print("Got message from server")
     config = data["config"]
     program = data["program"]
     N_CACHE_LEVELS = len(config)
@@ -49,7 +50,7 @@ def handle_run_program(data):
     with open(f"{program_file_path}.c", 'w') as file: file.write(program)
 
     C_to_dis(program_file_path)
-
+    print("Starting program simulation...")
     result = subprocess.run(["./engine/sim", architecture_file_name, f"{program_file_path}.dis", "--", *args], capture_output=True, text=True)
     print(result.stdout)
 
