@@ -24,12 +24,12 @@ int BLOCK_SIZE;
 // Some premade set clock cycle delays for hitting
 const int HIT_DELAYS[4] = {2, 10, 20, 50};
 const int RAM_DELAY = 100;
-uint32_t CYCLES = 0;
+uint64_t CYCLES = 0;
 
 // if misses[0] = 20 that means that the first layer of cache experienced 20 misses
-uint32_t* MISSES;
+uint64_t* MISSES;
 // if hits[2] = 14 that means that the third layer of cache experienced 14 misses
-uint32_t* HITS;
+uint64_t* HITS;
 
 FILE* CACHE_LOG;
 
@@ -342,13 +342,15 @@ Cache_t** ParseCPUArchitecture(char* path) {
     fgets(buf, sizeof(buf), file);
     N_CACHE_LEVELS = atoi(buf);
     memset(buf, 0, sizeof(buf));
-    HITS =   malloc(N_CACHE_LEVELS * sizeof(uint32_t));
-    MISSES = malloc(N_CACHE_LEVELS * sizeof(uint32_t));
+    HITS =   malloc(N_CACHE_LEVELS * sizeof(uint64_t));
+    MISSES = malloc(N_CACHE_LEVELS * sizeof(uint64_t));
     
     // Logging info about the general cache architecture
     Cache_t** caches = malloc(N_CACHE_LEVELS * (sizeof(Cache_t*)));
 
     for (int i = 0; i < N_CACHE_LEVELS; i++) {
+        HITS[i] = 0;
+        MISSES[i] = 0;
         // size = 2^p * q
         // block_size = 2^k
         fgets(buf, sizeof(buf), file); // Name
@@ -478,7 +480,7 @@ void initialize_cache() {
 }
 
 // Returns amount of cycles spent on memory accesses
-uint32_t finalize_cache() {
+uint64_t finalize_cache() {
     fclose(CACHE_LOG);
     return CYCLES;
 }
@@ -486,5 +488,5 @@ uint32_t finalize_cache() {
 FILE* get_cache_log() {return CACHE_LOG;}
 
 int get_cache_layer_count() {return N_CACHE_LEVELS;}
-int get_misses_at_layer(int layer) {return MISSES[layer];}
-int get_hits_at_layer(int layer) {return HITS[layer];}
+uint64_t get_misses_at_layer(int layer) {return MISSES[layer];}
+uint64_t get_hits_at_layer(int layer) {return HITS[layer];}

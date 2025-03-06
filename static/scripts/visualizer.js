@@ -29,15 +29,17 @@ function visualizeStep(step) {
     clear_sets()
     clear_lines()
     if (step["lines-changed"]) {
-        console.log("Clearing lines")
         clear_src_lines()
-        console.log("Visualizing next")
         visualize_src(step["lines"][0], step["lines"][1])
     }
+
+    if (step["addr"] == 0x0) {
+        ACCESS_COUNTER.innerHTML = 1 + Number(ACCESS_COUNTER.innerHTML)
+    }
     for (let i = 0; i < CONFIG.length; i++) {
+        
         ADDRESS_OBJECTS[i].innerHTML = hex_to_string_addr(step["addr"], BIT_LENGTHS[i].s, BIT_LENGTHS[i].b);
     }
-    console.log(step["lines"])
     document.querySelectorAll(".split-addr").forEach(addr => {addr.innerHTML = hex_to_string_addr(step["addr"],)})
     visualize_path(step["hits"], step["misses"], step["evict"], step["insert"])
     INSTR_COUNTER.innerHTML = "(" + (CURRENT_STEP+1) + "/" + TOTAL_STEPS + ") "

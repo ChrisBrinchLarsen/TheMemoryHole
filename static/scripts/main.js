@@ -9,9 +9,6 @@ function runCallback(load_log, exec_log) {
     create_caches()
     src_lines = PROGRAM_TEXT.replaceAll("<", "&lt")
                             .replaceAll(">", "&gt")
-                            .replaceAll("&", "&amp")
-                            .replaceAll("'", "&#039")
-                            .replaceAll('"', "&quot")
                             .split("\n");
     CODE_VIEWER.innerHTML = "";
     for (let i = 0; i < src_lines.length; i++) {
@@ -83,3 +80,16 @@ function addCache() {
     ARCHITECTURE.insertBefore(container, ADD_CACHE)
     renameCaches()
 }
+
+{/* <select name="cars" id="cars">
+    <option value="1">1-way</option>
+    <option value="2">2-way</option>
+    <option value="4">4-way</option>
+    <option value="8">8-way</option>
+    <option value="16">16-way</option>
+    <option value="32">32-way</option>
+    <option value="64">64-way</option>
+    <option value="128">128-way</option>
+    <option value="256">256-way</option>
+    <option value="512">512-way</option>
+  </select> */}

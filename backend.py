@@ -129,7 +129,7 @@ def handle_run_program(data):
             step["lines"] = active_lines
             executing_prog.append(step)
 
-    os.system(f"rm -f accesses {program_file_path}.riscv {program_file_path}.dis {program_file_path}.c {architecture_file_name}")
+    os.system(f"rm -f {program_file_path}.riscv {program_file_path}.dis {program_file_path}.c {architecture_file_name}")
 
     # TODO: Needs to return meta config information as well
 

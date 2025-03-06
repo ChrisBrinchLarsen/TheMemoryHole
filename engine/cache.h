@@ -51,11 +51,11 @@ int cache_rd_h(Cache_t *cache, struct memory *mem, int addr);
 int cache_rd_b(Cache_t *cache, struct memory *mem, int addr);
 
 int get_cache_layer_count();
-int get_misses_at_layer(int layer);
-int get_hits_at_layer(int layer);
+uint64_t get_misses_at_layer(int layer);
+uint64_t get_hits_at_layer(int layer);
 
 void initialize_cache();
-uint32_t finalize_cache();
+uint64_t finalize_cache();
 FILE* get_cache_log();
 
 #endif

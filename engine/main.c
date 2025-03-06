@@ -143,16 +143,17 @@ int main(int argc, char *argv[])
     clock_t before = clock();
     long int num_insns = simulate(mem, as, start_addr, log_file, map);
     clock_t after = clock();
-    uint32_t mem_cycles = finalize_cache();
+    uint64_t mem_cycles = finalize_cache();
     int N_CACHE_LAYERS = get_cache_layer_count();
-    int misses, hits, total_hits;
+    uint64_t misses, hits, total_hits;
+    total_hits = 0;
     printf("-- Cache Summary --\n");
     for (int i = 0; i < N_CACHE_LAYERS; i++) {
       misses = get_misses_at_layer(i);
       hits = get_hits_at_layer(i);
       total_hits += hits;
 
-      printf("L%d - %0.3f (%d/%d)\n",
+      printf("L%d - %0.3f (%lu/%lu)\n",
               i+1,
               (float)hits/(hits + misses),
               hits,
@@ -165,9 +166,9 @@ int main(int argc, char *argv[])
       //           (float)hits/(hits + misses),
       //           (float)misses/(hits + misses));
     }
-    printf("In total handled %d memory accesses.\n", total_hits + get_misses_at_layer(N_CACHE_LAYERS-1));
+    printf("In total handled %lu memory accesses.\n", total_hits + get_misses_at_layer(N_CACHE_LAYERS-1));
     printf("Total cache hit-rate: %0.3f\n", (float)total_hits/(total_hits + get_misses_at_layer(N_CACHE_LAYERS-1)));
-    printf("Clock cycles in memory: %d\n", mem_cycles);
+    printf("Clock cycles in memory: %lu\n", mem_cycles);
 
     int ticks = after - before;
     double mips = (1.0 * num_insns * CLOCKS_PER_SEC) / ticks / 1000000;
