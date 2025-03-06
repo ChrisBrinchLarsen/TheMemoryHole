@@ -8,3 +8,5 @@ const R = document.querySelectorAll(".register");
 
 const INSTR = document.getElementById("instr");
 const INSTR_COUNTER = document.getElementById("instr_counter")
+
+const CODE_VIEWER = document.getElementById("code-viewer");

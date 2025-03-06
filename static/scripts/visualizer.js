@@ -3,11 +3,13 @@ let LOAD_LOG = []
 let EXEC_LOG = []
 let TOTAL_STEPS = 0
 let CURRENT_STEP = 0
-const DELAY = 500;
+const DELAY = 50;
 let BIT_LENGTHS = []
 let SPLIT_ADDRS = []
 let ADDRESS_OBJECTS = []
 let CACHES = []
+let PROGRAM_TEXT = ""
+let SRC_LINES = []
 
 function visualize() {
     visualizeStep(EXEC_LOG[CURRENT_STEP])
@@ -26,9 +28,16 @@ function visualize() {
 function visualizeStep(step) {
     clear_sets()
     clear_lines()
+    if (step["lines-changed"]) {
+        console.log("Clearing lines")
+        clear_src_lines()
+        console.log("Visualizing next")
+        visualize_src(step["lines"][0], step["lines"][1])
+    }
     for (let i = 0; i < CONFIG.length; i++) {
         ADDRESS_OBJECTS[i].innerHTML = hex_to_string_addr(step["addr"], BIT_LENGTHS[i].s, BIT_LENGTHS[i].b);
     }
+    console.log(step["lines"])
     document.querySelectorAll(".split-addr").forEach(addr => {addr.innerHTML = hex_to_string_addr(step["addr"],)})
     visualize_path(step["hits"], step["misses"], step["evict"], step["insert"])
     INSTR_COUNTER.innerHTML = "(" + (CURRENT_STEP+1) + "/" + TOTAL_STEPS + ") "
@@ -68,6 +77,17 @@ function clear_sets() {
     document.querySelectorAll(".set").forEach(set => {
         set.classList.remove("miss")
     })
+}
+
+function clear_src_lines() {
+    SRC_LINES.forEach(line => {line.classList.remove("active")})
+}
+
+function visualize_src(start, end) {
+    
+    for (let i = start; i <= end; i++) {
+        SRC_LINES[i].classList.add("active");
+    }
 }
 
 function create_caches() {

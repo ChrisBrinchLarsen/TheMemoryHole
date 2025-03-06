@@ -24,7 +24,8 @@
 
 #code-viewer {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
+    white-space: pre;
 }
 
 #caches {
@@ -99,4 +100,12 @@
 
 .miss {
     border: solid red 3px;
+}
+
+.active {
+    background-color: aqua;
+}
+
+.src-line {
+    min-height: 1rem;
 }

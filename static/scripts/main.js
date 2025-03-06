@@ -1,12 +1,27 @@
 simpleCPU = [{p:6,q:1,k:4,a:1}, {p:7,q:1,k:4,a:2}]
 function sendProgram() {
-    programText = document.getElementById("programText").value;
+    PROGRAM_TEXT = document.getElementById("programText").value;
     document.getElementById("programText").value = "";
-    socket.emit("run_program", {program:programText, config:confirmArchitecture(), args:document.getElementById("args").value}, runCallback)
+    socket.emit("run_program", {program:PROGRAM_TEXT, config:confirmArchitecture(), args:document.getElementById("args").value}, runCallback)
 }
 
 function runCallback(load_log, exec_log) {
     create_caches()
+    src_lines = PROGRAM_TEXT.replaceAll("<", "&lt")
+                            .replaceAll(">", "&gt")
+                            .replaceAll("&", "&amp")
+                            .replaceAll("'", "&#039")
+                            .replaceAll('"', "&quot")
+                            .split("\n");
+    CODE_VIEWER.innerHTML = "";
+    for (let i = 0; i < src_lines.length; i++) {
+        line = document.createElement("div");
+        line.classList.add("src-line");
+        line.innerHTML = src_lines[i];
+        if (line.innerHTML == "") {line.innerHTML = " "}
+        CODE_VIEWER.appendChild(line);
+        SRC_LINES.push(line);
+    }
     ADDRESS_OBJECTS = document.querySelectorAll(".split_addr");
     INPUT_PAGE.style.display = "none";
     VISUALIZATION_PAGE.style.display = "flex";

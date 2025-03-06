@@ -35,7 +35,6 @@ def handle_run_program(data):
     id = uuid.uuid4().hex
     architecture_file_name = f"./tmp/architecture_{id}"
     program_file_path = f"./tmp/program_{id}"
-    active_lines = None
 
     with open(architecture_file_name, "w") as file:
         file.write(f"{N_CACHE_LEVELS}\n")
@@ -57,13 +56,14 @@ def handle_run_program(data):
 
     loading_instr = []
     executing_prog = []
+    active_lines = None
     with open("cache_log", "r") as log:
         line = log.readline()
         while (line != "---- PROGRAM START ----\n"): # Writing program to memory
             # TODO: This entire parsing of the loading instructions part of the cache_log
             line = log.readline()
         while (True): # Executing program
-            step = {"type":"", "title":"", "ram":False, "hits":[], "misses":[], "readers":[], "writers":[], "addr":0x0, "evict":[], "insert":[]}
+            step = {"type":"", "title":"", "ram":False, "hits":[], "misses":[], "readers":[], "writers":[], "addr":0x0, "evict":[], "insert":[], "lines":active_lines, "lines-changed":False}
             line = log.readline()
             if (not line): break
             tokens = line.split()
@@ -114,17 +114,19 @@ def handle_run_program(data):
                                 step["insert"].append((tokens[0], tokens[2], tokens[3]))
                             case _:
                                 match tokens[0]:
-                                    case write if write in ["wb, wh, ww, rb, rh, rw"]:
+                                    case write if write in ["wb", "wh", "ww", "rb", "rh", "rw"]:
                                         step["addr"] = int(tokens[1], 16)
                                     case "r":
                                         step["readers"].append(tokens[1])
                                     case "w":
                                         step["writers"].append(tokens[1])
                                     case "pc":
-                                        pass
+                                        active_lines = (tokens[2], tokens[3])
+                                        step["lines-changed"] = True
                         # Since there's no default case, stuff like 'ww 0xffa630 1' is actually ignored since the results of that operation are implicitly known by the cache misses and hits
                         line = log.readline()
                         tokens = line.split()
+            step["lines"] = active_lines
             executing_prog.append(step)
 
     os.system(f"rm -f accesses {program_file_path}.riscv {program_file_path}.dis {program_file_path}.c {architecture_file_name}")
@@ -137,7 +139,7 @@ def handle_run_program(data):
 
 def C_to_dis(program_file_path):
      # Compile from C -> RISC-V
-    os.system(f"./riscv/bin/riscv32-unknown-elf-gcc -march=rv32im -mabi=ilp32 -fno-tree-loop-distribute-patterns -mno-relax -O1 {program_file_path}.c lib.c -static -nostartfiles -nostdlib -o {program_file_path}.riscv -g")
+    os.system(f"./riscv/bin/riscv32-unknown-elf-gcc -march=rv32im -mabi=ilp32 -fno-tree-loop-distribute-patterns -mno-relax -O1 {program_file_path}.c lib.c -static -nostartfiles -o {program_file_path}.riscv -g")
     # Compile from RISC-V -> dis
     os.system(f"./riscv/bin/riscv32-unknown-elf-objdump -s -w {program_file_path}.riscv > {program_file_path}.dis")
     os.system(f"./riscv/bin/riscv32-unknown-elf-objdump -S {program_file_path}.riscv >> {program_file_path}.dis")

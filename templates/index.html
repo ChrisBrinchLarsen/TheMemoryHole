@@ -40,61 +40,51 @@
       <h1 id="instr"></h1>
     </div>
     <div id="registers">
-        <div class="register">R0</div>
-        <div class="register">R1</div>
-        <div class="register">R2</div>
-        <div class="register">R3</div>
-        <div class="register">R4</div>
-        <div class="register">R5</div>
-        <div class="register">R6</div>
-        <div class="register">R7</div>
-        <div class="register">R8</div>
-        <div class="register">R9</div>
-        <div  class="register">R10</div>
-        <div  class="register">R11</div>
-        <div  class="register">R12</div>
-        <div  class="register">R13</div>
-        <div  class="register">R14</div>
-        <div  class="register">R15</div>
-        <div  class="register">R16</div>
-        <div  class="register">R17</div>
-        <div  class="register">R18</div>
-        <div  class="register">R19</div>
-        <div  class="register">R20</div>
-        <div  class="register">R21</div>
-        <div  class="register">R22</div>
-        <div  class="register">R23</div>
-        <div  class="register">R24</div>
-        <div  class="register">R25</div>
-        <div  class="register">R26</div>
-        <div  class="register">R27</div>
-        <div  class="register">R28</div>
-        <div  class="register">R29</div>
-        <div  class="register">R30</div>
-        <div  class="register">R31</div>
+        <div class="register">x0</div>
+        <div class="register">ra</div>
+        <div class="register">sp</div>
+        <div class="register">gp</div>
+        <div class="register">tp</div>
+        <div class="register">t0</div>
+        <div class="register">t1</div>
+        <div class="register">t2</div>
+        <div class="register">s0</div>
+        <div class="register">s1</div>
+        <div  class="register">a0</div>
+        <div  class="register">a1</div>
+        <div  class="register">a2</div>
+        <div  class="register">a3</div>
+        <div  class="register">a4</div>
+        <div  class="register">a5</div>
+        <div  class="register">a6</div>
+        <div  class="register">a7</div>
+        <div  class="register">s2</div>
+        <div  class="register">s3</div>
+        <div  class="register">s4</div>
+        <div  class="register">s5</div>
+        <div  class="register">s6</div>
+        <div  class="register">s7</div>
+        <div  class="register">s8</div>
+        <div  class="register">s9</div>
+        <div  class="register">s10</div>
+        <div  class="register">s11</div>
+        <div  class="register">t3</div>
+        <div  class="register">t4</div>
+        <div  class="register">t5</div>
+        <div  class="register">t6</div>
     </div>
-        <div id="left-visualizer">
-            <div id="summary"></div>
-            <div id="code-viewer"></div>
-        </div>
-        <div id="right-visualizer">
-            <div id="caches">
-                <div class="cache">
-                    <h1>L1</h1>
-                    <div class="cache-info">
-                        <div class="split_addr"><span style="color: red;">000000000000000</span>|<span style="color: green;">000000000000</span>|<span style="color: blue;">00000</span></div>
-                        <div class="set">
-                            <div class="line"></div>
-                            <div class="line"></div>
-                            <div class="line"></div>
-                            <div class="line"></div>
-                        </div>
-                        <div class="set">
-                            <div class="line"></div>
-                            <div class="line"></div>
-                            <div class="line"></div>
-                            <div class="line"></div>
-                        </div>
+        <div id="side-holder">
+            <div id="left-visualizer">
+                <div id="summary"></div>
+                <div id="code-viewer">
+                    <div class="src-line">Hello</div>
+                    <div class="src-line active">Ayo ello queen</div>
+                    <div class="src-line">Duwop</div>
+                </div>
+            </div>
+            <div id="right-visualizer">
+                <div id="caches">
+                    <div class="cache">
                     </div>
                 </div>
             </div>

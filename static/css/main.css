@@ -67,3 +67,8 @@ body {
 .num-box {
     width: 4rem;
 }
+
+#side-holder {
+    display: flex;
+    flex-direction: row;
+}
