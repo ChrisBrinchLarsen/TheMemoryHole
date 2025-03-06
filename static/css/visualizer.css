@@ -80,3 +80,19 @@
 .offset-bits {
     color: lightskyblue;
 }
+
+.hit {
+    background-color: greenyellow ;
+}
+
+.evict {
+    background-color: orange ;
+}
+
+.insert {
+    background-color: blue ;
+}
+
+.miss {
+    border: solid red 3px;
+}

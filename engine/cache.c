@@ -45,12 +45,12 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
 int GetLineIndexFromTag(Cache_t* cache, uint32_t setIndex, uint32_t tag);
 int GetReplacementLineIndex(Cache_t* cache, uint32_t setIndex);
 void UpdateCacheSet(Cache_t* cache, uint32_t setIndex);
-void EvictCacheLine(Cache_t* cache, uint32_t addr, CacheLine_t* evict_line, struct memory *mem);
+void EvictCacheLine(Cache_t* cache, uint32_t addr, CacheLine_t* evict_line, struct memory *mem, int layer);
 void CacheSetToString(Cache_t* cache, int setIndex, char* out);
 void CacheLineToString(Cache_t* cache, uint32_t setIndex, uint32_t lineIndex, char* out);
 void PrintSet(Cache_t* cache, uint32_t setIndex);
 void PrintCache(Cache_t* cache);
-void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSize);
+void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSize, int layer);
 Address_t GetAddress(Cache_t* cache, uint32_t address);
 void Cache_free(Cache_t* c);
 uint64_t BinStrToNum(char* num, int n);
@@ -59,11 +59,12 @@ CacheLine_t CacheLine_new(bool valid, bool dirty, uint32_t tag, uint32_t LRU, ch
 void CacheLine_free(CacheLine_t* l);
 
 
-void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSize) {
+void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSize, int layer) {
     // NOTE: This function assumes that cache inclusivity holds
 
     Address_t a = GetAddress(cache, addr);
     int lineIndex = GetLineIndexFromTag(cache, a.setIndex, a.tag);
+    fprintf(CACHE_LOG, "%d E %d %d\n", layer, a.setIndex, lineIndex);
 
     if (lineIndex == -1) {
         printf("ERROR: cacheline in set 0x%x, lineindex 0x%x, (tag: 0x%x) was not found. Cache inclusivity might not've been held\n", a.setIndex, lineIndex, a.tag);
@@ -178,14 +179,15 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
         }
 
         lineIndex = GetReplacementLineIndex(cache, a.setIndex);
+        fprintf(CACHE_LOG, "%d I %d %d\n", layer, a.setIndex, lineIndex);
         
         // evict
         if (cache->sets[a.setIndex][lineIndex].valid) {
-            fprintf(CACHE_LOG, "%d E %d\n", layer, a.setIndex);
             // Here we need to find the address of the cacheline to be able to find it in the lower cache, otherwise we don't know where to evict it to.
             uint32_t evictAddr = (cache->sets[a.setIndex][lineIndex].tag << (cache->SetBitLength + cache->blockOffsetBitLength)) | (a.setIndex << cache->blockOffsetBitLength);
-            EvictCacheLine(cache, evictAddr, &cache->sets[a.setIndex][lineIndex], mem);
+            EvictCacheLine(cache, evictAddr, &cache->sets[a.setIndex][lineIndex], mem, layer);
         }
+
 
         // update line
         cache->sets[a.setIndex][lineIndex].valid = 1;
@@ -202,7 +204,7 @@ char* FetchBlock(Cache_t* cache, uint32_t addr, struct memory *mem, bool markDir
         HITS[layer-1]++;
         CYCLES += HIT_DELAYS[layer-1];
 
-        fprintf(CACHE_LOG, "%d H %d\n", layer, a.setIndex);
+        fprintf(CACHE_LOG, "%d H %d %d\n", layer, a.setIndex, lineIndex);
     }
     
     if (markDirty) {
@@ -265,14 +267,14 @@ int GetReplacementLineIndex(Cache_t* cache, uint32_t setIndex) {
     return lineIndex;
 }
 
-void EvictCacheLine(Cache_t* cache, uint32_t addr, CacheLine_t* evict_line, struct memory *mem) {
+void EvictCacheLine(Cache_t* cache, uint32_t addr, CacheLine_t* evict_line, struct memory *mem, int layer) {
 
     if (evict_line->dirty) {
 
-        if (cache->childCache == NULL) {
+        if (cache->childCache == NULL) { // Writing to main memory
             memory_write_back(mem, addr, evict_line->block, cache->blockSize);
-        } else {
-            cache_writeback_block(cache->childCache, addr, evict_line->block, cache->blockSize);
+        } else { // Writing to cache
+            cache_writeback_block(cache->childCache, addr, evict_line->block, cache->blockSize, layer+1);
         }
     }
 

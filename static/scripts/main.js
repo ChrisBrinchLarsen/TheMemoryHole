@@ -7,6 +7,7 @@ function sendProgram() {
 
 function runCallback(load_log, exec_log) {
     create_caches()
+    ADDRESS_OBJECTS = document.querySelectorAll(".split_addr");
     INPUT_PAGE.style.display = "none";
     VISUALIZATION_PAGE.style.display = "flex";
     LOAD_LOG = load_log
