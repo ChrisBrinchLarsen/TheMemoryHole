@@ -16,6 +16,9 @@ typedef struct CacheLine {
 } CacheLine_t;
 
 typedef struct Cache {
+    //
+    uint32_t id;
+
     // base parameters
     uint32_t cacheSize;
     uint32_t associativity;
