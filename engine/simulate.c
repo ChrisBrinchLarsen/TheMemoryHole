@@ -58,12 +58,9 @@ long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE 
         fprintf(CACHE_LOG_POINTER, "endfetch\n");
 
         fprintf(CACHE_LOG_POINTER, "instr:\n");
-        ProgramLineMap_t *plm = hashmap_get(map, &(ProgramLineMap_t){.pc=PC});
-        if (plm == NULL) {
-            printf("hashmap didn't find instruction at PC: %d", PC);
-        }
-        else {
-            fprintf(CACHE_LOG_POINTER, "pc: %d %d %d\n", plm->pc, plm->start, plm->end);
+        const ProgramLineMap_t *plm = hashmap_get(map, &(ProgramLineMap_t){.pc=PC});
+        if (plm != NULL) {
+            fprintf(CACHE_LOG_POINTER, "pc %d %d %d\n", plm->pc, plm->start, plm->end);
         }
         // Least significant 6 bits of instruction make up the OPCODE
         uint32_t OPCODE = instructionInt & 0x7F; 
@@ -711,7 +708,7 @@ int programLineMap_compare(const void *a, const void *b, void *udata) {
 bool programLineMap_iter(const void *item, void *udata) {
     // TODO: i have no idea what this function is meant for or if we need it tbh
     const ProgramLineMap_t *plm = item;
-    printf("pc: %d, start: %d, end: %d\n", plm->pc, plm->start, plm->end);
+    printf("pc %d, start: %d, end: %d\n", plm->pc, plm->start, plm->end);
     return true;
 }
 uint64_t programLineMap_hash(const void *item, uint64_t seed0, uint64_t seed1) {

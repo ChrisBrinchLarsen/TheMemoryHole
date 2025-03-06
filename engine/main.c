@@ -82,7 +82,6 @@ struct hashmap* createInstructionHashmap(const char *filename) {
   int endLine;
   int pc;
 
-  printf("started checking for comments\n");
   while (fgets(buffer, sizeof(buffer), fp) != NULL) { 
 
     // find a line number
@@ -108,14 +107,11 @@ struct hashmap* createInstructionHashmap(const char *filename) {
           endLine = atoi(numbuffer);
           continue;
         }
-
       }
-      printf("pc: %d, start: %d, end: %d\n", pc, startLine, endLine);
       hashmap_set(map, &(ProgramLineMap_t){.pc=pc,.start=startLine,.end=endLine});
       // back to finding start lines again
     }
   }
-  printf("end of checking for comments\n");
 
   fclose(fp);
 
@@ -145,7 +141,7 @@ int main(int argc, char *argv[])
     }
     int start_addr = read_exec(mem, as, argv[2], log_file);
     clock_t before = clock();
-    long int num_insns = simulate(mem, as, start_addr, log_file);
+    long int num_insns = simulate(mem, as, start_addr, log_file, map);
     clock_t after = clock();
     uint32_t mem_cycles = finalize_cache();
     int N_CACHE_LAYERS = get_cache_layer_count();
