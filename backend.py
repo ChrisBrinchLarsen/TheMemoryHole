@@ -61,7 +61,7 @@ def handle_run_program(data):
             # TODO: This entire parsing of the loading instructions part of the cache_log
             line = log.readline()
         while (True): # Executing program
-            step = {"type":"", "title":"", "ram":False, "hits":[], "misses":[], "readers":[], "writers":[]}
+            step = {"type":"", "title":"", "ram":False, "hits":[], "misses":[], "readers":[], "writers":[], "addr":0x0, "evict":[], "insert":[]}
             line = log.readline()
             if (not line): break
             tokens = line.split()
@@ -69,6 +69,7 @@ def handle_run_program(data):
                 case "fetch:":
                     step["type"] = "fetch"
                     step["title"] = f"Fetching instruction {tokens[2]}"
+                    step["addr"] = int(tokens[2], 16)
                     line = log.readline()
                     tokens = line.split()
                     while (line != "endfetch\n"):
@@ -79,11 +80,13 @@ def handle_run_program(data):
                             continue
                         match tokens[1]:
                             case "H":
-                                step["hits"].append((tokens[0], tokens[2]))
+                                step["hits"].append((tokens[0], tokens[2], tokens[3]))
                             case "M":
                                 step["misses"].append((tokens[0], tokens[2]))
                             case "E":
-                                pass
+                                step["evict"].append((tokens[0], tokens[2], tokens[3]))
+                            case "I":
+                                step["insert"].append((tokens[0], tokens[2], tokens[3]))
                         line = log.readline()
                         tokens = line.split()
                 case "instr:":
@@ -100,13 +103,17 @@ def handle_run_program(data):
                             continue
                         match tokens[1]:
                             case "H":
-                                step["hits"].append((tokens[0], tokens[2]))
+                                step["hits"].append((tokens[0], tokens[2], tokens[3]))
                             case "M":
                                 step["misses"].append((tokens[0], tokens[2]))
                             case "E":
-                                pass
+                                step["evict"].append((tokens[0], tokens[2], tokens[3]))
+                            case "I":
+                                step["insert"].append((tokens[0], tokens[2], tokens[3]))
                             case _:
                                 match tokens[0]:
+                                    case write if write in ["wb, wh, ww, rb, rh, rw"]:
+                                        step["addr"] = int(tokens[1], 16)
                                     case "r":
                                         step["readers"].append(tokens[1])
                                     case "w":
