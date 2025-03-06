@@ -693,3 +693,21 @@ void wrInstToLog(struct assembly *as, int jump) {
     }
     fprintf(log_file_global, "%*s", padding, "");
 }
+
+
+// for the hashmap
+int programLineMap_compare(const void *a, const void *b, void *udata) {
+    const ProgramLineMap_t *ua = a;
+    const ProgramLineMap_t *ub = b;
+    return ua->pc - ub->pc;
+}
+bool programLineMap_iter(const void *item, void *udata) {
+    // TODO: i have no idea what this function is meant for or if we need it tbh
+    const ProgramLineMap_t *plm = item;
+    printf("pc: %d, start: %d, end: %d\n", plm->pc, plm->start, plm->end);
+    return true;
+}
+uint64_t programLineMap_hash(const void *item, uint64_t seed0, uint64_t seed1) {
+    const ProgramLineMap_t *plm = item;
+    return hashmap_sip(&plm->pc, sizeof(int), seed0, seed1);
+}

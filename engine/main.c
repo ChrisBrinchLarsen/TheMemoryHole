@@ -9,6 +9,7 @@
 #include <regex.h>
 #include "cache.h"
 #include "mmu.h"
+#include "hashmap/hashmap.h"
 
 void terminate(const char *error)
 {
@@ -54,7 +55,9 @@ int pass_args_to_program(struct memory* mem, int argc, char* argv[]) {
   return seperator_position;
 }
 
-void createInstructionHashmap(const char *filename) {
+struct hashmap* createInstructionHashmap(const char *filename) {
+  struct hashmap *map = hashmap_new(sizeof(ProgramLineMap_t), 0, 0, 0, programLineMap_hash, programLineMap_compare, NULL, NULL);
+
   FILE *fp;
   fp = fopen(filename, "r");
   char buffer[256];
@@ -107,13 +110,24 @@ void createInstructionHashmap(const char *filename) {
         }
 
       }
-      printf("start: %d, end: %d, pc: %d\n", startLine, endLine, pc);
+      printf("pc: %d, start: %d, end: %d\n", startLine, endLine, pc);
+      hashmap_set(map, &(ProgramLineMap_t){.pc=pc,.start=startLine,.end=endLine});
+      printf("inbetween\n");
+      ProgramLineMap_t *tester = hashmap_get(map, &(ProgramLineMap_t){.pc=pc,.start=startLine,.end=endLine});
+      if (tester == NULL) {
+        printf("returned null\n");
+      }
+      else {
+        printf("on return, pc: %d, start: %d, end: %d\n", tester->pc, tester->start, tester->end);
+      }
       // back to finding start lines again
     }
   }
   printf("end of checking for comments\n");
 
   fclose(fp);
+
+  return map;
 }
 
 int main(int argc, char *argv[])
