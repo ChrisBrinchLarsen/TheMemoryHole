@@ -58,13 +58,14 @@ long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE 
         fprintf(CACHE_LOG_POINTER, "endfetch\n");
 
         fprintf(CACHE_LOG_POINTER, "instr:\n");
+        // Least significant 6 bits of instruction make up the OPCODE
+        uint32_t OPCODE = instructionInt & 0x7F; 
+        ExecuteInstruction(OPCODE, instructionInt, mem); // Perform current instruction
+
         const ProgramLineMap_t *plm = hashmap_get(map, &(ProgramLineMap_t){.pc=PC});
         if (plm != NULL) {
             fprintf(CACHE_LOG_POINTER, "pc %d %d %d\n", plm->pc, plm->start, plm->end);
         }
-        // Least significant 6 bits of instruction make up the OPCODE
-        uint32_t OPCODE = instructionInt & 0x7F; 
-        ExecuteInstruction(OPCODE, instructionInt, mem); // Perform current instruction
         fprintf(CACHE_LOG_POINTER, "endinstr\n");
         
 
@@ -700,12 +701,12 @@ void wrInstToLog(struct assembly *as, int jump) {
 
 
 // for the hashmap
-int programLineMap_compare(const void *a, const void *b, void *udata) {
+int programLineMap_compare(const void *a, const void *b, void*) {
     const ProgramLineMap_t *ua = a;
     const ProgramLineMap_t *ub = b;
     return ua->pc - ub->pc;
 }
-bool programLineMap_iter(const void *item, void *udata) {
+bool programLineMap_iter(const void *item, void*) {
     // TODO: i have no idea what this function is meant for or if we need it tbh
     const ProgramLineMap_t *plm = item;
     printf("pc %d, start: %d, end: %d\n", plm->pc, plm->start, plm->end);
