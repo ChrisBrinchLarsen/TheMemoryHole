@@ -110,16 +110,8 @@ struct hashmap* createInstructionHashmap(const char *filename) {
         }
 
       }
-      printf("pc: %d, start: %d, end: %d\n", startLine, endLine, pc);
+      printf("pc: %d, start: %d, end: %d\n", pc, startLine, endLine);
       hashmap_set(map, &(ProgramLineMap_t){.pc=pc,.start=startLine,.end=endLine});
-      printf("inbetween\n");
-      ProgramLineMap_t *tester = hashmap_get(map, &(ProgramLineMap_t){.pc=pc,.start=startLine,.end=endLine});
-      if (tester == NULL) {
-        printf("returned null\n");
-      }
-      else {
-        printf("on return, pc: %d, start: %d, end: %d\n", tester->pc, tester->start, tester->end);
-      }
       // back to finding start lines again
     }
   }
@@ -132,7 +124,7 @@ struct hashmap* createInstructionHashmap(const char *filename) {
 
 int main(int argc, char *argv[])
 {
-  createInstructionHashmap(argv[2]);
+  struct hashmap *map = createInstructionHashmap(argv[2]);
 
   struct memory *mem = memory_create();
   initialize_cache();

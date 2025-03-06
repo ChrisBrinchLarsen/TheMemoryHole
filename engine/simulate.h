@@ -17,6 +17,6 @@ bool programLineMap_iter(const void *item, void *udata);
 uint64_t programLineMap_hash(const void *item, uint64_t seed0, uint64_t seed1);
 
 // Simuler RISC-V program i givet lager og fra given start adresse
-long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE *log_file);
+long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE *log_file, struct hashmap *map);
 
 #endif

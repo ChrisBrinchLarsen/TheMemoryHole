@@ -35,7 +35,7 @@ void wrInstToLog(struct assembly *as, int jump);      // Writes information abou
 FILE* CACHE_LOG_POINTER;
 
 // Simulates provided RISC-V assembly instructions.
-long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE *log_file) {
+long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE *log_file, struct hashmap *map) {
     CACHE_LOG_POINTER = get_cache_log();
     fprintf(CACHE_LOG_POINTER, "---- PROGRAM START ----\n");
 
@@ -58,6 +58,13 @@ long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE 
         fprintf(CACHE_LOG_POINTER, "endfetch\n");
 
         fprintf(CACHE_LOG_POINTER, "instr:\n");
+        ProgramLineMap_t *plm = hashmap_get(map, &(ProgramLineMap_t){.pc=PC});
+        if (plm == NULL) {
+            printf("hashmap didn't find instruction at PC: %d", PC);
+        }
+        else {
+            fprintf(CACHE_LOG_POINTER, "pc: %d %d %d\n", plm->pc, plm->start, plm->end);
+        }
         // Least significant 6 bits of instruction make up the OPCODE
         uint32_t OPCODE = instructionInt & 0x7F; 
         ExecuteInstruction(OPCODE, instructionInt, mem); // Perform current instruction
