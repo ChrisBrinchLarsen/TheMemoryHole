@@ -11,3 +11,4 @@ const INSTR_COUNTER = document.getElementById("instr_counter")
 
 const CODE_VIEWER = document.getElementById("code-viewer");
 const ACCESS_COUNTER = document.getElementById("memory-accesses")
+const SUMMARY = document.getElementById("summary")

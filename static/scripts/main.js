@@ -20,6 +20,24 @@ function runCallback(load_log, exec_log) {
         SRC_LINES.push(line);
     }
     ADDRESS_OBJECTS = document.querySelectorAll(".split_addr");
+
+    for (let i = 0; i < CONFIG.length; i++) {
+        cache_stats = document.createElement("div");
+        cache_stats.innerHTML = `
+            <div>L${i+1}: <span class="cache-hit-percent"></span>% (<span class="cache-hits"></span>H/<span class="cache-misses"></span>M)</div>
+        `
+        SUMMARY.appendChild(cache_stats)
+    }
+
+    combined_hitrate_object = document.createElement("div");
+    combined_hitrate_object.innerHTML = `Cache Hit-rate: <span id="cache-hit-rate"></span>%`
+    SUMMARY.appendChild(combined_hitrate_object);
+
+    CACHE_HIT_RATE = document.getElementById("cache-hit-rate")
+    CACHE_HIT_COUNTER_OBJECTS = SUMMARY.querySelectorAll(".cache-hits")
+    CACHE_MISS_COUNTER_OBJECTS = SUMMARY.querySelectorAll(".cache-misses")
+    CACHE_PERCENT_OBJECTS = SUMMARY.querySelectorAll(".cache-hit-percent")
+
     INPUT_PAGE.style.display = "none";
     VISUALIZATION_PAGE.style.display = "flex";
     LOAD_LOG = load_log
@@ -31,7 +49,12 @@ function runCallback(load_log, exec_log) {
 function confirmArchitecture() {
     cacheList = ARCHITECTURE.querySelectorAll(".cache-container");
     N_CACHE_LAYERS = cacheList.length
+    
     cacheList.forEach(cache => {
+        // Setting these counters up for later
+        HITS.push(0);
+        MISSES.push(0);
+
         settings = cache.querySelectorAll(".num-box")
         CONFIG.push({p:settings[0].value
                     ,q:settings[1].value
@@ -80,16 +103,3 @@ function addCache() {
     ARCHITECTURE.insertBefore(container, ADD_CACHE)
     renameCaches()
 }
-
-{/* <select name="cars" id="cars">
-    <option value="1">1-way</option>
-    <option value="2">2-way</option>
-    <option value="4">4-way</option>
-    <option value="8">8-way</option>
-    <option value="16">16-way</option>
-    <option value="32">32-way</option>
-    <option value="64">64-way</option>
-    <option value="128">128-way</option>
-    <option value="256">256-way</option>
-    <option value="512">512-way</option>
-  </select> */}

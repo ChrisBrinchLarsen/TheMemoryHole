@@ -3,13 +3,22 @@ let LOAD_LOG = []
 let EXEC_LOG = []
 let TOTAL_STEPS = 0
 let CURRENT_STEP = 0
-const DELAY = 50;
+const DELAY = 0;
 let BIT_LENGTHS = []
 let SPLIT_ADDRS = []
 let ADDRESS_OBJECTS = []
 let CACHES = []
 let PROGRAM_TEXT = ""
 let SRC_LINES = []
+
+// The indices dictate which level of cache we're talking about
+let HITS = []
+let MISSES = []
+
+let CACHE_HIT_RATE = {}
+let CACHE_HIT_COUNTER_OBJECTS = []
+let CACHE_MISS_COUNTER_OBJECTS = []
+let CACHE_PERCENT_OBJECTS = []
 
 function visualize() {
     visualizeStep(EXEC_LOG[CURRENT_STEP])
@@ -33,15 +42,25 @@ function visualizeStep(step) {
         visualize_src(step["lines"][0], step["lines"][1])
     }
 
-    if (step["addr"] == 0x0) {
+    if (step["addr"].length) {
         ACCESS_COUNTER.innerHTML = 1 + Number(ACCESS_COUNTER.innerHTML)
     }
-    for (let i = 0; i < CONFIG.length; i++) {
-        
-        ADDRESS_OBJECTS[i].innerHTML = hex_to_string_addr(step["addr"], BIT_LENGTHS[i].s, BIT_LENGTHS[i].b);
-    }
+
     document.querySelectorAll(".split-addr").forEach(addr => {addr.innerHTML = hex_to_string_addr(step["addr"],)})
     visualize_path(step["hits"], step["misses"], step["evict"], step["insert"])
+    
+
+    let hit_sum = 0
+    for (let i = 0; i < CONFIG.length; i++) {
+        hit_sum += HITS[i]
+        ADDRESS_OBJECTS[i].innerHTML = hex_to_string_addr(step["addr"][0], BIT_LENGTHS[i].s, BIT_LENGTHS[i].b);
+        CACHE_HIT_COUNTER_OBJECTS[i].innerHTML = HITS[i]
+        CACHE_MISS_COUNTER_OBJECTS[i].innerHTML = MISSES[i]
+        CACHE_PERCENT_OBJECTS[i].innerHTML = Math.round((HITS[i] / (MISSES[i] + HITS[i]))*100)
+        
+    }
+    CACHE_HIT_RATE.innerHTML = Math.round((hit_sum / (MISSES[CONFIG.length-1] + hit_sum)) * 100)
+    
     INSTR_COUNTER.innerHTML = "(" + (CURRENT_STEP+1) + "/" + TOTAL_STEPS + ") "
     INSTR.innerHTML = step["title"]
     visualizeInstr(step["readers"], step["writers"])
@@ -51,7 +70,16 @@ function visualizeStep(step) {
 }
 
 function visualize_path(hits, misses, evictions, inserts) {
-    hits.forEach(hit => {give_line_class("hit", hit[0], hit[1], hit[2])})
+    hits.forEach(hit => {
+        HITS[hit[0]-1] += 1;
+        give_line_class("hit", hit[0], hit[1], hit[2])
+    })
+    
+    misses.forEach(miss => {
+        CACHES[miss[0]-1].children[1].children[1+Number(miss[1])].classList.add("miss")
+        MISSES[miss[0]-1] += 1;
+    })
+
     evictions.forEach(evictee => {
         give_line_class("evict", evictee[0], evictee[1], evictee[2])
         give_line_class("valid", evictee[0], evictee[1], evictee[2])
@@ -60,7 +88,7 @@ function visualize_path(hits, misses, evictions, inserts) {
         give_line_class("insert", insertee[0], insertee[1], insertee[2])
         give_line_class("valid", insertee[0], insertee[1], insertee[2])
     })
-    misses.forEach(miss => {CACHES[miss[0]-1].children[1].children[1+Number(miss[1])].classList.add("miss")})
+    
 }
 
 function give_line_class(className, cacheN, setN, lineN) {

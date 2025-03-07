@@ -63,7 +63,7 @@ def handle_run_program(data):
             # TODO: This entire parsing of the loading instructions part of the cache_log
             line = log.readline()
         while (True): # Executing program
-            step = {"type":"", "title":"", "ram":False, "hits":[], "misses":[], "readers":[], "writers":[], "addr":0x0, "evict":[], "insert":[], "lines":active_lines, "lines-changed":False}
+            step = {"type":"", "title":"", "ram":False, "hits":[], "misses":[], "readers":[], "writers":[], "addr":[], "evict":[], "insert":[], "lines":active_lines, "lines-changed":False}
             line = log.readline()
             if (not line): break
             tokens = line.split()
@@ -71,7 +71,7 @@ def handle_run_program(data):
                 case "fetch:":
                     step["type"] = "fetch"
                     step["title"] = f"Fetching instruction {tokens[2]}"
-                    step["addr"] = int(tokens[2], 16)
+                    step["addr"].append(int(tokens[2], 16))
                     line = log.readline()
                     tokens = line.split()
                     while (line != "endfetch\n"):
@@ -93,7 +93,7 @@ def handle_run_program(data):
                         tokens = line.split()
                 case "instr:":
                     step["type"] = "instr"
-                    step["title"] = log.readline()[:-1] # This might have an \n at the end that we would want to trim off
+                    step["title"] = log.readline()[:-1]
                     if (step["title"] == "endinstr"): continue
                     line =  log.readline()
                     tokens = line.split()
@@ -114,8 +114,8 @@ def handle_run_program(data):
                                 step["insert"].append((tokens[0], tokens[2], tokens[3]))
                             case _:
                                 match tokens[0]:
-                                    case write if write in ["wb", "wh", "ww", "rb", "rh", "rw"]:
-                                        step["addr"] = int(tokens[1], 16)
+                                    case access if access in ["wb", "wh", "ww", "rb", "rh", "rw"]:
+                                        step["addr"].append(int(tokens[1], 16))
                                     case "r":
                                         step["readers"].append(tokens[1])
                                     case "w":
@@ -128,7 +128,6 @@ def handle_run_program(data):
                         tokens = line.split()
             step["lines"] = active_lines
             executing_prog.append(step)
-
     os.system(f"rm -f {program_file_path}.riscv {program_file_path}.dis {program_file_path}.c {architecture_file_name}")
 
     # TODO: Needs to return meta config information as well
