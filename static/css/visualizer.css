@@ -13,15 +13,14 @@
     display: flex;
     flex-direction: column;
     width: 50%;
-    border-right: 3px solid;
 }
 
 #summary {
     display: flex;
     flex-direction: column;
-    border-bottom: 3px solid;
+    border: 3px solid;
     background-color:darkgrey;
-    border-left: 3px solid;
+    margin: .25rem;
 }
 
 #code-viewer {
@@ -31,13 +30,15 @@
     background-color: lightgrey;
     border: 2px solid;
     border-radius: 10px;
-    margin: .5rem;
+    margin: .25rem;
 }
 
 #caches {
     display: flex;
     flex-direction: column;
     width: 100%;
+    margin: .25rem;
+    border: 3px solid;
 }
 
 .cache {
@@ -46,8 +47,6 @@
     width: 100%;
     justify-items: center;
     background-color:darkgrey;
-    border-bottom: 3px solid;
-    border-left: 3px solid;
 }
 
 .cache h1 {
