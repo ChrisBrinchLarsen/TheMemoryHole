@@ -26,7 +26,7 @@
             <button id="add-cache" onclick="addCache()">Add Cache +</button>
         </div>
         <div id="program_side">
-            <textarea id="programText" rows="4" cols="50" placeholder="Source code.."></textarea><br>
+            <textarea id="programText" rows="25" cols="50" placeholder="Source code.."></textarea><br>
             <textarea id="args" rows="1" cols="50" placeholder="Input space separated argument list.."></textarea><br>
             <input type="submit" value="Run Code" onclick="sendProgram()">
         </div>
@@ -86,10 +86,7 @@
                 </div>
             </div>
             <div id="right-visualizer">
-                <div id="caches">
-                    <div class="cache">
-                    </div>
-                </div>
+                <div id="caches"><div class="cache"><h1>L1</h1><div class="cache-info"><div class="split_addr"><span style="color: red;">00000000000000000000000000</span>|<span style="color: green;">00</span>|<span style="color: blue;">0000</span></div><div class="set"><div class="line valid"></div></div><div class="set"><div class="line valid"></div></div><div class="set"><div class="line valid"></div></div><div class="set"><div class="line valid"></div></div></div></div><div class="cache"><h1>L2</h1><div class="cache-info"><div class="split_addr"><span style="color: red;">00000000000000000000000000</span>|<span style="color: green;">00</span>|<span style="color: blue;">0000</span></div><div class="set"><div class="line valid"></div><div class="line valid"></div></div><div class="set"><div class="line valid"></div><div class="line valid"></div></div><div class="set"><div class="line valid"></div><div class="line valid"></div></div><div class="set"><div class="line valid"></div><div class="line valid"></div></div></div></div></div>
             </div>
         </div>
     <div id="visualizer">
