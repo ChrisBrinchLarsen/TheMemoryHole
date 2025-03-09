@@ -12,10 +12,12 @@ function runCallback(load_log, exec_log) {
                             .split("\n");
     CODE_VIEWER.innerHTML = "";
     for (let i = 0; i < src_lines.length; i++) {
-        line = document.createElement("div");
+        let line = document.createElement("div");
         line.setAttribute("data-nr", i+1);
         line.onclick = function () {
             SELECTED_LINE = i
+            SRC_LINES.forEach(innerLine => {innerLine.classList.remove("selected")})
+            line.classList.add("selected")
             SUMMARY.style.display = "none"
             LINE_SUMMARY.style.display = "flex"
             SUMMARY_LINE_NR.innerHTML = i+1

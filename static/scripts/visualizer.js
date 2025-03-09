@@ -210,6 +210,7 @@ function returnToSummary() {
     SELECTED_LINE = undefined
     LINE_SUMMARY.style.display = "none"
     SUMMARY.style.display = "flex"
+    SRC_LINES.forEach(line => {line.classList.remove("selected")})
 }
 
 function updateLineSummary(line_nr) {

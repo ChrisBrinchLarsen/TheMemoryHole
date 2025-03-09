@@ -120,3 +120,7 @@
 .src-line:hover {
     background-color: dimgray;
 }
+
+.selected {
+    background-color: darkgreen;
+}
