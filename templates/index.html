@@ -75,9 +75,19 @@
     </div>
         <div id="side-holder">
             <div id="left-visualizer">
-                <div id="summary">
+                <div id="running-summary" class="summary">
                     <h1>Running Summary</h1>
                     <div>Memory Accesses: <span id="memory-accesses">0</span></div>
+                </div>
+                <div id="line-summary" class="summary" style="display: none;">
+                    <div style="display: flex; flex-direction: row; justify-content: space-between;">
+                        <h1>Line <span id="summary-line-nr"></span></h1>
+                        <button onclick="returnToSummary()" class="x-button">X</button>
+                    </div>
+                    <div>Hits: <span id="summary-line-hits"></span></div>
+                    <div>Misses: <span id="summary-line-misses"></span></div>
+                    <div>Hit-rate: <span id="summary-line-hit-rate"></span>%</div>
+
                 </div>
                 <div id="code-viewer">
                     <div class="src-line">Hello &lt</div>

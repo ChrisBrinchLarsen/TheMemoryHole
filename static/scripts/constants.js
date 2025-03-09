@@ -11,4 +11,11 @@ const INSTR_COUNTER = document.getElementById("instr_counter")
 
 const CODE_VIEWER = document.getElementById("code-viewer");
 const ACCESS_COUNTER = document.getElementById("memory-accesses")
-const SUMMARY = document.getElementById("summary")
+const SUMMARY = document.getElementById("running-summary")
+const LINE_SUMMARY = document.getElementById("line-summary")
+const SUMMARY_LINE_NR = document.getElementById("summary-line-nr")
+const SUMMARY_LINE_HITS = document.getElementById("summary-line-hits")
+const SUMMARY_LINE_MISSES = document.getElementById("summary-line-misses")
+const SUMMARY_LINE_HIT_RATE = document.getElementById("summary-line-hit-rate")
+
+

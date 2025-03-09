@@ -35,8 +35,9 @@ body {
     justify-content: space-between;
 }
 
-.cache-header button {
+.x-button {
     background-color: lightcoral;
+    aspect-ratio: 1/1;
 }
 
 #navbar {

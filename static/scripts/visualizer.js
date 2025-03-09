@@ -10,10 +10,13 @@ let ADDRESS_OBJECTS = []
 let CACHES = []
 let PROGRAM_TEXT = ""
 let SRC_LINES = []
+let SELECTED_LINE = undefined
 
 // The indices dictate which level of cache we're talking about
 let HITS = []
 let MISSES = []
+let LINE_HITS = []
+let LINE_MISSES = []
 
 let CACHE_HIT_RATE = {}
 let CACHE_HIT_COUNTER_OBJECTS = []
@@ -47,9 +50,14 @@ function visualizeStep(step) {
     }
 
     document.querySelectorAll(".split-addr").forEach(addr => {addr.innerHTML = hex_to_string_addr(step["addr"],)})
-    visualize_path(step["hits"], step["misses"], step["evict"], step["insert"])
-    
+    if (step["lines"].length > 0) {
+        visualize_path(step["hits"], step["misses"], step["evict"], step["insert"], step["lines"][0], step["lines"][1])
+    } else {
+        visualize_path(step["hits"], step["misses"], step["evict"], step["insert"], -2, -1)
+    }
 
+    updateLineSummary(SELECTED_LINE)
+    
     let hit_sum = 0
     for (let i = 0; i < CONFIG.length; i++) {
         hit_sum += HITS[i]
@@ -69,15 +77,28 @@ function visualizeStep(step) {
     }
 }
 
-function visualize_path(hits, misses, evictions, inserts) {
+// Get line stats of specific line, 1 indexed
+function get_src_line_stats(nr) {
+    return {hits:LINE_HITS[nr-1], misses:LINE_MISSES[nr-1]}
+}
+
+function visualize_path(hits, misses, evictions, inserts, lineS, lineE) {
     hits.forEach(hit => {
         HITS[hit[0]-1] += 1;
         give_line_class("hit", hit[0], hit[1], hit[2])
+        for (let i = lineS; i <= lineE; i++) {
+            LINE_HITS[i] += 1;
+        }
     })
     
     misses.forEach(miss => {
         CACHES[miss[0]-1].children[1].children[1+Number(miss[1])].classList.add("miss")
         MISSES[miss[0]-1] += 1;
+        for (let i = lineS; i <= lineE; i++) {
+            if (miss[0] == CONFIG.length) { // Miss in last layer of cache, this is prone to breakage
+                LINE_MISSES[i] += 1;
+            }
+        }
     })
 
     evictions.forEach(evictee => {
@@ -183,4 +204,17 @@ function clearRegisters() {
         reg.classList.remove("written-to");
     });
     reg_changed = false
+}
+
+function returnToSummary() {
+    SELECTED_LINE = undefined
+    LINE_SUMMARY.style.display = "none"
+    SUMMARY.style.display = "flex"
+}
+
+function updateLineSummary(line_nr) {
+    if (line_nr == undefined) {return}
+    SUMMARY_LINE_HITS.innerHTML = LINE_HITS[SELECTED_LINE]
+    SUMMARY_LINE_MISSES.innerHTML = LINE_MISSES[SELECTED_LINE]
+    SUMMARY_LINE_HIT_RATE.innerHTML = Math.round((LINE_HITS[SELECTED_LINE] / (LINE_MISSES[SELECTED_LINE] + LINE_HITS[SELECTED_LINE]))*100)
 }

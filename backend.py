@@ -56,7 +56,7 @@ def handle_run_program(data):
 
     loading_instr = []
     executing_prog = []
-    active_lines = None
+    active_lines = []
     with open("cache_log", "r") as log:
         line = log.readline()
         while (line != "---- PROGRAM START ----\n"): # Writing program to memory

@@ -13,12 +13,23 @@ function runCallback(load_log, exec_log) {
     CODE_VIEWER.innerHTML = "";
     for (let i = 0; i < src_lines.length; i++) {
         line = document.createElement("div");
+        line.setAttribute("data-nr", i+1);
+        line.onclick = function () {
+            SELECTED_LINE = i
+            SUMMARY.style.display = "none"
+            LINE_SUMMARY.style.display = "flex"
+            SUMMARY_LINE_NR.innerHTML = i+1
+            updateLineSummary(i)
+        }
         line.classList.add("src-line");
         line.innerHTML = src_lines[i];
         if (line.innerHTML == "") {line.innerHTML = " "}
         CODE_VIEWER.appendChild(line);
         SRC_LINES.push(line);
+        LINE_HITS.push(0)
+        LINE_MISSES.push(0)
     }
+
     ADDRESS_OBJECTS = document.querySelectorAll(".split_addr");
 
     for (let i = 0; i < CONFIG.length; i++) {
@@ -88,7 +99,7 @@ function addCache() {
     container.innerHTML = `
         <div class="cache-header">
             <h2 class="cache-title">L1</h2>
-            <button onclick="removeCache(this)">X</button>
+            <button onclick="removeCache(this)" class="x-button">X</button>
         </div>
         <div class="cache-setting">
             Cache size: 2^<input class="num-box" type="number"> * <input class="num-box" type="number"> bytes
