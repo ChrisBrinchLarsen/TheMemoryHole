@@ -11,6 +11,7 @@ let CACHES = []
 let PROGRAM_TEXT = ""
 let SRC_LINES = []
 let SELECTED_LINE = undefined
+let PLAYING = false
 
 // The indices dictate which level of cache we're talking about
 let HITS = []
@@ -35,6 +36,22 @@ function visualize() {
     setTimeout(() => {
         visualize();
     }, DELAY);
+}
+
+function visualizeStep_playing() {
+    if (PLAYING) {
+        if (CURRENT_STEP == TOTAL_STEPS-1) {
+            visualizeStep(EXEC_LOG[CURRENT_STEP])
+            CURRENT_STEP += 1
+            pause()
+        } else {
+            visualizeStep(EXEC_LOG[CURRENT_STEP])
+            CURRENT_STEP += 1
+            setTimeout(() => {
+                visualizeStep_playing();
+            }, DELAY_INPUT.value);
+        }
+    }
 }
 
 function visualizeStep(step) {
@@ -218,4 +235,40 @@ function updateLineSummary(line_nr) {
     SUMMARY_LINE_HITS.innerHTML = LINE_HITS[SELECTED_LINE]
     SUMMARY_LINE_MISSES.innerHTML = LINE_MISSES[SELECTED_LINE]
     SUMMARY_LINE_HIT_RATE.innerHTML = Math.round((LINE_HITS[SELECTED_LINE] / (LINE_MISSES[SELECTED_LINE] + LINE_HITS[SELECTED_LINE]))*100)
+}
+
+function play() {
+    if (PLAYING) {
+        alert("You're already playing.")
+        return
+    } 
+    if (CURRENT_STEP == TOTAL_STEPS) {
+        alert("Already at end of execution")
+        return
+    }
+    PLAYING = true
+    PLAY_BUTTON.style.display = "none"
+    PAUSE_BUTTON.style.display = "block"
+    setTimeout(() => {
+        visualizeStep_playing();
+    }, DELAY_INPUT.value);
+}
+
+function pause() {
+    PLAYING = false
+    PAUSE_BUTTON.style.display = "none"
+    PLAY_BUTTON.style.display = "block"
+}
+
+function next() {
+    if (CURRENT_STEP == TOTAL_STEPS) {
+        alert("Already at end of execution")
+        return
+    }
+    if (PLAYING) {
+        alert("Must be paused in order to perform step-through")
+        return
+    }
+    visualizeStep(EXEC_LOG[CURRENT_STEP])
+    CURRENT_STEP += 1
 }

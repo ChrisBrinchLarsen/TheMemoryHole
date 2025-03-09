@@ -124,3 +124,8 @@
 .selected {
     background-color: darkgreen;
 }
+
+.img-icon {
+    aspect-ratio: 1/1;
+    height: 100%;
+}

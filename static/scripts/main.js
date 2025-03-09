@@ -56,7 +56,7 @@ function runCallback(load_log, exec_log) {
     LOAD_LOG = load_log
     EXEC_LOG = exec_log
     TOTAL_STEPS = load_log.length + exec_log.length
-    visualize()
+    INSTR_COUNTER.innerHTML = "(0/" + TOTAL_STEPS + ") "
 }
 
 function confirmArchitecture() {
