@@ -134,7 +134,7 @@ function give_line_class(className, cacheN, setN, lineN) {
 }
 
 function clear_lines() {
-    document.querySelectorAll(".line").forEach(line => {
+    document.querySelectorAll(".hit, .evict, .insert").forEach(line => {
         line.classList.remove("hit")
         line.classList.remove("evict")
         line.classList.remove("insert")
@@ -142,13 +142,13 @@ function clear_lines() {
 }
 
 function clear_sets() {
-    document.querySelectorAll(".set").forEach(set => {
+    document.querySelectorAll(".miss").forEach(set => {
         set.classList.remove("miss")
     })
 }
 
 function clear_src_lines() {
-    SRC_LINES.forEach(line => {line.classList.remove("active")})
+    document.querySelectorAll(".active").forEach(line => {line.classList.remove("active")})
 }
 
 function visualize_src(start, end) {
@@ -209,8 +209,8 @@ function hex_to_string_addr(addr, set_len, offset_len) {
 
 function visualizeInstr(readers, writers) {
     clearRegisters();
-    readers.forEach(reader => {R[reader].classList.toggle("read-from"); reg_changed = true});
-    writers.forEach(writer => {R[writer].classList.toggle("written-to"); reg_changed = true});
+    readers.forEach(reader => {R[reader].classList.add("read-from"); reg_changed = true});
+    writers.forEach(writer => {R[writer].classList.add("written-to"); reg_changed = true});
 }
 
 reg_changed = true

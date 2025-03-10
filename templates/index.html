@@ -19,7 +19,22 @@
 {% block body %}
 <div class="full-container" style="display: flex;">
     <div id="navbar" class="center">
-      <h1>The Memory Hole</h1>
+      <h1 style="padding-left: 0.5rem;">The Memory Hole</h1>
+      <div style="align-content: center; margin-right: 1rem;">
+        <select name="predefined-architectures" id="architecture-dropdown">
+            <option disabled selected value>Sample Architectures</option>
+            <option onclick="preset_architecture([[6,1,4,1], [7,1,4,2]])">Simple CPU</option>
+            <option onclick="preset_architecture([[10,32,5,8],[10,256,6,12],[20,4,6,16]])">Low-end CPU</option>
+            <option onclick="preset_architecture([[10,64,6,8],[10,1024,6,12],[20,8,6,16]])">Mid-end CPU</option>
+            <option onclick="preset_architecture([[10,128,6,8],[20,2,7,12],[20,16,7,16]])">High-end CPU</option>
+        </select>
+        <select name="predefined-Programs" id="program-dropdown">
+            <option disabled selected value>Sample Programs</option>
+            <option data-path="{{ url_for('static', filename='programs/fib.c') }}" onclick="preset_program(this.dataset.path)">Fibonacci</option>
+            <option data-path="{{ url_for('static', filename='programs/matrix_good.c') }}" onclick="preset_program(this.dataset.path)">Good Matrix</option>
+            <option data-path="{{ url_for('static', filename='programs/matrix_bad.c') }}" onclick="preset_program(this.dataset.path)">Bad Matrix</option>
+        </select>
+     </div>
     </div>
     <div id="main-content">
         <div id="architecture">

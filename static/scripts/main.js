@@ -1,9 +1,10 @@
-simpleCPU = [{p:6,q:1,k:4,a:1}, {p:7,q:1,k:4,a:2}]
 function sendProgram() {
     PROGRAM_TEXT = document.getElementById("programText").value;
     document.getElementById("programText").value = "";
     socket.emit("run_program", {program:PROGRAM_TEXT, config:confirmArchitecture(), args:document.getElementById("args").value}, runCallback)
 }
+
+
 
 function runCallback(load_log, exec_log) {
     create_caches()
@@ -115,4 +116,37 @@ function addCache() {
     `
     ARCHITECTURE.insertBefore(container, ADD_CACHE)
     renameCaches()
+}
+
+function preset_architecture(caches) {
+    ARCHITECTURE.innerHTML = ""
+    caches.forEach(cache => {
+        container = document.createElement("div");
+        container.classList.add("cache-container");
+        container.innerHTML = `
+        <div class="cache-header">
+            <h2 class="cache-title">L1</h2>
+            <button onclick="removeCache(this)" class="x-button">X</button>
+        </div>
+        <div class="cache-setting">
+            Cache size: 2^<input class="num-box" type="number" value="${cache[0]}"> * <input class="num-box" type="number" value="${cache[1]}"> bytes
+        </div>
+        <div class="cache-setting">
+            Block size: 2^<input class="num-box" type="number" value="${cache[2]}"> bytes
+        </div>
+        <div class="cache-setting">
+            Associativity: <input class="num-box" type="number" value="${cache[3]}">-way
+        </div>
+        `
+        ARCHITECTURE.appendChild(container)
+    })
+    ARCHITECTURE.appendChild(ADD_CACHE)
+}
+
+function preset_program(path) {
+    console.log(path)
+    fetch(path)
+        .then(response => response.text())
+        .then(data => {document.getElementById("programText").value = data})
+        .catch(error => console.error("Error fetching file:", error));
 }
