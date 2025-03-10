@@ -12,6 +12,12 @@ let PROGRAM_TEXT = ""
 let SRC_LINES = []
 let SELECTED_LINE = undefined
 let PLAYING = false
+let COLORED_SET_OBJECTS = []
+let COLORED_LINES = []
+let REG_CHANGED = true
+
+let READERS = []
+let WRITERS = []
 
 // The indices dictate which level of cache we're talking about
 let HITS = []
@@ -24,19 +30,11 @@ let CACHE_HIT_COUNTER_OBJECTS = []
 let CACHE_MISS_COUNTER_OBJECTS = []
 let CACHE_PERCENT_OBJECTS = []
 
-function visualize() {
-    visualizeStep(EXEC_LOG[CURRENT_STEP])
-    CURRENT_STEP += 1
-    if (CURRENT_STEP == (TOTAL_STEPS - 1)) {
-        setTimeout(() => {
-            visualizeStep(EXEC_LOG[CURRENT_STEP]);
-        }, DELAY);
-        return
-    }
-    setTimeout(() => {
-        visualize();
-    }, DELAY);
-}
+let step_time_sum = 0.0
+
+let line_start = -1
+let line_end = -2
+
 
 function visualizeStep_playing() {
     if (PLAYING) {
@@ -47,32 +45,39 @@ function visualizeStep_playing() {
         } else {
             visualizeStep(EXEC_LOG[CURRENT_STEP])
             CURRENT_STEP += 1
-            setTimeout(() => {
-                visualizeStep_playing();
-            }, DELAY_INPUT.value);
+            if (DELAY_INPUT.value == "0") {
+                requestAnimationFrame(visualizeStep_playing);
+            } else {
+                setTimeout(() => {
+                    visualizeStep_playing();
+                }, DELAY_INPUT.value);
+            }
         }
     }
 }
 
 function visualizeStep(step) {
+    // const startTime = performance.now()
     clear_sets()
     clear_lines()
     if (step["lines-changed"]) {
         clear_src_lines()
         visualize_src(step["lines"][0], step["lines"][1])
     }
-
+    
+    // Updating the summary counter of total memory accesses
     if (step["addr"].length) {
         ACCESS_COUNTER.innerHTML = 1 + Number(ACCESS_COUNTER.innerHTML)
     }
-
-    document.querySelectorAll(".split-addr").forEach(addr => {addr.innerHTML = hex_to_string_addr(step["addr"],)})
+    
+    
+    SPLIT_ADDRS.forEach(addr => {addr.innerHTML = hex_to_string_addr(step["addr"],)})
     if (step["lines"].length > 0) {
         visualize_path(step["hits"], step["misses"], step["evict"], step["insert"], step["lines"][0], step["lines"][1])
     } else {
         visualize_path(step["hits"], step["misses"], step["evict"], step["insert"], -2, -1)
     }
-
+    
     updateLineSummary(SELECTED_LINE)
     
     let hit_sum = 0
@@ -89,8 +94,10 @@ function visualizeStep(step) {
     INSTR_COUNTER.innerHTML = "(" + (CURRENT_STEP+1) + "/" + TOTAL_STEPS + ") "
     INSTR.innerHTML = step["title"]
     visualizeInstr(step["readers"], step["writers"])
+    // const endTime = performance.now()
+    // step_time_sum += endTime - startTime
     if (CURRENT_STEP == TOTAL_STEPS - 1) {
-        EXEC_LOG = []
+        console.log(`Steps took on average: ${step_time_sum/TOTAL_STEPS}`)
     }
 }
 
@@ -100,6 +107,9 @@ function get_src_line_stats(nr) {
 }
 
 function visualize_path(hits, misses, evictions, inserts, lineS, lineE) {
+    COLORED_LINES = []
+    COLORED_SET_OBJECTS = []
+    
     hits.forEach(hit => {
         HITS[hit[0]-1] += 1;
         give_line_class("hit", hit[0], hit[1], hit[2])
@@ -109,7 +119,9 @@ function visualize_path(hits, misses, evictions, inserts, lineS, lineE) {
     })
     
     misses.forEach(miss => {
-        CACHES[miss[0]-1].children[1].children[1+Number(miss[1])].classList.add("miss")
+        set = CACHES[miss[0]-1].children[1].children[1+Number(miss[1])]
+        set.classList.add("miss")
+        COLORED_SET_OBJECTS.push(set)
         MISSES[miss[0]-1] += 1;
         for (let i = lineS; i <= lineE; i++) {
             if (miss[0] == CONFIG.length) { // Miss in last layer of cache, this is prone to breakage
@@ -117,7 +129,7 @@ function visualize_path(hits, misses, evictions, inserts, lineS, lineE) {
             }
         }
     })
-
+    
     evictions.forEach(evictee => {
         give_line_class("evict", evictee[0], evictee[1], evictee[2])
         give_line_class("valid", evictee[0], evictee[1], evictee[2])
@@ -126,33 +138,37 @@ function visualize_path(hits, misses, evictions, inserts, lineS, lineE) {
         give_line_class("insert", insertee[0], insertee[1], insertee[2])
         give_line_class("valid", insertee[0], insertee[1], insertee[2])
     })
-    
 }
 
+function clear_sets() {
+    COLORED_SET_OBJECTS.forEach(set => {set.classList.remove("miss")})
+}
+
+
 function give_line_class(className, cacheN, setN, lineN) {
-    CACHES[cacheN-1].children[1].children[1+Number(setN)].children[lineN].classList.add(className);
+    line = CACHES[cacheN-1].children[1].children[1+Number(setN)].children[lineN]
+    line.classList.add(className);
+    COLORED_LINES.push(line)
 }
 
 function clear_lines() {
-    document.querySelectorAll(".hit, .evict, .insert").forEach(line => {
+    COLORED_LINES.forEach(line => {
         line.classList.remove("hit")
         line.classList.remove("evict")
         line.classList.remove("insert")
     })
 }
 
-function clear_sets() {
-    document.querySelectorAll(".miss").forEach(set => {
-        set.classList.remove("miss")
-    })
-}
 
 function clear_src_lines() {
-    document.querySelectorAll(".active").forEach(line => {line.classList.remove("active")})
+    for (let i = line_start; i <= line_end; i++) {
+        SRC_LINES[i].classList.remove("active")
+    }
 }
 
 function visualize_src(start, end) {
-    
+    line_start = start;
+    line_end = end;
     for (let i = start; i <= end; i++) {
         SRC_LINES[i].classList.add("active");
     }
@@ -170,6 +186,7 @@ function create_caches() {
         cache_div.appendChild(title);
         cache_div.appendChild(cache_info_div);
         addr = document.createElement("div")
+        SPLIT_ADDRS.push(addr)
         addr.classList.add("split_addr")
         addr.innerHTML = hex_to_string_addr(0x0, BIT_LENGTHS[i].s, BIT_LENGTHS[i].b);
         cache_info_div.appendChild(addr);
@@ -209,18 +226,31 @@ function hex_to_string_addr(addr, set_len, offset_len) {
 
 function visualizeInstr(readers, writers) {
     clearRegisters();
-    readers.forEach(reader => {R[reader].classList.add("read-from"); reg_changed = true});
-    writers.forEach(writer => {R[writer].classList.add("written-to"); reg_changed = true});
+    READERS = []
+    WRITERS = []
+    readers.forEach(reader => {
+        READERS.push(R[reader])
+        R[reader].classList.add("read-from"); 
+        REG_CHANGED = true
+    });
+    writers.forEach(writer => {
+        WRITERS.push(R[writer])
+        R[writer].classList.add("written-to");
+        REG_CHANGED = true
+    });
 }
 
-reg_changed = true
 function clearRegisters() {
-    if (!reg_changed) {return}
-    R.forEach(reg => {
+    if (!REG_CHANGED) {return}
+    READERS.forEach(reg => {
         reg.classList.remove("read-from");
         reg.classList.remove("written-to");
     });
-    reg_changed = false
+    WRITERS.forEach(reg => {
+        reg.classList.remove("read-from");
+        reg.classList.remove("written-to");
+    })
+    REG_CHANGED = false
 }
 
 function returnToSummary() {
@@ -271,4 +301,16 @@ function next() {
     }
     visualizeStep(EXEC_LOG[CURRENT_STEP])
     CURRENT_STEP += 1
+}
+
+function end() {
+    if (CURRENT_STEP == TOTAL_STEPS-1) {
+        visualizeStep(EXEC_LOG[CURRENT_STEP])
+        CURRENT_STEP += 1
+        if (PLAYING) {pause()}
+    } else {
+        visualizeStep(EXEC_LOG[CURRENT_STEP])
+        CURRENT_STEP += 1
+        end()
+    }
 }
