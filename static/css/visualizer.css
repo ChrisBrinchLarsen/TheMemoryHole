@@ -125,7 +125,12 @@
     background-color: darkgreen;
 }
 
-.img-icon {
+/* .img-icon {
+    aspect-ratio: 1/1;
+    height: 100%;
+} */
+
+.img-button {
     aspect-ratio: 1/1;
     height: 100%;
 }

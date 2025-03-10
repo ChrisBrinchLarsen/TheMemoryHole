@@ -36,16 +36,16 @@
 
 <div class="full-container" style="display: none;">
     <div id="navbar">
-        <div style="display: flex; flex-direction: row;"> 
+        <div style="display: flex; flex-direction: row; width: 50%;"> 
             <h1 id="instr_counter"></h1>
             <div id="controller" style="display: flex; flex-direction: row;">
-                <button id="play-button" onclick="play()"><img src="{{ url_for('static', filename='images/play.png') }}" class="img-icon"></button>
-                <button id="pause-button" onclick="pause()" style="display: none;"><img src="{{ url_for('static', filename='images/pause.png') }}" class="img-icon"></button>
-                <button id="next-button" onclick="next()"><img src="{{ url_for('static', filename='images/next.png') }}" class="img-icon"></button>
+                <button id="play-button" onclick="play()" class="img-button"><img src="{{ url_for('static', filename='images/play.png') }}" class="img-icon"></button>
+                <button id="pause-button" onclick="pause()" class="img-button" style="display: none;"><img src="{{ url_for('static', filename='images/pause.png') }}" class="img-icon"></button>
+                <button id="next-button" onclick="next()" class="img-button"><img src="{{ url_for('static', filename='images/next.png') }}" class="img-icon"></button>
                 <h2>Delay:<input id="delay-input" min="0" class="num-box" type="number" value="100">ms</h2>
             </div>
         </div>
-        <h1 id="instr"></h1>
+        <h1 id="instr" style="text-align: right;"></h1>
     </div>
     <div id="registers">
         <div class="register">x0</div>
