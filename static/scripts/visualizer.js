@@ -57,7 +57,6 @@ function visualizeStep_playing() {
 }
 
 function visualizeStep(step) {
-    // const startTime = performance.now()
     clear_sets()
     clear_lines()
     if (step["lines-changed"]) {
@@ -94,11 +93,6 @@ function visualizeStep(step) {
     INSTR_COUNTER.innerHTML = "(" + (CURRENT_STEP+1) + "/" + TOTAL_STEPS + ") "
     INSTR.innerHTML = step["title"]
     visualizeInstr(step["readers"], step["writers"])
-    // const endTime = performance.now()
-    // step_time_sum += endTime - startTime
-    if (CURRENT_STEP == TOTAL_STEPS - 1) {
-        console.log(`Steps took on average: ${step_time_sum/TOTAL_STEPS}`)
-    }
 }
 
 // Get line stats of specific line, 1 indexed
@@ -304,6 +298,10 @@ function next() {
 }
 
 function end() {
+    if (CURRENT_STEP == TOTAL_STEPS) {
+        alert("Already at end of execution")
+        return
+    }
     if (CURRENT_STEP == TOTAL_STEPS-1) {
         visualizeStep(EXEC_LOG[CURRENT_STEP])
         CURRENT_STEP += 1
