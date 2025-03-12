@@ -89,14 +89,14 @@ int read_exec(struct memory *mem, struct assembly *as, const char *name, FILE *l
         int block = i / 4;
         int disp = (i % 4) * 2;
         int data = to_hex2(hexes[block][disp], hexes[block][disp + 1]);
-        memory_wr_b(mem, addr, data);
+        mmu_wr_b_instr(mem, addr, data);
         ++addr;
       }
     }
     else if ((n = sscanf(line, " %x: %x %7s %15s %23s", &addr, &a, opcode, args, rest)) >= 2)
     {
       msg = "Insn";
-      memory_wr_w(mem, addr, a);
+      mmu_wr_w_instr(mem, addr, a);
       if (n > 2)
       {
         char text[64];
