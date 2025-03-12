@@ -54,7 +54,7 @@ long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE 
 
         // Read next instruction
         fprintf(CACHE_LOG_POINTER, "fetch: ");
-        int instructionInt = memory_rd_w(mem, PC);
+        int instructionInt = mmu_rd_w(mem, PC);
         fprintf(CACHE_LOG_POINTER, "endfetch\n");
 
         fprintf(CACHE_LOG_POINTER, "instr:\n");
@@ -421,7 +421,7 @@ void ProcessI_L(int instruction, struct memory *mem) {
 
     switch (funct3) {
         case 0x0: // Load Byte
-            valueToSave = memory_rd_b(mem, rdReg(rs1) + imm);
+            valueToSave = mmu_rd_b(mem, rdReg(rs1) + imm);
             valueToSaveSE = (valueToSave << 24) >> 24;
             if (log_enabled) {
                 fprintf(log_file_global, "Load %d into R[%d] from %x", valueToSaveSE, rd, R[rs1] + imm);
@@ -430,7 +430,7 @@ void ProcessI_L(int instruction, struct memory *mem) {
             wrReg(rd, valueToSaveSE);
             break;
         case 0x1: // Load Half
-            valueToSave = memory_rd_h(mem, rdReg(rs1) + imm);
+            valueToSave = mmu_rd_h(mem, rdReg(rs1) + imm);
             valueToSaveSE = (valueToSave << 16) >> 16;
             if (log_enabled) {
                 fprintf(log_file_global, "Load %d into R[%d] from %x", valueToSaveSE, rd, R[rs1] + imm);
@@ -441,7 +441,7 @@ void ProcessI_L(int instruction, struct memory *mem) {
         case 0x2: // Load Word
             log_offset = R[rs1] + imm;
             fprintf(CACHE_LOG_POINTER, "LW %d, %d(%d)\n", rd, imm, rs1);
-            wrReg(rd, memory_rd_w(mem, rdReg(rs1) + imm));
+            wrReg(rd, mmu_rd_w(mem, rdReg(rs1) + imm));
             if (log_enabled) {
                 fprintf(log_file_global, "Load %d into R[%d] from %x", R[rd], rd, log_offset);
             }
@@ -449,7 +449,7 @@ void ProcessI_L(int instruction, struct memory *mem) {
         case 0x4: // Load Byte (U)
             log_offset = R[rs1] + imm;
             fprintf(CACHE_LOG_POINTER, "LBU %d, %d(%d)\n", rd, imm, rs1);
-            wrReg(rd, memory_rd_b(mem, rdReg(rs1) + imm));
+            wrReg(rd, mmu_rd_b(mem, rdReg(rs1) + imm));
             if (log_enabled) {
                 fprintf(log_file_global, "Load %d into R[%d] from %x", R[rd], rd, log_offset);
             }
@@ -457,7 +457,7 @@ void ProcessI_L(int instruction, struct memory *mem) {
         case 0x5: // Load Half (U)
             log_offset = R[rs1] + imm;
             fprintf(CACHE_LOG_POINTER, "LHU %d, %d(%d)\n", rd, imm, rs1);
-            wrReg(rd, memory_rd_h(mem, rdReg(rs1) + imm));
+            wrReg(rd, mmu_rd_h(mem, rdReg(rs1) + imm));
             if (log_enabled) {
                 fprintf(log_file_global, "Load %d into R[%d] from %x", R[rd], rd, log_offset);
             }
@@ -539,7 +539,7 @@ void ProcessS(int instruction, struct memory *mem) {
     switch (funct3) {
     case 0x0: // Store Byte
         fprintf(CACHE_LOG_POINTER, "SB %d, %d(%d)\n", rs2, imm, rs1);
-        memory_wr_b(mem, rdReg(rs1) + imm, rdReg(rs2));
+        mmu_wr_b(mem, rdReg(rs1) + imm, rdReg(rs2));
         if (log_enabled) {
             fprintf(log_file_global, "(%x+%x=%x) <- %d", imm, R[rs1], R[rs1] + imm, R[rs2]);
         } 
@@ -549,14 +549,14 @@ void ProcessS(int instruction, struct memory *mem) {
             fprintf(log_file_global, "%x <- %d", R[rs1] + imm, R[rs2]);
         }
         fprintf(CACHE_LOG_POINTER, "SH %d, %d(%d)\n", rs2, imm, rs1);
-        memory_wr_h(mem, rdReg(rs1) + imm, rdReg(rs2));
+        mmu_wr_h(mem, rdReg(rs1) + imm, rdReg(rs2));
         break;
     case 0x2: // Store Word
         if (log_enabled) {
             fprintf(log_file_global, "%x <- %d", R[rs1] + imm, R[rs2]);
         }
         fprintf(CACHE_LOG_POINTER, "SW %d, %d(%d)\n", rs2, imm, rs1);
-        memory_wr_w(mem, rdReg(rs1) + imm, rdReg(rs2));
+        mmu_wr_w(mem, rdReg(rs1) + imm, rdReg(rs2));
         break;
     default:
         break;

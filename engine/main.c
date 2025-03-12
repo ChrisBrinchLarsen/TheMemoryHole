@@ -40,14 +40,14 @@ int pass_args_to_program(struct memory* mem, int argc, char* argv[]) {
     unsigned count_addr = 0x1000000;
     unsigned argv_addr = 0x1000004;
     unsigned str_addr = argv_addr + 4 * num_args;
-    memory_wr_w(mem, count_addr, num_args);
+    mmu_wr_w_instr(mem, count_addr, num_args);
     for (int index = 0; index < num_args; ++index) {
-      memory_wr_w(mem, argv_addr + 4 * index, str_addr);
+      mmu_wr_w_instr(mem, argv_addr + 4 * index, str_addr);
       char* cp = argv[first_arg + index];
       int c;
       do {
         c = *cp++;
-        memory_wr_b(mem, str_addr++, c);
+        mmu_wr_b_instr(mem, str_addr++, c);
       } while (c);
     }
   }
@@ -140,9 +140,11 @@ int main(int argc, char *argv[])
       }
     }
     int start_addr = read_exec(mem, as, argv[2], log_file);
+    open_accesses_file();
     clock_t before = clock();
     long int num_insns = simulate(mem, as, start_addr, log_file, map);
     clock_t after = clock();
+    close_accesses_file();
     uint64_t mem_cycles = finalize_cache();
     int N_CACHE_LAYERS = get_cache_layer_count();
     uint64_t misses, hits, total_hits;

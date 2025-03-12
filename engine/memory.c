@@ -43,3 +43,25 @@ void memory_write_back(struct memory* mem, int addr, char* block, uint32_t block
   int page_offset = addr & 0x0ffff;
   memcpy(&page[page_offset], block, block_size);
 }
+
+
+void memory_wr_w(struct memory *mem, int addr, uint32_t data)
+{
+  char* page = get_page(mem, addr);
+  int page_offset = addr & 0x0ffff;
+  memcpy(&page[page_offset], &data, sizeof(uint32_t));
+}
+
+void memory_wr_h(struct memory *mem, int addr, uint16_t data)
+{
+  char* page = get_page(mem, addr);
+  int page_offset = addr & 0x0ffff;
+  memcpy(&page[page_offset], &data, sizeof(uint16_t));
+}
+
+void memory_wr_b(struct memory *mem, int addr, uint8_t data)
+{
+  char* page = get_page(mem, addr);
+  int page_offset = addr & 0x0ffff;
+  memcpy(&page[page_offset], &data, sizeof(uint8_t));
+}
