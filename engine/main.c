@@ -120,6 +120,7 @@ struct hashmap* createInstructionHashmap(const char *filename) {
 
 int main(int argc, char *argv[])
 {
+  open_accesses_file();
   struct hashmap *map = createInstructionHashmap(argv[2]);
 
   struct memory *mem = memory_create();
@@ -139,7 +140,6 @@ int main(int argc, char *argv[])
         terminate("Could not open logfile, terminating.");
       }
     }
-    open_accesses_file();
     int start_addr = read_exec(mem, as, argv[2], log_file);
     clock_t before = clock();
     long int num_insns = simulate(mem, as, start_addr, log_file, map);
