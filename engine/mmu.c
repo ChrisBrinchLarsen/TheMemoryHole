@@ -65,13 +65,11 @@ void mmu_wr_h(struct memory *mem, int addr, uint16_t data) {
 }
 
 void mmu_wr_b(struct memory *mem, int addr, uint8_t data) {
-    FILE* accesses = fopen("accesses", "a");
     fprintf(accesses, "mmu_wr_b(memory, 0x%x, %d);\n", addr, data);
     cache_wr_b(TOP_LEVEL_CACHE, mem, addr, data);
 }
 
 int mmu_rd_w(struct memory *mem, int addr) {
-    FILE* accesses = fopen("accesses", "a");
     fprintf(accesses, "mmu_rd_w(memory, 0x%x);\n", addr);
     if (addr & 0b11)
     {

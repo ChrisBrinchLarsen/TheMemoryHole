@@ -53,6 +53,7 @@ def handle_run_program(data):
     print("Starting program simulation...")
     result = subprocess.run(["./engine/sim", architecture_file_name, f"{program_file_path}.dis", "--", *args], capture_output=True, text=True)
     print(result.stdout)
+    print(result.stderr)
 
     loading_instr = []
     executing_prog = []

@@ -139,12 +139,11 @@ int main(int argc, char *argv[])
         terminate("Could not open logfile, terminating.");
       }
     }
-    int start_addr = read_exec(mem, as, argv[2], log_file);
     open_accesses_file();
+    int start_addr = read_exec(mem, as, argv[2], log_file);
     clock_t before = clock();
     long int num_insns = simulate(mem, as, start_addr, log_file, map);
     clock_t after = clock();
-    close_accesses_file();
     uint64_t mem_cycles = finalize_cache();
     int N_CACHE_LAYERS = get_cache_layer_count();
     uint64_t misses, hits, total_hits;
@@ -191,6 +190,7 @@ int main(int argc, char *argv[])
     {
       printf("\nSimulated %ld instructions in %d ticks (%f MIPS)\n", num_insns, ticks, mips);
     }
+    close_accesses_file();
     assembly_delete(as);
     memory_delete(mem);
   }
