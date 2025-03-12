@@ -144,7 +144,6 @@ function preset_architecture(caches) {
 }
 
 function preset_program(path) {
-    console.log(path)
     fetch(path)
         .then(response => response.text())
         .then(data => {document.getElementById("programText").value = data})
