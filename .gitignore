@@ -7,3 +7,5 @@ loggers
 cache_log
 sim
 riscv/
+tmp/architecture*
+tmp/program*

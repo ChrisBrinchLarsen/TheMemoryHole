@@ -72,9 +72,9 @@ function visualizeStep(step) {
     
     SPLIT_ADDRS.forEach(addr => {addr.innerHTML = hex_to_string_addr(step["addr"],)})
     if (step["lines"].length > 0) {
-        visualize_path(step["hits"], step["misses"], step["evict"], step["insert"], step["lines"][0], step["lines"][1])
+        visualize_path(step["hits"], step["misses"], step["evict"], step["insert"], step["lines"][0], step["lines"][1], step["is_write"])
     } else {
-        visualize_path(step["hits"], step["misses"], step["evict"], step["insert"], -2, -1)
+        visualize_path(step["hits"], step["misses"], step["evict"], step["insert"], -2, -1, step["is_write"])
     }
     
     updateLineSummary(SELECTED_LINE)
@@ -100,13 +100,17 @@ function get_src_line_stats(nr) {
     return {hits:LINE_HITS[nr-1], misses:LINE_MISSES[nr-1]}
 }
 
-function visualize_path(hits, misses, evictions, inserts, lineS, lineE) {
+function visualize_path(hits, misses, evictions, inserts, lineS, lineE, is_write) {
     COLORED_LINES = []
     COLORED_SET_OBJECTS = []
     
     hits.forEach(hit => {
         HITS[hit[0]-1] += 1;
         give_line_class("hit", hit[0], hit[1], hit[2])
+        if (is_write && (hit[0] == 1)) { // Hit a write access in L1
+            console.log("We out here4")
+            give_line_class("dirty", hit[0], hit[1], hit[2])
+        }
         for (let i = lineS; i <= lineE; i++) {
             LINE_HITS[i] += 1;
         }
@@ -126,11 +130,20 @@ function visualize_path(hits, misses, evictions, inserts, lineS, lineE) {
     
     evictions.forEach(evictee => {
         give_line_class("evict", evictee[0], evictee[1], evictee[2])
+            console.log("We out here3")
+        give_line_class("dirty", evictee[0], evictee[1], evictee[2])
         give_line_class("valid", evictee[0], evictee[1], evictee[2])
     })
     inserts.forEach(insertee => {
         give_line_class("insert", insertee[0], insertee[1], insertee[2])
         give_line_class("valid", insertee[0], insertee[1], insertee[2])
+        if (is_write && (insertee[0] == 1)) {
+            console.log("We out here")
+            give_line_class("dirty", insertee[0], insertee[1], insertee[2])
+        } else {
+            console.log("We out here2")
+            remove_line_class("dirty", insertee[0], insertee[1], insertee[2])
+        }
     })
 }
 
@@ -140,9 +153,14 @@ function clear_sets() {
 
 
 function give_line_class(className, cacheN, setN, lineN) {
-    line = CACHES[cacheN-1].children[1].children[1+Number(setN)].children[lineN]
+    let line = CACHES[cacheN-1].children[1].children[1+Number(setN)].children[lineN]
     line.classList.add(className);
     COLORED_LINES.push(line)
+}
+
+function remove_line_class(className, cacheN, setN, lineN) {
+    let line = CACHES[cacheN-1].children[1].children[1+Number(setN)].children[lineN]
+    line.classList.remove(className);
 }
 
 function clear_lines() {

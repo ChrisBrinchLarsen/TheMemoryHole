@@ -93,6 +93,16 @@
     background-color: dimgray;
 }
 
+.dirty {
+    background: repeating-linear-gradient(
+        -45deg, 
+        rgba(0, 0, 0, 0.5) 0px, 
+        rgba(0, 0, 0, 0.5) 5px, 
+        transparent 5px, 
+        transparent 10px
+    );
+}
+
 .hit {
     background-color: greenyellow ;
 }
@@ -134,3 +144,4 @@
     aspect-ratio: 1/1;
     height: 100%;
 }
+
