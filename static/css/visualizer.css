@@ -115,9 +115,10 @@
     background-color: blue ;
 }
 
-.miss {
+.miss .line {
     border: solid red 3px;
 }
+
 
 .active {
     background-color: lightgreen;
@@ -127,12 +128,12 @@
     min-height: 1rem;
 }
 
-.src-line:hover {
-    background-color: dimgray;
+.selected {
+    background-color: #a8a8a8 !important;
 }
 
-.selected {
-    background-color: darkgreen;
+.src-line:hover {
+    background-color: #d9d9d9;
 }
 
 /* .img-icon {
