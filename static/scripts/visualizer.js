@@ -35,19 +35,34 @@ let step_time_sum = 0.0
 let line_start = -1
 let line_end = -2
 
+let render_time = 0
+let step_time = 0
+let steps_per_frame = 0
+
 
 function visualizeStep_playing() {
+    if (CURRENT_STEP == TOTAL_STEPS) {pause()}
+
     if (PLAYING) {
         if (CURRENT_STEP == TOTAL_STEPS-1) {
             visualizeStep(EXEC_LOG[CURRENT_STEP])
-            CURRENT_STEP += 1
+            CURRENT_STEP++
             pause()
         } else {
-            visualizeStep(EXEC_LOG[CURRENT_STEP])
-            CURRENT_STEP += 1
             if (DELAY_INPUT.value == "0") {
-                requestAnimationFrame(visualizeStep_playing);
+                for (let i = 0; i < Math.round(steps_per_frame) && CURRENT_STEP < TOTAL_STEPS; i++) {
+                    visualizeStep(EXEC_LOG[CURRENT_STEP]);
+                    CURRENT_STEP++;
+                }
+                render_start = performance.now()
+                requestAnimationFrame(() => {
+                    render_time = performance.now() - render_start
+                    steps_per_frame = render_time / step_time;
+                    visualizeStep_playing();
+                })
             } else {
+                visualizeStep(EXEC_LOG[CURRENT_STEP]);
+                CURRENT_STEP++;
                 setTimeout(() => {
                     visualizeStep_playing();
                 }, DELAY_INPUT.value);
@@ -103,7 +118,6 @@ function visualize_path(hits, misses, evictions, inserts, lineS, lineE, is_write
         HITS[hit[0]-1] += 1;
         give_line_class("hit", hit[0], hit[1], hit[2])
         if (is_write && (hit[0] == 1)) { // Hit a write access in L1
-            console.log("We out here4")
             give_line_class("dirty", hit[0], hit[1], hit[2])
         }
         for (let i = lineS; i <= lineE; i++) {
@@ -125,7 +139,6 @@ function visualize_path(hits, misses, evictions, inserts, lineS, lineE, is_write
     
     evictions.forEach(evictee => {
         give_line_class("evict", evictee[0], evictee[1], evictee[2])
-            console.log("We out here3")
         give_line_class("dirty", evictee[0], evictee[1], evictee[2])
         give_line_class("valid", evictee[0], evictee[1], evictee[2])
     })
@@ -133,10 +146,8 @@ function visualize_path(hits, misses, evictions, inserts, lineS, lineE, is_write
         give_line_class("insert", insertee[0], insertee[1], insertee[2])
         give_line_class("valid", insertee[0], insertee[1], insertee[2])
         if (is_write && (insertee[0] == 1)) {
-            console.log("We out here")
             give_line_class("dirty", insertee[0], insertee[1], insertee[2])
         } else {
-            console.log("We out here2")
             remove_line_class("dirty", insertee[0], insertee[1], insertee[2])
         }
     })
@@ -286,6 +297,18 @@ function play() {
     PLAYING = true
     PLAY_BUTTON.style.display = "none"
     PAUSE_BUTTON.style.display = "block"
+
+    // Testing rendering time
+    const render_start = performance.now()
+    requestAnimationFrame(() => {
+        rendertime = performance.now() - render_start
+        const step_start = performance.now()
+        visualizeStep(EXEC_LOG[CURRENT_STEP])
+        CURRENT_STEP += 1
+        step_time = performance.now() - step_start
+    })
+    steps_per_frame = render_time / step_time
+
     setTimeout(() => {
         visualizeStep_playing();
     }, DELAY_INPUT.value);
@@ -315,13 +338,20 @@ function end() {
         alert("Already at end of execution")
         return
     }
-    if (CURRENT_STEP == TOTAL_STEPS-1) {
+
+    while (CURRENT_STEP != TOTAL_STEPS) {
         visualizeStep(EXEC_LOG[CURRENT_STEP])
-        CURRENT_STEP += 1
-        if (PLAYING) {pause()}
-    } else {
-        visualizeStep(EXEC_LOG[CURRENT_STEP])
-        CURRENT_STEP += 1
-        end()
+        CURRENT_STEP += 1;
     }
+    if (PLAYING) {pause()}
+
+    // if (CURRENT_STEP == TOTAL_STEPS-1) {
+    //     visualizeStep(EXEC_LOG[CURRENT_STEP])
+    //     CURRENT_STEP += 1
+    //     if (PLAYING) {pause()}
+    // } else {
+    //     visualizeStep(EXEC_LOG[CURRENT_STEP])
+    //     CURRENT_STEP += 1
+    //     end()
+    // }
 }
