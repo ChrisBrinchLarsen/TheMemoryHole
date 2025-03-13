@@ -141,6 +141,7 @@ function preset_architecture(caches) {
         ARCHITECTURE.appendChild(container)
     })
     ARCHITECTURE.appendChild(ADD_CACHE)
+    renameCaches()
 }
 
 function preset_program(path) {

@@ -95,11 +95,6 @@ function visualizeStep(step) {
     visualizeInstr(step["readers"], step["writers"])
 }
 
-// Get line stats of specific line, 1 indexed
-function get_src_line_stats(nr) {
-    return {hits:LINE_HITS[nr-1], misses:LINE_MISSES[nr-1]}
-}
-
 function visualize_path(hits, misses, evictions, inserts, lineS, lineE, is_write) {
     COLORED_LINES = []
     COLORED_SET_OBJECTS = []
