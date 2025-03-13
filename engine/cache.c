@@ -48,8 +48,6 @@ void UpdateCacheSet(Cache_t* cache, uint32_t setIndex);
 void EvictCacheLine(Cache_t* cache, uint32_t addr, CacheLine_t* evict_line, struct memory *mem);
 void CacheSetToString(Cache_t* cache, int setIndex, char* out);
 void CacheLineToString(Cache_t* cache, uint32_t setIndex, uint32_t lineIndex, char* out);
-void PrintSet(Cache_t* cache, uint32_t setIndex);
-void PrintCache(Cache_t* cache);
 void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSize);
 Address_t GetAddress(Cache_t* cache, uint32_t address);
 void Cache_free(Cache_t* c);
