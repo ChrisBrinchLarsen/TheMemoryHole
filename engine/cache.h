@@ -7,6 +7,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+typedef struct Address {
+    uint32_t full_addr;
+    uint32_t tag;
+    uint32_t set_index;
+    uint32_t block_offset;
+} Address_t;
+
 typedef struct CacheLine {
     bool valid;
     bool dirty;
@@ -16,29 +23,29 @@ typedef struct CacheLine {
 } CacheLine_t;
 
 typedef struct Cache {
-    //
     uint32_t id;
 
     // base parameters
-    uint32_t cacheSize;
+    uint32_t cache_size;
     uint32_t associativity;
 
-    uint32_t setCount;
+    uint32_t set_count;
 
     // bit sizes
-    uint32_t blockOffsetBitLength;
-    uint32_t SetBitLength;
-    uint32_t TagBitLength;
+    uint32_t block_offset_bit_length;
+    uint32_t set_bit_length;
+    uint32_t tag_bit_length;
 
-    uint32_t blockSize;
-
-    struct Cache* childCache;
+    uint32_t block_size;
 
     CacheLine_t **sets;
 
+    uint64_t hits;
+    uint64_t misses;
+
 } Cache_t;
 
-Cache_t** ParseCPUArchitecture(char* path);
+Cache_t* parse_cpu(char* path);
 
 // skriv word/halfword/byte til lager
 void cache_wr_w(Cache_t *cache, struct memory *mem, int addr, uint32_t data);
