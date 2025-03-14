@@ -5,15 +5,17 @@
 
 int main() {
     printf("Unit testing starting...\n");
+    open_accesses_file();
     struct memory* memory = memory_create();
     initialize_cache();
-    Cache_t** caches = ParseCPUArchitecture("./testing/Architectures/SimpleCPU.md");
-    supply_cache(caches[0]);
+    parse_cpu("./testing/Architectures/SimpleCPU.md");
 
-    mmu_wr_b(memory, 0xf, 0);
-    mmu_wr_b(memory, 0x27, 0);
-    mmu_wr_w(memory, 0x10080, 172931);
+    print_all_caches();
+    mmu_wr_w(memory, 0x11538, 0);
+    print_all_caches();
+    mmu_rd_w(memory, 0x103f0);
+    print_all_caches();
+    
 
-    uint32_t mem_cycles = finalize_cache();
-    int N_CACHE_LAYERS = get_cache_layer_count();
+    finalize_cache();
 }

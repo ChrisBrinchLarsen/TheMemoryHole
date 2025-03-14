@@ -64,7 +64,7 @@ def handle_run_program(data):
             # TODO: This entire parsing of the loading instructions part of the cache_log
             line = log.readline()
         while (True): # Executing program
-            step = {"type":"", "title":"", "ram":False, "hits":[], "misses":[], "readers":[], "writers":[], "addr":[], "evict":[], "insert":[], "lines":active_lines, "lines-changed":False, "is_write":False}
+            step = {"type":"", "title":"", "ram":False, "hits":[], "misses":[], "readers":[], "writers":[], "addr":[], "evict":[], "insert":[], "invalidate":[], "lines":active_lines, "lines-changed":False, "is_write":False}
             line = log.readline()
             if (not line): break
             tokens = line.split()
@@ -81,15 +81,17 @@ def handle_run_program(data):
                             line = log.readline()
                             tokens = line.split()
                             continue
-                        match tokens[1]:
+                        match tokens[0]:
                             case "H":
-                                step["hits"].append((tokens[0], tokens[2], tokens[3]))
+                                step["hits"].append((tokens[1], tokens[2], tokens[3]))
                             case "M":
-                                step["misses"].append((tokens[0], tokens[2]))
+                                step["misses"].append((tokens[1], tokens[2]))
                             case "E":
-                                step["evict"].append((tokens[0], tokens[2], tokens[3]))
+                                step["evict"].append((tokens[1], tokens[2], tokens[3]))
+                            case "F": # Yes I know F (fetch into cache) being insert is weird asf
+                                step["insert"].append((tokens[1], tokens[2], tokens[3]))
                             case "I":
-                                step["insert"].append((tokens[0], tokens[2], tokens[3]))
+                                step["invalidate"].append((tokens[1], tokens[2], tokens[3]))
                         line = log.readline()
                         tokens = line.split()
                 case "instr:":
@@ -132,7 +134,7 @@ def handle_run_program(data):
                         tokens = line.split()
             step["lines"] = active_lines
             executing_prog.append(step)
-    os.system(f"rm -f accesses cache_log {program_file_path}.riscv {program_file_path}.dis {program_file_path}.c {architecture_file_name}")
+    os.system(f"rm -f accesses {program_file_path}.riscv {program_file_path}.dis {program_file_path}.c {architecture_file_name}")
 
     # TODO: Needs to return meta config information as well
 

@@ -27,7 +27,6 @@ const uint32_t ACTIVE_REPLACEMENT_POLICY = LRU_REPLACEMENT_POLICY;
 void cache_writeback_block(uint32_t layer, int addr_int, char* data, size_t block_size);
 char* fetch_block(uint32_t layer, uint32_t addr_int, struct memory *mem, bool mark_dirty);
 void handle_miss(uint32_t layer, Address_t addr, struct memory* mem, bool mark_dirty);
-void cache_writeback_block(uint32_t layer, int addr_int, char* data, size_t block_size);
 int get_line_index_from_tag(Cache_t* cache, Address_t addr);
 int get_replacement_line_index(uint32_t layer, uint32_t set_index);
 void evict_cache_line(uint32_t layer, uint32_t addr_int, CacheLine_t* evict_line, struct memory *mem);
@@ -37,16 +36,9 @@ void CacheSetToString(Cache_t* cache, int setIndex, char* out);
 void CacheLineToString(Cache_t* cache, uint32_t setIndex, uint32_t lineIndex, char* out);
 void PrintSet(Cache_t* cache, uint32_t setIndex);
 void PrintCache(Cache_t* cache);
-Cache_t* parse_cpu(char* path);
 Address_t get_address(Cache_t* cache, uint32_t address);
 Cache_t* cache_new(uint32_t cacheSize, uint32_t block_size, uint32_t associativity);
 CacheLine_t cacheline_new(char* block);
-void initialize_cache();
-void finalize_cache();
-FILE* get_cache_log();
-int get_cache_layer_count();
-uint64_t get_misses_at_layer(int layer);
-uint64_t get_hits_at_layer(int layer);
 
 
 void cache_wr_w(struct memory *mem, int addr_int, uint32_t data) {
@@ -117,6 +109,7 @@ char* fetch_block(uint32_t layer, uint32_t addr_int, struct memory *mem, bool ma
 
     // check if line is already in set, otherwise add it. CACHE HIT/MISS
     if (line_index == -1) { // MISS
+        line_index = get_replacement_line_index(layer, addr.set_index);
         handle_miss(layer, addr, mem, mark_dirty);
     }
     // HIT
@@ -125,7 +118,7 @@ char* fetch_block(uint32_t layer, uint32_t addr_int, struct memory *mem, bool ma
         cache->sets[addr.set_index][line_index].LRU = 0; // least recently used; just now
         cache->hits++;
 
-        fprintf(CACHE_LOG, "H %d %d %d\n", cache->id, addr.set_index, line_index);
+        fprintf(CACHE_LOG, "H %d %d %d\n", layer+1, addr.set_index, line_index);
     }
     
     if (mark_dirty) {
@@ -144,12 +137,15 @@ void handle_miss(uint32_t layer, Address_t addr, struct memory* mem, bool mark_d
     CacheLine_t* victim = &cache->sets[addr.set_index][line_index];
     if (victim->valid) {
         victim->valid = 0;
-        invalidate_line(layer-1, addr.full_addr);
-        if (victim->dirty) {evict_cache_line(layer, addr.full_addr, victim, mem);}
+        if (layer != 0) {invalidate_line(layer-1, addr.full_addr);}
+        if (victim->dirty) {
+            uint32_t evict_addr = (cache->sets[addr.set_index][line_index].tag << (cache->set_bit_length + cache->block_offset_bit_length)) | (addr.set_index << cache->block_offset_bit_length);
+            evict_cache_line(layer, evict_addr, victim, mem);
+        }
     }
 
     // the cache below returns its entire block, we need to know which part of that cache is our block (since it might be smaller)
-    char* block = NULL;
+    char* block;
     uint32_t block_offset = 0;
 
     if (layer != N_CACHE_LEVELS-1) { // Not at last layer of cache
@@ -185,6 +181,11 @@ void handle_miss(uint32_t layer, Address_t addr, struct memory* mem, bool mark_d
     victim->tag = addr.tag;
     victim->LRU = 0;
     // copy and insert block
+    if (block == NULL) {
+        printf("Block was NULL\n");
+    } else if (victim->block == NULL) {
+        printf("Victim block was null\n");
+    }
     memcpy(victim->block, block, cache->block_size);
 }
 
@@ -199,7 +200,6 @@ void cache_writeback_block(uint32_t layer, int addr_int, char* data, size_t bloc
 
     if (line_index == -1) {
         printf("ERROR: Tried to perform write-back, but block was missing in lower level cache. Cache inclusivity didn't hold.\n");
-        PrintCache(cache);
         exit(1);
     }
     fprintf(CACHE_LOG, "E %d %d %d\n", layer+1, addr.set_index, line_index);
@@ -444,3 +444,10 @@ FILE* get_cache_log() {return CACHE_LOG;}
 int get_cache_layer_count() {return N_CACHE_LEVELS;}
 uint64_t get_misses_at_layer(int layer) {return caches[layer].misses;}
 uint64_t get_hits_at_layer(int layer) {return caches[layer].hits;}
+
+void print_all_caches() {
+    for (uint32_t i = 0; i < N_CACHE_LEVELS; i++) {
+        PrintCache(&caches[i]);
+        printf("\n");
+    }
+}

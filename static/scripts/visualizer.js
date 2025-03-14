@@ -87,9 +87,9 @@ function visualizeStep(step) {
     
     SPLIT_ADDRS.forEach(addr => {addr.innerHTML = hex_to_string_addr(step["addr"],)})
     if (step["lines"].length > 0) {
-        visualize_path(step["hits"], step["misses"], step["evict"], step["insert"], step["lines"][0], step["lines"][1], step["is_write"])
+        visualize_path(step["hits"], step["misses"], step["evict"], step["insert"], step["invalidate"], step["lines"][0], step["lines"][1], step["is_write"])
     } else {
-        visualize_path(step["hits"], step["misses"], step["evict"], step["insert"], -2, -1, step["is_write"])
+        visualize_path(step["hits"], step["misses"], step["evict"], step["insert"], step["invalidate"], -2, -1, step["is_write"])
     }
     
     updateLineSummary(SELECTED_LINE)
@@ -110,7 +110,7 @@ function visualizeStep(step) {
     visualizeInstr(step["readers"], step["writers"])
 }
 
-function visualize_path(hits, misses, evictions, inserts, lineS, lineE, is_write) {
+function visualize_path(hits, misses, evictions, inserts, invalidations, lineS, lineE, is_write) {
     COLORED_LINES = []
     COLORED_SET_OBJECTS = []
     
@@ -150,6 +150,10 @@ function visualize_path(hits, misses, evictions, inserts, lineS, lineE, is_write
         } else {
             remove_line_class("dirty", insertee[0], insertee[1], insertee[2])
         }
+    })
+    invalidations.forEach(invalidee => {
+        remove_line_class("valid", invalidee[0], invalidee[1], invalidee[2]);
+        remove_line_class("dirty", invalidee[0], invalidee[1], invalidee[2]);
     })
 }
 

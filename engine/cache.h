@@ -65,4 +65,6 @@ void initialize_cache();
 void finalize_cache();
 FILE* get_cache_log();
 
+void print_all_caches();
+
 #endif
