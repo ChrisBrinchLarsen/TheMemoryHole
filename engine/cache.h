@@ -48,21 +48,21 @@ typedef struct Cache {
 Cache_t* parse_cpu(char* path);
 
 // skriv word/halfword/byte til lager
-void cache_wr_w(Cache_t *cache, struct memory *mem, int addr, uint32_t data);
-void cache_wr_h(Cache_t *cache, struct memory *mem, int addr, uint16_t data);
-void cache_wr_b(Cache_t *cache, struct memory *mem, int addr, uint8_t data);
+void cache_wr_w(struct memory *mem, int addr, uint32_t data);
+void cache_wr_h(struct memory *mem, int addr, uint16_t data);
+void cache_wr_b(struct memory *mem, int addr, uint8_t data);
 
 // læs word/halfword/byte fra lager - data er nul-forlænget
-int cache_rd_w(Cache_t *cache, struct memory *mem, int addr);
-int cache_rd_h(Cache_t *cache, struct memory *mem, int addr);
-int cache_rd_b(Cache_t *cache, struct memory *mem, int addr);
+int cache_rd_w(struct memory *mem, int addr);
+int cache_rd_h(struct memory *mem, int addr);
+int cache_rd_b(struct memory *mem, int addr);
 
 int get_cache_layer_count();
 uint64_t get_misses_at_layer(int layer);
 uint64_t get_hits_at_layer(int layer);
 
 void initialize_cache();
-uint64_t finalize_cache();
+void finalize_cache();
 FILE* get_cache_log();
 
 #endif

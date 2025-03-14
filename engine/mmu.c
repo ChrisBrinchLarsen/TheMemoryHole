@@ -3,14 +3,9 @@
 #include <stdio.h>
 #include <stdint.h>
 
-Cache_t* TOP_LEVEL_CACHE;
 struct memory* mem;
 FILE* accesses;
 
-Cache_t* recieve_cache() {return TOP_LEVEL_CACHE;}
-void supply_cache(Cache_t* cache) {
-    TOP_LEVEL_CACHE = cache;
-}
 void open_accesses_file() {
     accesses = fopen("accesses", "a");
 }
@@ -51,7 +46,7 @@ void mmu_wr_w(struct memory *mem, int addr, uint32_t data) {
         printf("Unaligned word write to %x\n", addr);
         exit(-1);
     }
-    cache_wr_w(TOP_LEVEL_CACHE, mem, addr, data);
+    cache_wr_w(mem, addr, data);
 }
 
 void mmu_wr_h(struct memory *mem, int addr, uint16_t data) {
@@ -61,12 +56,12 @@ void mmu_wr_h(struct memory *mem, int addr, uint16_t data) {
         printf("Unaligned word write to %x\n", addr);
         exit(-1);
     }
-    cache_wr_h(TOP_LEVEL_CACHE, mem, addr, data);
+    cache_wr_h(mem, addr, data);
 }
 
 void mmu_wr_b(struct memory *mem, int addr, uint8_t data) {
     fprintf(accesses, "mmu_wr_b(memory, 0x%x, %d);\n", addr, data);
-    cache_wr_b(TOP_LEVEL_CACHE, mem, addr, data);
+    cache_wr_b(mem, addr, data);
 }
 
 int mmu_rd_w(struct memory *mem, int addr) {
@@ -76,7 +71,7 @@ int mmu_rd_w(struct memory *mem, int addr) {
         printf("Unaligned word write to %x\n", addr);
         exit(-1);
     }
-    int result = cache_rd_w(TOP_LEVEL_CACHE, mem, addr);
+    int result = cache_rd_w(mem, addr);
     return result;
 }
 
@@ -88,12 +83,12 @@ int mmu_rd_h(struct memory *mem, int addr) {
         printf("Unaligned word write to %x\n", addr);
         exit(-1);
     }
-    int result = cache_rd_h(TOP_LEVEL_CACHE, mem, addr);
+    int result = cache_rd_h(mem, addr);
     return result;
 }
 
 int mmu_rd_b(struct memory *mem, int addr) {
     fprintf(accesses, "mmu_rd_b(memory, 0x%x);\n", addr);
-    int result = cache_rd_b(TOP_LEVEL_CACHE, mem, addr);
+    int result = cache_rd_b(mem, addr);
     return result;
 }

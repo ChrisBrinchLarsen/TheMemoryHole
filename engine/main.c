@@ -125,8 +125,7 @@ int main(int argc, char *argv[])
 
   struct memory *mem = memory_create();
   initialize_cache();
-  Cache_t** caches = ParseCPUArchitecture(argv[1]);
-  supply_cache(caches[0]); // Letting MMU know which cache should be checked first
+  parse_cpu(argv[1]);
   argc = pass_args_to_program(mem, argc, argv);
   if (argc == 3 || argc == 5)
   {
@@ -144,7 +143,7 @@ int main(int argc, char *argv[])
     clock_t before = clock();
     long int num_insns = simulate(mem, as, start_addr, log_file, map);
     clock_t after = clock();
-    uint64_t mem_cycles = finalize_cache();
+    finalize_cache();
     int N_CACHE_LAYERS = get_cache_layer_count();
     uint64_t misses, hits, total_hits;
     total_hits = 0;
@@ -159,17 +158,9 @@ int main(int argc, char *argv[])
               (float)hits/(hits + misses),
               hits,
               hits + misses);
-
-      // printf("L%d - Hit: %d - Miss: %d - Hit-rate: %0.3f - Miss-rate %0.3f\n",
-      //           i+1,
-      //           hits,
-      //           misses,
-      //           (float)hits/(hits + misses),
-      //           (float)misses/(hits + misses));
     }
     printf("In total handled %lu memory accesses.\n", total_hits + get_misses_at_layer(N_CACHE_LAYERS-1));
     printf("Total cache hit-rate: %0.3f\n", (float)total_hits/(total_hits + get_misses_at_layer(N_CACHE_LAYERS-1)));
-    printf("Clock cycles in memory: %lu\n", mem_cycles);
 
     int ticks = after - before;
     double mips = (1.0 * num_insns * CLOCKS_PER_SEC) / ticks / 1000000;

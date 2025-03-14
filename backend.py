@@ -104,15 +104,17 @@ def handle_run_program(data):
                             line = log.readline()
                             tokens = line.split()
                             continue
-                        match tokens[1]:
+                        match tokens[0]:
                             case "H":
-                                step["hits"].append((tokens[0], tokens[2], tokens[3]))
+                                step["hits"].append((tokens[1], tokens[2], tokens[3]))
                             case "M":
-                                step["misses"].append((tokens[0], tokens[2]))
+                                step["misses"].append((tokens[1], tokens[2]))
                             case "E":
-                                step["evict"].append((tokens[0], tokens[2], tokens[3]))
+                                step["evict"].append((tokens[1], tokens[2], tokens[3]))
+                            case "F": # Yes I know F (fetch into cache) being insert is weird asf
+                                step["insert"].append((tokens[1], tokens[2], tokens[3]))
                             case "I":
-                                step["insert"].append((tokens[0], tokens[2], tokens[3]))
+                                step["invalidate"].append((tokens[1], tokens[2], tokens[3]))
                             case _:
                                 match tokens[0]:
                                     case access if access in ["wb", "wh", "ww", "rb", "rh", "rw"]:
