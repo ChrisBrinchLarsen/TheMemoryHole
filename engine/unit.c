@@ -10,8 +10,9 @@ int main() {
     printf("Unit testing starting...\n");
     open_accesses_file();
     struct memory* memory = memory_create();
-    Cache_t** caches = ParseCPUArchitecture("./testing/Architectures/inclusivity_test.md");
-    supply_cache(caches[0]);
+    //Cache_t* cache = parse_cpu("./testing/Architectures/inclusivity_test.md");
+    parse_cpu("./testing/Architectures/inclusivity_test.md");
+    //supply_cache(cache);
     
     print_all_caches();
 
@@ -39,6 +40,7 @@ int main() {
     //mmu_wr_b(memory, 0x27, 0);
     //mmu_wr_w(memory, 0x10080, 172931);
 
-    uint32_t mem_cycles = finalize_cache();
+    //uint32_t mem_cycles = finalize_cache();
+    finalize_cache();
     close_accesses_file();
 }

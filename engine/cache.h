@@ -65,11 +65,6 @@ void initialize_cache();
 void finalize_cache();
 FILE* get_cache_log();
 
-<<<<<<< HEAD
 void print_all_caches();
-=======
-void PrintSet(Cache_t* cache, uint32_t setIndex);
-void PrintCache(Cache_t* cache);
->>>>>>> master
 
 #endif
