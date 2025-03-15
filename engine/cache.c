@@ -34,11 +34,21 @@ void invalidate_line(uint32_t layer, uint32_t addr_int);
 void increment_line_LRU(Cache_t* cache, uint32_t setIndex);
 void CacheSetToString(Cache_t* cache, int setIndex, char* out);
 void CacheLineToString(Cache_t* cache, uint32_t setIndex, uint32_t lineIndex, char* out);
+<<<<<<< HEAD
 void PrintSet(Cache_t* cache, uint32_t setIndex);
 void PrintCache(Cache_t* cache);
 Address_t get_address(Cache_t* cache, uint32_t address);
 Cache_t* cache_new(uint32_t cacheSize, uint32_t block_size, uint32_t associativity);
 CacheLine_t cacheline_new(char* block);
+=======
+void cache_writeback_block(Cache_t *cache, int addr, char* data, size_t blockSize);
+Address_t GetAddress(Cache_t* cache, uint32_t address);
+void Cache_free(Cache_t* c);
+uint64_t BinStrToNum(char* num, int n);
+Cache_t* Cache_new(uint32_t id, uint32_t cacheSize, uint32_t associativity);
+CacheLine_t CacheLine_new(bool valid, bool dirty, uint32_t tag, uint32_t LRU, char* block);
+void CacheLine_free(CacheLine_t* l);
+>>>>>>> master
 
 
 void cache_wr_w(struct memory *mem, int addr_int, uint32_t data) {
