@@ -29,7 +29,7 @@ void ProcessB(int instruction);                       // Branch instructions
 void ProcessJ(int instruction);                       // Jump and Link
 void ProcessU_L(int instruction);                     // Load Upper Immediate
 void ProcessU_A(int instruction);                     // Add unsigned immediate to PC (auipc)
-void git();                                // Function that prints register overview for debugging
+void PrintRegisters();                                // Function that prints register overview for debugging
 void wrInstToLog(struct assembly *as, int jump);      // Writes information about the current instruction to a log file
 
 FILE* CACHE_LOG_POINTER;

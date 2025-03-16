@@ -30,7 +30,7 @@ void handle_miss(uint32_t layer, Address_t addr, struct memory* mem, bool mark_d
 int get_line_index_from_tag(Cache_t* cache, Address_t addr);
 int get_replacement_line_index(uint32_t layer, uint32_t set_index);
 void evict_cache_line(uint32_t layer, uint32_t addr_int, CacheLine_t* evict_line, struct memory *mem);
-void invalidate_line(uint32_t layer, uint32_t addr_int);
+void invalidate_line(uint32_t layer, uint32_t addr_int, struct memory* mem);
 void increment_line_LRU(Cache_t* cache, uint32_t setIndex);
 void CacheSetToString(Cache_t* cache, int setIndex, char* out);
 void CacheLineToString(Cache_t* cache, uint32_t setIndex, uint32_t lineIndex, char* out);
@@ -135,11 +135,16 @@ void handle_miss(uint32_t layer, Address_t addr, struct memory* mem, bool mark_d
 
     int line_index = get_replacement_line_index(layer, addr.set_index);
     CacheLine_t* victim = &cache->sets[addr.set_index][line_index];
+    printf("Victim in L%d is line %d\n", layer+1, line_index);
     if (victim->valid) {
-        victim->valid = 0;
-        if (layer != 0) {invalidate_line(layer-1, addr.full_addr);}
+        if (layer != 0) {
+            printf("From L%d, we're telling L%d to invalidate line with tag %d\n", layer+1, layer, addr.tag);
+            uint32_t inval_line_addr = (victim->tag << (cache->set_bit_length + cache->block_offset_bit_length)) | (addr.set_index << cache->block_offset_bit_length);
+            invalidate_line(layer-1, inval_line_addr, mem);
+        }
         if (victim->dirty) {
-            uint32_t evict_addr = (cache->sets[addr.set_index][line_index].tag << (cache->set_bit_length + cache->block_offset_bit_length)) | (addr.set_index << cache->block_offset_bit_length);
+            printf("And we are dirty\n");
+            uint32_t evict_addr = (victim->tag << (cache->set_bit_length + cache->block_offset_bit_length)) | (addr.set_index << cache->block_offset_bit_length);
             evict_cache_line(layer, evict_addr, victim, mem);
         }
     }
@@ -181,11 +186,6 @@ void handle_miss(uint32_t layer, Address_t addr, struct memory* mem, bool mark_d
     victim->tag = addr.tag;
     victim->LRU = 0;
     // copy and insert block
-    if (block == NULL) {
-        printf("Block was NULL\n");
-    } else if (victim->block == NULL) {
-        printf("Victim block was null\n");
-    }
     memcpy(victim->block, block, cache->block_size);
 }
 
@@ -197,9 +197,11 @@ void cache_writeback_block(uint32_t layer, int addr_int, char* data, size_t bloc
 
     // If inclusivity holds, we will always find a line in this set with a matching tag
     int line_index = get_line_index_from_tag(cache, addr);
+    printf("Found matching line in L%d to be line %d\n", layer+1, line_index);
 
     if (line_index == -1) {
         printf("ERROR: Tried to perform write-back, but block was missing in lower level cache. Cache inclusivity didn't hold.\n");
+        printf("We were trying to insert tag %x into L%d\n", addr.tag, layer+1);
         exit(1);
     }
     fprintf(CACHE_LOG, "E %d %d %d\n", layer+1, addr.set_index, line_index);
@@ -258,21 +260,30 @@ int get_replacement_line_index(uint32_t layer, uint32_t set_index) {
 void evict_cache_line(uint32_t layer, uint32_t addr_int, CacheLine_t* evict_line, struct memory *mem) {
     evict_line->dirty = false;
     if (layer == N_CACHE_LEVELS-1) { // Writing to main memory
+        printf("So we're writing back to RAM\n");
         memory_write_back(mem, addr_int, evict_line->block, (&caches[layer])->block_size);
     } else { // Writing to cache
+        printf("So we're writing back the tag %d to L%d\n", get_address(&caches[layer], addr_int).tag,layer+2);
         cache_writeback_block(layer+1, addr_int, evict_line->block, (&caches[layer])->block_size);
     }
 }
 
-void invalidate_line(uint32_t layer, uint32_t addr_int) {
+void invalidate_line(uint32_t layer, uint32_t addr_int, struct memory* mem) {
     Address_t addr = get_address(&caches[layer], addr_int);
 
     int line_index = get_line_index_from_tag(&caches[layer], addr);
+    printf("L%d has been told to invalidate tag %d and found it at line %d", layer+1, addr.tag, line_index);
     if (line_index != -1) {
+        CacheLine_t* victim = &caches[layer].sets[addr.set_index][line_index];
         fprintf(CACHE_LOG, "I %d %d %d\n", layer+1, addr.set_index, line_index);
-        (&caches[layer])->sets[addr.set_index][line_index].valid = 0;
+        victim->valid = 0;
+        if (victim->dirty) {
+            victim->dirty = false;
+            uint32_t evict_addr = (victim->tag << (caches[layer].set_bit_length + caches[layer].block_offset_bit_length)) | (addr.set_index << caches[layer].block_offset_bit_length);
+            evict_cache_line(layer, evict_addr, &caches[layer].sets[addr.set_index][line_index], mem);
+        }
         // Back-invalidation up the cache chain
-        if (layer != 0) {invalidate_line(layer-1, addr_int);}
+        if (layer != 0) {invalidate_line(layer-1, addr_int, mem);}
     }
 }
 

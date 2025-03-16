@@ -33,7 +33,7 @@ int main() {
 
     print_all_caches();
 
-    mmu_wr_b(memory, 0b01000, 0); // E
+    mmu_wr_b(memory, 0b01000, 0); // B
     
     print_all_caches();
 
