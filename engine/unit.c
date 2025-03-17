@@ -11,31 +11,20 @@ int main() {
     open_accesses_file();
     struct memory* memory = memory_create();
     //Cache_t* cache = parse_cpu("./testing/Architectures/inclusivity_test.md");
-    parse_cpu("./testing/Architectures/inclusivity_test.md");
+    parse_cpu("./testing/Architectures/inclusivity_test2.md");
     //supply_cache(cache);
     
+
     print_all_caches();
-
-    mmu_wr_b(memory, 0b00100, 0); // A
-    mmu_wr_b(memory, 0b01000, 0); // B
-
-    mmu_wr_b(memory, 0b00100, 0); // A
-    mmu_wr_b(memory, 0b01100, 0); // C
+    mmu_rd_w(memory, 0x10160);
+    print_all_caches();
+    mmu_rd_w(memory, 0x10164);
+    print_all_caches();
+    mmu_rd_w(memory, 0x1028c);
+    print_all_caches();
+    mmu_rd_w(memory, 0x100a0);
+    print_all_caches();
     
-    mmu_wr_b(memory, 0b00100, 0); // A
-    mmu_wr_b(memory, 0b10000, 0); // D
-    
-    mmu_wr_b(memory, 0b00100, 0); // A
-
-    print_all_caches();
-
-    mmu_wr_b(memory, 0b10100, 0); // E
-
-    print_all_caches();
-
-    mmu_wr_b(memory, 0b01000, 0); // B
-    
-    print_all_caches();
 
     //mmu_wr_b(memory, 0x27, 0);
     //mmu_wr_w(memory, 0x10080, 172931);
