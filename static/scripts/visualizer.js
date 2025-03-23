@@ -25,7 +25,7 @@ let MISSES = []
 let LINE_HITS = []
 let LINE_MISSES = []
 
-let CACHE_HIT_RATE = {}
+let CACHE_MISS_RATE = {}
 let CACHE_HIT_COUNTER_OBJECTS = []
 let CACHE_MISS_COUNTER_OBJECTS = []
 let CACHE_PERCENT_OBJECTS = []
@@ -100,10 +100,10 @@ function visualizeStep(step) {
         ADDRESS_OBJECTS[i].innerHTML = hex_to_string_addr(step["addr"][0], BIT_LENGTHS[i].s, BIT_LENGTHS[i].b);
         CACHE_HIT_COUNTER_OBJECTS[i].innerHTML = HITS[i]
         CACHE_MISS_COUNTER_OBJECTS[i].innerHTML = MISSES[i]
-        CACHE_PERCENT_OBJECTS[i].innerHTML = Math.round((HITS[i] / (MISSES[i] + HITS[i]))*100)
+        CACHE_PERCENT_OBJECTS[i].innerHTML = Math.round((MISSES[i] / (MISSES[i] + HITS[i]))*100)
         
     }
-    CACHE_HIT_RATE.innerHTML = Math.round((hit_sum / (MISSES[CONFIG.length-1] + hit_sum)) * 100)
+    CACHE_MISS_RATE.innerHTML = Math.round((MISSES[CONFIG.length-1] / (MISSES[CONFIG.length-1] + hit_sum)) * 100)
     
     INSTR_COUNTER.innerHTML = "(" + (CURRENT_STEP+1) + "/" + TOTAL_STEPS + ") "
     INSTR.innerHTML = step["title"]
@@ -286,7 +286,7 @@ function updateLineSummary(line_nr) {
     if (line_nr == undefined) {return}
     SUMMARY_LINE_HITS.innerHTML = LINE_HITS[SELECTED_LINE]
     SUMMARY_LINE_MISSES.innerHTML = LINE_MISSES[SELECTED_LINE]
-    SUMMARY_LINE_HIT_RATE.innerHTML = Math.round((LINE_HITS[SELECTED_LINE] / (LINE_MISSES[SELECTED_LINE] + LINE_HITS[SELECTED_LINE]))*100)
+    SUMMARY_LINE_MISS_RATE.innerHTML = Math.round((LINE_MISSES[SELECTED_LINE] / (LINE_MISSES[SELECTED_LINE] + LINE_HITS[SELECTED_LINE]))*100)
 }
 
 function play() {

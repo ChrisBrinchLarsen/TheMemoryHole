@@ -16,7 +16,7 @@ const LINE_SUMMARY = document.getElementById("line-summary")
 const SUMMARY_LINE_NR = document.getElementById("summary-line-nr")
 const SUMMARY_LINE_HITS = document.getElementById("summary-line-hits")
 const SUMMARY_LINE_MISSES = document.getElementById("summary-line-misses")
-const SUMMARY_LINE_HIT_RATE = document.getElementById("summary-line-hit-rate")
+const SUMMARY_LINE_MISS_RATE = document.getElementById("summary-line-miss-rate")
 
 const DELAY_INPUT = document.getElementById("delay-input")
 const NEXT_BUTTON = document.getElementById("next-button")

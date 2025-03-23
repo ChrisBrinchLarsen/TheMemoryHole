@@ -38,19 +38,19 @@ function runCallback(load_log, exec_log) {
     for (let i = 0; i < CONFIG.length; i++) {
         cache_stats = document.createElement("div");
         cache_stats.innerHTML = `
-            <div>L${i+1}: <span class="cache-hit-percent"></span>% (<span class="cache-hits"></span>H/<span class="cache-misses"></span>M)</div>
+            <div>L${i+1}: <span class="cache-miss-percent"></span>% (<span class="cache-hits"></span>H/<span class="cache-misses"></span>M)</div>
         `
         SUMMARY.appendChild(cache_stats)
     }
 
-    combined_hitrate_object = document.createElement("div");
-    combined_hitrate_object.innerHTML = `Cache Hit-rate: <span id="cache-hit-rate"></span>%`
-    SUMMARY.appendChild(combined_hitrate_object);
+    combined_missrate_object = document.createElement("div");
+    combined_missrate_object.innerHTML = `Cache Miss-rate: <span id="cache-miss-rate"></span>%`
+    SUMMARY.appendChild(combined_missrate_object);
 
-    CACHE_HIT_RATE = document.getElementById("cache-hit-rate")
+    CACHE_MISS_RATE = document.getElementById("cache-miss-rate")
     CACHE_HIT_COUNTER_OBJECTS = SUMMARY.querySelectorAll(".cache-hits")
     CACHE_MISS_COUNTER_OBJECTS = SUMMARY.querySelectorAll(".cache-misses")
-    CACHE_PERCENT_OBJECTS = SUMMARY.querySelectorAll(".cache-hit-percent")
+    CACHE_PERCENT_OBJECTS = SUMMARY.querySelectorAll(".cache-miss-percent")
 
     INPUT_PAGE.style.display = "none";
     VISUALIZATION_PAGE.style.display = "flex";
