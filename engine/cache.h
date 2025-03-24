@@ -1,5 +1,4 @@
-#ifndef __CACHE_H__
-#define __CACHE_H__
+#pragma once
 
 #include "memory.h"
 #include <stdbool.h> 
@@ -22,9 +21,8 @@ typedef struct CacheLine {
     char* block;
 } CacheLine_t;
 
-typedef struct Cache {
-    uint32_t id;
 
+typedef struct Cache {
     // base parameters
     uint32_t cache_size;
     uint32_t associativity;
@@ -39,32 +37,94 @@ typedef struct Cache {
     uint32_t block_size;
 
     CacheLine_t **sets;
-
-    uint64_t hits;
-    uint64_t misses;
-
 } Cache_t;
 
+/**
+ * Parses a cache architecture file to generate cache hierarchy data structure
+ * 
+ * @param path A string containing the path to a CPU architecture specification file
+ * @return An array of caches, with higher level caches appearing first
+ */
 Cache_t* parse_cpu(char* path);
 
-// skriv word/halfword/byte til lager
+/**
+ * Writes a single word (4 bytes) to memory
+ * 
+ * @param mem A pointer to the targeted backing memory struct 
+ * @param addr The address to write data to
+ * @param data The data to write to memory 
+ */
 void cache_wr_w(struct memory *mem, int addr, uint32_t data);
+
+/**
+ * Writes a half (2 bytes) to memory
+ * 
+ * @param mem A pointer to the targeted backing memory struct 
+ * @param addr The address to write data to
+ * @param data The data to write to memory
+ */
 void cache_wr_h(struct memory *mem, int addr, uint16_t data);
+
+/**
+ * Writes a byte to memory
+ * 
+ * @param mem A pointer to the targeted backing memory struct 
+ * @param addr The address to write data to
+ * @param data The data to write to memory
+ */
 void cache_wr_b(struct memory *mem, int addr, uint8_t data);
 
-// læs word/halfword/byte fra lager - data er nul-forlænget
+/**
+ * Reads a single word (4 bytes) from memory
+ * 
+ * @param mem A pointer to the targeted backing memory struct 
+ * @param addr The address to read from
+ * @return The word retrieved from memory at addr as an integer
+ */
 int cache_rd_w(struct memory *mem, int addr);
+
+/**
+ * Reads a half (2 bytes) from memory
+ * 
+ * @param mem A pointer to the targeted backing memory struct 
+ * @param addr The address to read from
+ * @return The half retrieved from memory at addr, zero extended as an integer
+ */
 int cache_rd_h(struct memory *mem, int addr);
+
+/**
+ * Reads a byte from memory
+ * 
+ * @param mem A pointer to the targeted backing memory struct 
+ * @param addr The address to read from
+ * @return The byte retrieved from memory at addr, zero extended as an integer
+ */
 int cache_rd_b(struct memory *mem, int addr);
 
-int get_cache_layer_count();
-uint64_t get_misses_at_layer(int layer);
-uint64_t get_hits_at_layer(int layer);
 
+/**
+ * Initalizes the active cache
+ * 
+ * @note Really just opens a cache_log file in the scope of the cache.c file
+ */
 void initialize_cache();
+
+/**
+ * Finalizes the active cache
+ * 
+ * @note Really just closes a cache_log file in the scope of the cache.c file
+ */
 void finalize_cache();
+
+/**
+ * Retrieves the active cache_log file pointer
+ * 
+ * @return A file pointer to an opened cache_log file
+ */
 FILE* get_cache_log();
 
+/**
+ * Retrieves the active cache_log file pointer
+ * 
+ */
 void print_all_caches();
-
-#endif

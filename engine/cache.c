@@ -116,7 +116,6 @@ char* fetch_block(uint32_t layer, uint32_t addr_int, struct memory *mem, bool ma
     else {
         // count cache hits
         cache->sets[addr.set_index][line_index].LRU = 0; // least recently used; just now
-        cache->hits++;
 
         fprintf(CACHE_LOG, "H %d %d %d\n", layer+1, addr.set_index, line_index);
     }
@@ -131,7 +130,6 @@ char* fetch_block(uint32_t layer, uint32_t addr_int, struct memory *mem, bool ma
 void handle_miss(uint32_t layer, Address_t addr, struct memory* mem, bool mark_dirty) {
     Cache_t* cache = &caches[layer];
     fprintf(CACHE_LOG, "M %d %d\n", layer+1, addr.set_index);
-    cache->misses++;
 
     int line_index = get_replacement_line_index(layer, addr.set_index);
     CacheLine_t* victim = &cache->sets[addr.set_index][line_index];
@@ -409,9 +407,6 @@ Cache_t* cache_new(uint32_t cacheSize, uint32_t block_size, uint32_t associativi
     c->block_offset_bit_length = log2(c->block_size);
     c->set_bit_length = log2(c->set_count);
     c->tag_bit_length = ADDR_LEN - c->block_offset_bit_length - c->set_bit_length;
-
-    c->hits = 0;
-    c->misses = 0;
    
     c->sets = (CacheLine_t**)malloc(c->set_count * sizeof(CacheLine_t*));
     for (uint32_t i = 0; i < c->set_count; i++) {
@@ -444,10 +439,6 @@ void finalize_cache() {
 }
 
 FILE* get_cache_log() {return CACHE_LOG;}
-
-int get_cache_layer_count() {return N_CACHE_LEVELS;}
-uint64_t get_misses_at_layer(int layer) {return caches[layer].misses;}
-uint64_t get_hits_at_layer(int layer) {return caches[layer].hits;}
 
 void print_all_caches() {
     for (uint32_t i = 0; i < N_CACHE_LEVELS; i++) {

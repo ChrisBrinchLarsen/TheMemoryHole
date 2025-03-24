@@ -9,3 +9,5 @@ sim
 riscv/
 tmp/architecture*
 tmp/program*
+/engine/html
+/engine/latex
