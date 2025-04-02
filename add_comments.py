@@ -14,5 +14,5 @@ pg = ""
 with open(filename, "r") as file:
     pg = file.read()
 
-with open(filename.split(".")[0] + "_commented.c", "w") as file:
+with open("."+filename.split(".")[-2] + "_commented.c", "w") as file:
     file.write(addDebugComments(pg))
