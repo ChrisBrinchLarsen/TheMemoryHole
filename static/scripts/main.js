@@ -47,6 +47,11 @@ function runCallback(load_log, exec_log) {
     combined_missrate_object.innerHTML = `Cache Miss-rate: <span id="cache-miss-rate"></span>%`
     SUMMARY.appendChild(combined_missrate_object);
 
+    clock_cycles_counter_object = document.createElement("div");
+    clock_cycles_counter_object.innerHTML = `Clock Cycles: <span id="cycle_counter"></span>`
+    SUMMARY.appendChild(clock_cycles_counter_object)
+
+    CYCLE_COUNTER = document.getElementById("cycle_counter")
     CACHE_MISS_RATE = document.getElementById("cache-miss-rate")
     CACHE_HIT_COUNTER_OBJECTS = SUMMARY.querySelectorAll(".cache-hits")
     CACHE_MISS_COUNTER_OBJECTS = SUMMARY.querySelectorAll(".cache-misses")
