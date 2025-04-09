@@ -357,8 +357,8 @@ void ProcessI_A(int instruction) {
         break;
     case 0x1: // Shift Left Logical Immediate
         if (funct7 == 0x00) {
-            unsigned int u1 = (unsigned int)rdReg(rs1);
             fprintf(CACHE_LOG_POINTER, "SLLI %d, %d, %d\n", rd, rs1, shiftValue);
+            unsigned int u1 = (unsigned int)rdReg(rs1);
             wrReg(rd, (int)((u1) << shiftValue));
             if (log_enabled) {
                 fprintf(log_file_global, "R[%d] <- (%u << %d = %d)", rd, u1, shiftValue, R[rd]);
