@@ -25,6 +25,11 @@ let MISSES = []
 let LINE_HITS = []
 let LINE_MISSES = []
 
+let LATENCY_AT_LEVEL = [3, 12, 38, 108, 150, 150, 150, 150, 150, 150, 150, 150]
+let DRAM_LATENCY = 195
+let ESTIMATED_CYCLES = 0
+let CYCLE_COUNTER = {}
+
 let CACHE_MISS_RATE = {}
 let CACHE_HIT_COUNTER_OBJECTS = []
 let CACHE_MISS_COUNTER_OBJECTS = []
@@ -104,7 +109,8 @@ function visualizeStep(step) {
         
     }
     CACHE_MISS_RATE.innerHTML = Math.round((MISSES[CONFIG.length-1] / (MISSES[CONFIG.length-1] + hit_sum)) * 100)
-    
+    CYCLE_COUNTER.innerHTML = ESTIMATED_CYCLES
+
     INSTR_COUNTER.innerHTML = "(" + (CURRENT_STEP+1) + "/" + TOTAL_STEPS + ") "
     INSTR.innerHTML = step["title"]
     visualizeInstr(step["readers"], step["writers"])
@@ -116,6 +122,7 @@ function visualize_path(hits, misses, evictions, inserts, invalidations, lineS, 
     
     hits.forEach(hit => {
         HITS[hit[0]-1] += 1;
+        ESTIMATED_CYCLES += LATENCY_AT_LEVEL[hit[0]-1]
         give_line_class("hit", hit[0], hit[1], hit[2])
         if (is_write && (hit[0] == 1)) { // Hit a write access in L1
             give_line_class("dirty", hit[0], hit[1], hit[2])
@@ -130,6 +137,7 @@ function visualize_path(hits, misses, evictions, inserts, invalidations, lineS, 
         set.classList.add("miss")
         COLORED_SET_OBJECTS.push(set)
         MISSES[miss[0]-1] += 1;
+        ESTIMATED_CYCLES += LATENCY_AT_LEVEL[miss[0]-1]
         for (let i = lineS; i <= lineE; i++) {
             if (miss[0] == CONFIG.length) { // Miss in last layer of cache, this is prone to breakage
                 LINE_MISSES[i] += 1;
