@@ -27,6 +27,7 @@
             <option value='[[10,32,6,8],[10,256,6,12],[20,4,6,16]]'>Realistic Low-end CPU</option>
             <option value='[[10,64,6,8],[10,1024,6,12],[20,8,6,16]]'>Realistic Mid-end CPU</option>
             <option value='[[10,128,7,8],[20,2,7,12],[20,16,7,16]]'>Realistic High-end CPU</option>
+            <option value='[[10,32,6,4],[10,512,6,16]]'>Raspberry Pi3</option>
         </select>
         <select name="predefined-Programs" id="program-dropdown" onchange="preset_program(this.value); this.selectedindex = -1">
             <option disabled selected value>Sample Programs</option>
@@ -34,6 +35,7 @@
             <option value="{{ url_for('static', filename='programs/matrix_good.c') }}">Good Matrix</option>
             <option value="{{ url_for('static', filename='programs/matrix_bad.c') }}">Bad Matrix</option>
             <option value="{{ url_for('static', filename='programs/random.c') }}">Random Accesses</option>
+            <option value="{{ url_for('static', filename='programs/raspberry_fillcache.c') }}">Raspberry fill L1</option>
         </select>
      </div>
     </div>
