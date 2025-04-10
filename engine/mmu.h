@@ -22,6 +22,7 @@ void mmu_wr_h(struct memory *mem, int addr, uint16_t data);
 void mmu_wr_b(struct memory *mem, int addr, uint8_t data);
 
 // læs word/halfword/byte fra lager - data er nul-forlænget
+int mmu_rd_instr(struct memory *mem, int addr);
 int mmu_rd_w(struct memory *mem, int addr);
 int mmu_rd_h(struct memory *mem, int addr);
 int mmu_rd_b(struct memory *mem, int addr);

@@ -79,6 +79,8 @@ void cache_wr_h(struct memory *mem, int addr, uint16_t data);
  */
 void cache_wr_b(struct memory *mem, int addr, uint8_t data);
 
+int cache_rd_instr(struct memory *mem, int addr_int);
+
 /**
  * Reads a single word (4 bytes) from memory
  * 

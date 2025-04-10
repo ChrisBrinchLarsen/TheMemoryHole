@@ -64,6 +64,17 @@ void mmu_wr_b(struct memory *mem, int addr, uint8_t data) {
     cache_wr_b(mem, addr, data);
 }
 
+int mmu_rd_instr(struct memory *mem, int addr) {
+    fprintf(accesses, "mmu_rd_w(memory, 0x%x);\n", addr);
+    if (addr & 0b11)
+    {
+        printf("Unaligned word write to %x\n", addr);
+        exit(-1);
+    }
+    int result = cache_rd_instr(mem, addr);
+    return result;
+}
+
 int mmu_rd_w(struct memory *mem, int addr) {
     fprintf(accesses, "mmu_rd_w(memory, 0x%x);\n", addr);
     if (addr & 0b11)

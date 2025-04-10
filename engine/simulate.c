@@ -54,7 +54,7 @@ long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE 
 
         // Read next instruction
         fprintf(CACHE_LOG_POINTER, "fetch: ");
-        int instructionInt = mmu_rd_w(mem, PC);
+        int instructionInt = mmu_rd_instr(mem, PC);
         fprintf(CACHE_LOG_POINTER, "endfetch\n");
 
         fprintf(CACHE_LOG_POINTER, "instr:\n");
