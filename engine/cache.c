@@ -14,6 +14,7 @@ int ADDR_LEN = 32;
 uint32_t N_CACHE_LEVELS;
 
 Cache_t* caches;
+Cache_t* L1i;
 
 FILE* CACHE_LOG;
 
@@ -37,7 +38,7 @@ void CacheLineToString(Cache_t* cache, uint32_t setIndex, uint32_t lineIndex, ch
 void PrintSet(Cache_t* cache, uint32_t setIndex);
 void PrintCache(Cache_t* cache);
 Address_t get_address(Cache_t* cache, uint32_t address);
-Cache_t* cache_new(uint32_t cacheSize, uint32_t block_size, uint32_t associativity);
+Cache_t* cache_new(uint32_t layer, uint32_t cacheSize, uint32_t block_size, uint32_t associativity);
 CacheLine_t cacheline_new(char* block);
 
 
@@ -70,6 +71,20 @@ void cache_wr_b(struct memory *mem, int addr_int, uint8_t data) {
     memcpy(&block[addr.block_offset], &data, sizeof(uint8_t));
 }
 
+int cache_rd_instr(struct memory *mem, int addr_int) {
+    fprintf(CACHE_LOG, "rw 0x%x\n", addr_int); // TODO is this logging correct?
+
+    Address_t addr = get_address(L1i, addr_int);
+
+
+    // if not found in 
+    char* block = fetch_block(1, addr_int, mem, false);
+
+
+    return (int)(*(uint32_t*)&block[addr.block_offset]);
+}
+
+
 int cache_rd_w(struct memory *mem, int addr_int) {
     fprintf(CACHE_LOG, "rw 0x%x\n", addr_int);
     char* block = fetch_block(0, addr_int, mem, false);
@@ -98,6 +113,12 @@ int cache_rd_b(struct memory *mem, int addr_int) {
 }
 
 
+/// @brief recursive function that finds a block, starting at some Layer. Updates caches accordingly
+/// @param layer the layer of the cache
+/// @param addr_int address
+/// @param mem memory
+/// @param mark_dirty whether to mark things dirty (in case of a write) 
+/// @return 
 char* fetch_block(uint32_t layer, uint32_t addr_int, struct memory *mem, bool mark_dirty) {
     Cache_t* cache = &caches[layer];
     Address_t addr = get_address(cache, addr_int);
@@ -360,7 +381,11 @@ Cache_t* parse_cpu(char* path) {
         fgets(buf, sizeof(buf), file); // associativity
         a = atoi(buf);
 
-        caches[i] = *cache_new((uint32_t)(pow(2,p) * q), (uint32_t)(pow(2,k)), a);
+        caches[i] = *cache_new(i, (uint32_t)(pow(2,p) * q), (uint32_t)(pow(2,k)), a);
+        if (i > 0) { // linked list
+            caches[i-1].child_cache = &caches[i];
+            caches[i].parent_cache = &caches[i-1];
+        }
     }
     fclose(file);
     return caches;
@@ -397,8 +422,9 @@ Address_t get_address(Cache_t* cache, uint32_t address) {
 }
 
 
-Cache_t* cache_new(uint32_t cacheSize, uint32_t block_size, uint32_t associativity) {
+Cache_t* cache_new(uint32_t layer, uint32_t cacheSize, uint32_t block_size, uint32_t associativity) {
     Cache_t* c = (Cache_t*)malloc(sizeof(Cache_t));
+    c->layer = layer;
     c->cache_size = cacheSize;
     c->block_size = block_size;
     c->associativity = associativity;
@@ -407,6 +433,9 @@ Cache_t* cache_new(uint32_t cacheSize, uint32_t block_size, uint32_t associativi
     c->block_offset_bit_length = log2(c->block_size);
     c->set_bit_length = log2(c->set_count);
     c->tag_bit_length = ADDR_LEN - c->block_offset_bit_length - c->set_bit_length;
+
+    c->child_cache = NULL; // THIS HAS TO BE SET ELSEWHERE
+    c->parent_cache = NULL; // THIS HAS TO BE SET ELSEWHERE
    
     c->sets = (CacheLine_t**)malloc(c->set_count * sizeof(CacheLine_t*));
     for (uint32_t i = 0; i < c->set_count; i++) {
