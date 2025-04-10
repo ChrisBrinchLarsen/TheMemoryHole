@@ -86,6 +86,7 @@ int cache_rd_instr(struct memory *mem, int addr_int) {
 
 
 int cache_rd_w(struct memory *mem, int addr_int) {
+    fprintf(CACHE_LOG, "rw 0x%x\n", addr_int);
     char* block = fetch_block(&caches[0], addr_int, mem, false);
 
     Address_t addr = get_address(&caches[0], addr_int);
@@ -131,9 +132,7 @@ char* fetch_block(Cache_t* cache, uint32_t addr_int, struct memory *mem, bool ma
         line_index = get_replacement_line_index(cache, addr.set_index);
         handle_miss(cache, addr, mem, mark_dirty);
     }
-    // HIT
-    else {
-        // count cache hits
+    else { // HIT
         cache->sets[addr.set_index][line_index].LRU = 0; // least recently used; just now
 
         fprintf(CACHE_LOG, "H %d %d %d\n", cache->layer+1, addr.set_index, line_index);
@@ -149,9 +148,10 @@ char* fetch_block(Cache_t* cache, uint32_t addr_int, struct memory *mem, bool ma
 void handle_miss(Cache_t* cache, Address_t addr, struct memory* mem, bool mark_dirty) {
     fprintf(CACHE_LOG, "M %d %d\n", cache->layer+1, addr.set_index);
 
+    // replace, back-invalidate and evict another line in this set first.
     int line_index = get_replacement_line_index(cache, addr.set_index);
     CacheLine_t* victim = &cache->sets[addr.set_index][line_index];
-    if (victim->valid) {
+    if (victim->valid) { // sometimes the line to replace is unused, in which case we don't need to invalidate or evict anything
         if (cache->layer != 0) {
             uint32_t inval_line_addr = (victim->tag << (cache->set_bit_length + cache->block_offset_bit_length)) | (addr.set_index << cache->block_offset_bit_length);
             invalidate_line(cache->parent_cache, inval_line_addr, mem);
@@ -166,7 +166,7 @@ void handle_miss(Cache_t* cache, Address_t addr, struct memory* mem, bool mark_d
     char* block;
     uint32_t block_offset = 0;
 
-    if (cache->layer != N_CACHE_LEVELS-1) { // Not at last layer of cache
+    if (!(cache->child_cache == NULL)) { // Not at last layer of cache
         // recursive call
         block = fetch_block(cache->child_cache, addr.full_addr, mem, mark_dirty);
 
@@ -177,7 +177,7 @@ void handle_miss(Cache_t* cache, Address_t addr, struct memory* mem, bool mark_d
         uint32_t mask = ((uint32_t)pow(2,caches->child_cache->block_offset_bit_length)-1);
         block_offset = block_offset & mask;
 
-    } else {
+    } else { // at last layer; fetch from main memory instead
         fprintf(CACHE_LOG, "RAM\n");
         // when fetching from main memory, the block offset will just be 0, since we've already requested our specific size.
         block = find_block(mem, addr.full_addr, cache->block_size);
@@ -185,14 +185,6 @@ void handle_miss(Cache_t* cache, Address_t addr, struct memory* mem, bool mark_d
 
     // Fetched a block into the cache
     fprintf(CACHE_LOG, "F %d %d %d\n", cache->layer+1, addr.set_index, line_index);
-    
-    // Evict
-    // if (victim->valid) {
-    //     // Here we need to find the address of the cacheline to be able to find it in the lower cache, otherwise we don't know where to evict it to.
-    //     uint32_t evictAddr = (cache->sets[a.setIndex][lineIndex].tag << (cache->SetBitLength + cache->block_offset_bit_length)) | (a.setIndex << cache->block_offset_bit_length);
-    //     EvictCacheLine(cache, evictAddr, &cache->sets[a.setIndex][lineIndex], mem);
-    // }
-
 
     // update line
     victim->valid = 1;
@@ -384,6 +376,7 @@ Cache_t* parse_cpu(char* path) {
         a = atoi(buf);
         memset(buf, 0, sizeof(buf));
 
+        printf("%d, %d, %d, %d\n", p, q, k, a);
         L1i = cache_new(0, (uint32_t)(pow(2,p) * q), (uint32_t)(pow(2,k)), a);
     }
 
@@ -403,6 +396,7 @@ Cache_t* parse_cpu(char* path) {
         a = atoi(buf);
         memset(buf, 0, sizeof(buf));
 
+        printf("%d, %d, %d, %d\n", p, q, k, a);
         caches[i] = *cache_new(i, (uint32_t)(pow(2,p) * q), (uint32_t)(pow(2,k)), a);
         if (i > 0) { // linked list
             caches[i-1].child_cache = &caches[i];
