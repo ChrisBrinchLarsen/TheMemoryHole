@@ -13,8 +13,8 @@
 int ADDR_LEN = 32;
 uint32_t N_CACHE_LEVELS;
 
-Cache_t* caches;
-Cache_t* L1i;
+Cache_t* caches = NULL;
+Cache_t* L1i = NULL;
 
 FILE* CACHE_LOG;
 
@@ -72,6 +72,10 @@ void cache_wr_b(struct memory *mem, int addr_int, uint8_t data) {
 }
 
 int cache_rd_instr(struct memory *mem, int addr_int) {
+    if (L1i == NULL) { // in case we aren't using an instruction cache, we simply redirect this to the normal cache_rd_w method instead
+        return cache_rd_w(mem, addr_int);
+    }
+
     fprintf(CACHE_LOG, "rw 0x%x\n", addr_int); // TODO is this logging correct?
     char* block = fetch_block(L1i, addr_int, mem, false);
 
@@ -358,6 +362,31 @@ Cache_t* parse_cpu(char* path) {
     // Associativity: a-way
     uint32_t p, q, k, a;
 
+
+    memset(buf, 0, sizeof(buf));
+
+    fgets(buf, sizeof(buf), file); // name
+    if (strcmp(buf, "i\n")) { // IF NOT EQUALS
+        fseek(file, (long)-strlen(buf), SEEK_CUR);
+    }
+    else {
+        memset(buf, 0, sizeof(buf));
+        fgets(buf, sizeof(buf), file); // p
+        p = atoi(buf);
+        memset(buf, 0, sizeof(buf));
+        fgets(buf, sizeof(buf), file); // q
+        q = atoi(buf);
+        memset(buf, 0, sizeof(buf));
+        fgets(buf, sizeof(buf), file); // k
+        k = atoi(buf);
+        memset(buf, 0, sizeof(buf));
+        fgets(buf, sizeof(buf), file); // associativity
+        a = atoi(buf);
+        memset(buf, 0, sizeof(buf));
+
+        L1i = cache_new(0, (uint32_t)(pow(2,p) * q), (uint32_t)(pow(2,k)), a);
+    }
+
     for (uint32_t i = 0; i < N_CACHE_LEVELS; i++) {
         fgets(buf, sizeof(buf), file); // Name
         memset(buf, 0, sizeof(buf));
@@ -372,12 +401,7 @@ Cache_t* parse_cpu(char* path) {
         memset(buf, 0, sizeof(buf));
         fgets(buf, sizeof(buf), file); // associativity
         a = atoi(buf);
-
-
-        // TODO parse L1i somewhere around here. This is temporary
-        if (i == 0) {
-            L1i = cache_new(i, (uint32_t)(pow(2,p) * q), (uint32_t)(pow(2,k)), a);
-        }
+        memset(buf, 0, sizeof(buf));
 
         caches[i] = *cache_new(i, (uint32_t)(pow(2,p) * q), (uint32_t)(pow(2,k)), a);
         if (i > 0) { // linked list
@@ -385,8 +409,8 @@ Cache_t* parse_cpu(char* path) {
             caches[i].parent_cache = &caches[i-1];
         }
     }
-    if (N_CACHE_LEVELS > 1) {
-        L1i->child_cache = &caches[1]; // set L2 as child
+    if (N_CACHE_LEVELS > 1 && L1i != NULL) {
+        L1i->child_cache = &caches[1]; // set L2 as child of instruction cache L1i
     }
 
     fclose(file);
