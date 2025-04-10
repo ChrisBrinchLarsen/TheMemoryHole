@@ -6,13 +6,13 @@
 #left-visualizer {
     display: flex;
     flex-direction: column;
-    width: 50%;
+    width: 30%;
 }
 
 #right-visualizer {
     display: flex;
     flex-direction: column;
-    width: 50%;
+    width: 70%;
 }
 
 .summary {
@@ -39,6 +39,12 @@
     width: 100%;
     margin: .25rem;
     border: 3px solid;
+}
+
+#horizontal-caches {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
 }
 
 .cache {
@@ -145,4 +151,14 @@
     aspect-ratio: 1/1;
     height: 100%;
 }
+ 
 
+.cache-name {
+    font-size: 1.2rem;
+}
+
+.cache-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}

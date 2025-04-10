@@ -21,6 +21,17 @@ body {
     width: 100%;
 }
 
+.spread-horizontal {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.flex-horizontal {
+    display: flex;
+    flex-direction: row;
+}
+
 .cache-container {
     display: flex;
     flex-direction: column;

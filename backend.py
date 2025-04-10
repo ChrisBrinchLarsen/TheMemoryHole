@@ -28,22 +28,41 @@ def get_logs():
 def handle_run_program(data):
     print("Got message from server")
     config = data["config"]
+    print(config)
     program = data["program"]
-    N_CACHE_LEVELS = len(config)
+    N_CACHE_LEVELS = data["levels"]
+    print(N_CACHE_LEVELS)
     # TODO: Make it possible to send arguments from frontend to run the program with
     args = data["args"].split(" ")
     id = uuid.uuid4().hex
     architecture_file_name = f"./tmp/architecture_{id}"
     program_file_path = f"./tmp/program_{id}"
 
+
+
     with open(architecture_file_name, "w") as file:
         file.write(f"{N_CACHE_LEVELS}\n")
-        for i in range(N_CACHE_LEVELS):
-            file.write(f"L{i+1}\n")
-            file.write(f"{config[i]['p']}\n")
-            file.write(f"{config[i]['q']}\n")
-            file.write(f"{config[i]['k']}\n")
-            file.write(f"{config[i]['a']}\n")
+        if (N_CACHE_LEVELS != len(config)):
+            file.write("i\n")
+            file.write(f"{config[0]['p']}\n")
+            file.write(f"{config[0]['q']}\n")
+            file.write(f"{config[0]['k']}\n")
+            file.write(f"{config[0]['a']}\n")
+            for i in range(1,N_CACHE_LEVELS+1):
+                file.write(f"L{i}\n")
+                
+                file.write(f"{config[i]['p']}\n")
+                file.write(f"{config[i]['q']}\n")
+                file.write(f"{config[i]['k']}\n")
+                file.write(f"{config[i]['a']}\n")
+        else:
+            for i in range(N_CACHE_LEVELS):
+                file.write(f"L{i+1}\n")
+                
+                file.write(f"{config[i]['p']}\n")
+                file.write(f"{config[i]['q']}\n")
+                file.write(f"{config[i]['k']}\n")
+                file.write(f"{config[i]['a']}\n")
 
     program = addDebugComments(program)
 
@@ -134,8 +153,8 @@ def handle_run_program(data):
                         tokens = line.split()
             step["lines"] = active_lines
             executing_prog.append(step)
-    os.system(f"rm -f {program_file_path}.riscv {program_file_path}.dis {program_file_path}.c {architecture_file_name}")
-
+    os.system(f"rm -f {program_file_path}.riscv {program_file_path}.dis {program_file_path}.c")
+    # {architecture_file_name}
     # TODO: Needs to return meta config information as well
 
     # TODO: Probably needs to return the summary information from stdout as well

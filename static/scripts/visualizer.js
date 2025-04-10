@@ -1,3 +1,4 @@
+let N_CACHE_LAYERS = 0
 let CONFIG = []
 let LOAD_LOG = []
 let EXEC_LOG = []
@@ -15,6 +16,12 @@ let PLAYING = false
 let COLORED_SET_OBJECTS = []
 let COLORED_LINES = []
 let REG_CHANGED = true
+
+let HAS_INSTRUCTION_CACHE = false
+let INSTRUCTION_CONFIG = {}
+let INSTR_HITS = 0
+let INSTR_MISSES = 0
+let INSTR_BIT_LENGTHS = {}
 
 let READERS = []
 let WRITERS = []
@@ -100,7 +107,7 @@ function visualizeStep(step) {
     updateLineSummary(SELECTED_LINE)
     
     let hit_sum = 0
-    for (let i = 0; i < CONFIG.length; i++) {
+    for (let i = 0; i < N_CACHE_LAYERS; i++) {
         hit_sum += HITS[i]
         ADDRESS_OBJECTS[i].innerHTML = hex_to_string_addr(step["addr"][0], BIT_LENGTHS[i].s, BIT_LENGTHS[i].b);
         CACHE_HIT_COUNTER_OBJECTS[i].innerHTML = HITS[i]
@@ -108,7 +115,7 @@ function visualizeStep(step) {
         CACHE_PERCENT_OBJECTS[i].innerHTML = Math.round((MISSES[i] / (MISSES[i] + HITS[i]))*100)
         
     }
-    CACHE_MISS_RATE.innerHTML = Math.round((MISSES[CONFIG.length-1] / (MISSES[CONFIG.length-1] + hit_sum)) * 100)
+    CACHE_MISS_RATE.innerHTML = Math.round((MISSES[N_CACHE_LAYERS-1] / (MISSES[N_CACHE_LAYERS-1] + hit_sum)) * 100)
     CYCLE_COUNTER.innerHTML = ESTIMATED_CYCLES
 
     INSTR_COUNTER.innerHTML = "(" + (CURRENT_STEP+1) + "/" + TOTAL_STEPS + ") "
@@ -139,7 +146,7 @@ function visualize_path(hits, misses, evictions, inserts, invalidations, lineS, 
         MISSES[miss[0]-1] += 1;
         ESTIMATED_CYCLES += LATENCY_AT_LEVEL[miss[0]-1]
         for (let i = lineS; i <= lineE; i++) {
-            if (miss[0] == CONFIG.length) { // Miss in last layer of cache, this is prone to breakage
+            if (miss[0] == N_CACHE_LAYERS) { // Miss in last layer of cache, this is prone to breakage
                 LINE_MISSES[i] += 1;
             }
         }
@@ -204,34 +211,176 @@ function visualize_src(start, end) {
     }
 }
 
+// function create_caches() {
+//     document.getElementById("caches").innerHTML = "";
+//     for (let i = 0; i < N_CACHE_LAYERS; i++) {
+//         cache_div = document.createElement("div");
+//         cache_div.classList.add("cache")
+//         title = document.createElement("h1");
+//         title.innerHTML = "L" + (i+1);
+//         cache_info_div = document.createElement("div");
+//         cache_info_div.classList.add("cache-info");
+//         cache_div.appendChild(title);
+//         cache_div.appendChild(cache_info_div);
+//         addr = document.createElement("div")
+//         SPLIT_ADDRS.push(addr)
+//         addr.classList.add("split_addr")
+//         addr.innerHTML = hex_to_string_addr(0x0, BIT_LENGTHS[i].s, BIT_LENGTHS[i].b);
+//         cache_info_div.appendChild(addr);
+//         for (let k = 0; k < Math.pow(2, BIT_LENGTHS[i].s); k++) {
+//             set = document.createElement("div")
+//             set.classList.add("set")
+//             for (let j = 0; j < CONFIG[i].a; j++) {
+//                 line = document.createElement("div");
+//                 line.classList.add("line");
+//                 set.appendChild(line)
+//             }
+//             cache_info_div.appendChild(set);
+//         }
+//         document.getElementById("caches").appendChild(cache_div)
+//         CACHES.push(cache_div)
+//     }
+// }
+
 function create_caches() {
-    document.getElementById("caches").innerHTML = "";
-    for (let i = 0; i < CONFIG.length; i++) {
-        cache_div = document.createElement("div");
-        cache_div.classList.add("cache")
-        title = document.createElement("h1");
-        title.innerHTML = "L" + (i+1);
-        cache_info_div = document.createElement("div");
-        cache_info_div.classList.add("cache-info");
-        cache_div.appendChild(title);
-        cache_div.appendChild(cache_info_div);
-        addr = document.createElement("div")
-        SPLIT_ADDRS.push(addr)
-        addr.classList.add("split_addr")
-        addr.innerHTML = hex_to_string_addr(0x0, BIT_LENGTHS[i].s, BIT_LENGTHS[i].b);
-        cache_info_div.appendChild(addr);
-        for (let k = 0; k < Math.pow(2, BIT_LENGTHS[i].s); k++) {
+    caches_object = document.getElementById("caches")
+    caches_object.innerHTML = ""
+
+    if (HAS_INSTRUCTION_CACHE) {
+        horiz_caches = document.createElement("div")
+        horiz_caches.setAttribute("id","horizontal-caches")
+        instr_cache_div = document.createElement("div")
+        data_cache_div = document.createElement("div")
+        horiz_caches.appendChild(data_cache_div)
+        horiz_caches.appendChild(instr_cache_div)
+        instr_cache_div.classList.add("cache")
+        data_cache_div.classList.add("cache")
+        instr_cache_div.innerHTML = `
+        <div class="cache-info">
+            <div class="split_addr cache-header">
+                <h1 class="cache-name">L1i-</h1>
+                ${hex_to_string_addr(0x0, INSTR_BIT_LENGTHS.s, INSTR_BIT_LENGTHS.b)}
+            </div>
+        </div>
+        `
+        data_cache_div.innerHTML = `
+        <div class="cache-info">
+            <div class="split_addr cache-header">
+                <h1 class="cache-name">L1d-</h1>
+                ${hex_to_string_addr(0x0, BIT_LENGTHS[0].s, BIT_LENGTHS[0].b)}
+            </div>
+        </div>
+        `
+        data_cache_info = data_cache_div.querySelector(".cache-info")
+        for (let k = 0; k < Math.pow(2, BIT_LENGTHS[0].s); k++) {
             set = document.createElement("div")
             set.classList.add("set")
-            for (let j = 0; j < CONFIG[i].a; j++) {
+            for (let j = 0; j < CONFIG[1].a; j++) {
                 line = document.createElement("div");
                 line.classList.add("line");
                 set.appendChild(line)
             }
-            cache_info_div.appendChild(set);
+            data_cache_info.appendChild(set);
         }
-        document.getElementById("caches").appendChild(cache_div)
+        CACHES.push(data_cache_div)
+        instr_cache_info = instr_cache_div.querySelector(".cache-info")
+        for (let k = 0; k < Math.pow(2, INSTR_BIT_LENGTHS.s); k++) {
+            set = document.createElement("div")
+            set.classList.add("set")
+            for (let j = 0; j < CONFIG[0].a; j++) {
+                line = document.createElement("div");
+                line.classList.add("line");
+                set.appendChild(line)
+            }
+            instr_cache_info.appendChild(set);
+        }
+        CACHES.push(instr_cache_div)
+        caches_object.appendChild(horiz_caches)
+
+
+    } else {
+        cache_div = document.createElement("div")
+        cache_div.classList.add("cache")
+        cache_div.innerHTML = `
+        <div class="cache-info">
+            <div class="split_addr cache-header">
+                <h1 class="cache-name">L1-</h1>
+                ${hex_to_string_addr(0x0, BIT_LENGTHS[0].s, BIT_LENGTHS[0].b)}
+            </div>
+        </div>
+        `
+        cache_info = cache_div.querySelector(".cache-info")
+        for (let k = 0; k < Math.pow(2, BIT_LENGTHS[0].s); k++) {
+            set = document.createElement("div")
+            set.classList.add("set")
+            for (let j = 0; j < CONFIG[0].a; j++) {
+                line = document.createElement("div");
+                line.classList.add("line");
+                set.appendChild(line)
+            }
+            cache_info.appendChild(set);
+        }
+        caches_object.appendChild(cache_div)
         CACHES.push(cache_div)
+    }
+
+
+
+
+    if (!HAS_INSTRUCTION_CACHE) {
+        for (let i = 1; i < N_CACHE_LAYERS; i++) {
+            cache_div = document.createElement("div")
+            cache_div.classList.add("cache")
+            
+            cache_div.innerHTML = `
+            <div class="cache-info">
+                <div class="split_addr cache-header">
+                    <h1 class="cache-name">${"L"+(i+1)}-</h1>
+                    ${hex_to_string_addr(0x0, BIT_LENGTHS[i].s, BIT_LENGTHS[i].b)}
+                </div>
+            </div>
+            `
+            cache_info = cache_div.querySelector(".cache-info")
+            for (let k = 0; k < Math.pow(2, BIT_LENGTHS[i].s); k++) {
+                set = document.createElement("div")
+                set.classList.add("set")
+                for (let j = 0; j < CONFIG[i].a; j++) {
+                    line = document.createElement("div");
+                    line.classList.add("line");
+                    set.appendChild(line)
+                }
+                cache_info.appendChild(set);
+            }
+            caches_object.appendChild(cache_div)
+            CACHES.push(cache_div)
+        }
+    } else {
+        for (let i = 1; i < N_CACHE_LAYERS; i++) {
+            cache_div = document.createElement("div")
+            cache_div.classList.add("cache")
+            
+            cache_div.innerHTML = `
+            <div class="cache-info">
+                <div class="split_addr cache-header">
+                    <h1 class="cache-name">${"L"+(i+1)}-</h1>
+                    ${hex_to_string_addr(0x0, BIT_LENGTHS[i].s, BIT_LENGTHS[i].b)}
+                </div>
+            </div>
+            `
+            cache_info = cache_div.querySelector(".cache-info")
+            for (let k = 0; k < Math.pow(2, BIT_LENGTHS[i].s); k++) {
+                set = document.createElement("div")
+                set.classList.add("set")
+                for (let j = 0; j < CONFIG[i].a; j++) {
+                    line = document.createElement("div");
+                    line.classList.add("line");
+                    set.appendChild(line)
+                }
+                cache_info.appendChild(set);
+            }
+            caches_object.appendChild(cache_div)
+            CACHES.push(cache_div)
+        }
     }
 }
 
@@ -251,7 +400,9 @@ function hex_to_string_addr(addr, set_len, offset_len) {
     for (i; i < 32; i++) {
         tag = ((addr >> i) & 1) + tag
     }
-    return `<span style="color: red;">${tag}</span>|<span style="color: green;">${set}</span>|<span style="color: blue;">${offset}</span>`
+    element = `<span style="color: red;">${tag}</span>|<span style="color: green;">${set}</span>|<span style="color: blue;">${offset}</span>`
+    SPLIT_ADDRS.push(element)
+    return element
 }
 
 function visualizeInstr(readers, writers) {
