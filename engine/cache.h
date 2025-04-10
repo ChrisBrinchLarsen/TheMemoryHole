@@ -23,6 +23,8 @@ typedef struct CacheLine {
 
 
 typedef struct Cache {
+    uint32_t layer;
+
     // base parameters
     uint32_t cache_size;
     uint32_t associativity;
@@ -35,6 +37,9 @@ typedef struct Cache {
     uint32_t tag_bit_length;
 
     uint32_t block_size;
+
+    struct Cache* child_cache; // Cache_t name doesn't exist here
+    struct Cache* parent_cache; // Cache_t name doesn't exist here
 
     CacheLine_t **sets;
 } Cache_t;
@@ -73,6 +78,8 @@ void cache_wr_h(struct memory *mem, int addr, uint16_t data);
  * @param data The data to write to memory
  */
 void cache_wr_b(struct memory *mem, int addr, uint8_t data);
+
+int cache_rd_instr(struct memory *mem, int addr_int);
 
 /**
  * Reads a single word (4 bytes) from memory

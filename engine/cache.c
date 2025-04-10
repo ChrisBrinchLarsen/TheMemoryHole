@@ -13,7 +13,8 @@
 int ADDR_LEN = 32;
 uint32_t N_CACHE_LEVELS;
 
-Cache_t* caches;
+Cache_t* caches = NULL;
+Cache_t* L1i = NULL;
 
 FILE* CACHE_LOG;
 
@@ -24,27 +25,27 @@ const uint32_t ACTIVE_REPLACEMENT_POLICY = LRU_REPLACEMENT_POLICY;
 
 
 // Private function prototypes
-void cache_writeback_block(uint32_t layer, int addr_int, char* data, size_t block_size);
-char* fetch_block(uint32_t layer, uint32_t addr_int, struct memory *mem, bool mark_dirty);
-void handle_miss(uint32_t layer, Address_t addr, struct memory* mem, bool mark_dirty);
+void cache_writeback_block(Cache_t* cache, int addr_int, char* data, size_t block_size);
+char* fetch_block(Cache_t* cache, uint32_t addr_int, struct memory *mem, bool mark_dirty);
+void handle_miss(Cache_t* cache, Address_t addr, struct memory* mem, bool mark_dirty);
 int get_line_index_from_tag(Cache_t* cache, Address_t addr);
-int get_replacement_line_index(uint32_t layer, uint32_t set_index);
-void evict_cache_line(uint32_t layer, uint32_t addr_int, CacheLine_t* evict_line, struct memory *mem);
-void invalidate_line(uint32_t layer, uint32_t addr_int, struct memory* mem);
+int get_replacement_line_index(Cache_t* cache, uint32_t set_index);
+void evict_cache_line(Cache_t* cache, uint32_t addr_int, CacheLine_t* evict_line, struct memory *mem);
+void invalidate_line(Cache_t* cache, uint32_t addr_int, struct memory* mem);
 void increment_line_LRU(Cache_t* cache, uint32_t setIndex);
 void CacheSetToString(Cache_t* cache, int setIndex, char* out);
 void CacheLineToString(Cache_t* cache, uint32_t setIndex, uint32_t lineIndex, char* out);
 void PrintSet(Cache_t* cache, uint32_t setIndex);
 void PrintCache(Cache_t* cache);
 Address_t get_address(Cache_t* cache, uint32_t address);
-Cache_t* cache_new(uint32_t cacheSize, uint32_t block_size, uint32_t associativity);
+Cache_t* cache_new(uint32_t layer, uint32_t cacheSize, uint32_t block_size, uint32_t associativity);
 CacheLine_t cacheline_new(char* block);
 
 
 void cache_wr_w(struct memory *mem, int addr_int, uint32_t data) {
     fprintf(CACHE_LOG, "ww 0x%x %d\n", addr_int, data);
 
-    char* block = fetch_block(0, addr_int, mem, true);
+    char* block = fetch_block(&caches[0], addr_int, mem, true);
 
     Address_t addr = get_address(&caches[0], addr_int);
 
@@ -54,7 +55,7 @@ void cache_wr_w(struct memory *mem, int addr_int, uint32_t data) {
 void cache_wr_h(struct memory *mem, int addr_int, uint16_t data) {
     fprintf(CACHE_LOG, "wh 0x%x %d\n", addr_int, data);
     // TODO : Check if address in half-aligned
-    char* block = fetch_block(0, addr_int, mem, true);
+    char* block = fetch_block(&caches[0], addr_int, mem, true);
 
     Address_t addr = get_address(&caches[0], addr_int);
 
@@ -63,16 +64,30 @@ void cache_wr_h(struct memory *mem, int addr_int, uint16_t data) {
 
 void cache_wr_b(struct memory *mem, int addr_int, uint8_t data) {
     fprintf(CACHE_LOG, "wb 0x%x %d\n", addr_int, data);
-    char* block = fetch_block(0, addr_int, mem, true);
+    char* block = fetch_block(&caches[0], addr_int, mem, true);
 
     Address_t addr = get_address(&caches[0], addr_int);
 
     memcpy(&block[addr.block_offset], &data, sizeof(uint8_t));
 }
 
+int cache_rd_instr(struct memory *mem, int addr_int) {
+    if (L1i == NULL) { // in case we aren't using an instruction cache, we simply redirect this to the normal cache_rd_w method instead
+        return cache_rd_w(mem, addr_int);
+    }
+
+    fprintf(CACHE_LOG, "rw 0x%x\n", addr_int); // TODO is this logging correct?
+    char* block = fetch_block(L1i, addr_int, mem, false);
+
+    Address_t addr = get_address(L1i, addr_int);
+
+    return (int)(*(uint32_t*)&block[addr.block_offset]);
+}
+
+
 int cache_rd_w(struct memory *mem, int addr_int) {
     fprintf(CACHE_LOG, "rw 0x%x\n", addr_int);
-    char* block = fetch_block(0, addr_int, mem, false);
+    char* block = fetch_block(&caches[0], addr_int, mem, false);
 
     Address_t addr = get_address(&caches[0], addr_int);
 
@@ -81,7 +96,7 @@ int cache_rd_w(struct memory *mem, int addr_int) {
 
 int cache_rd_h(struct memory *mem, int addr_int) {
     fprintf(CACHE_LOG, "rh 0x%x\n", addr_int);
-    char* block = fetch_block(0, addr_int, mem, false);
+    char* block = fetch_block(&caches[0], addr_int, mem, false);
 
     Address_t addr = get_address(&caches[0], addr_int);
 
@@ -90,7 +105,7 @@ int cache_rd_h(struct memory *mem, int addr_int) {
 
 int cache_rd_b(struct memory *mem, int addr_int) {
     fprintf(CACHE_LOG, "rb 0x%x\n", addr_int);
-    char* block = fetch_block(0, addr_int, mem, false);
+    char* block = fetch_block(&caches[0], addr_int, mem, false);
 
     Address_t addr = get_address(&caches[0], addr_int);
 
@@ -98,8 +113,13 @@ int cache_rd_b(struct memory *mem, int addr_int) {
 }
 
 
-char* fetch_block(uint32_t layer, uint32_t addr_int, struct memory *mem, bool mark_dirty) {
-    Cache_t* cache = &caches[layer];
+/// @brief recursive function that finds a block, starting at some Layer. Updates caches accordingly
+/// @param layer the layer of the cache
+/// @param addr_int address
+/// @param mem memory
+/// @param mark_dirty whether to mark things dirty (in case of a write) 
+/// @return 
+char* fetch_block(Cache_t* cache, uint32_t addr_int, struct memory *mem, bool mark_dirty) {
     Address_t addr = get_address(cache, addr_int);
 
     increment_line_LRU(cache, addr.set_index);
@@ -109,15 +129,13 @@ char* fetch_block(uint32_t layer, uint32_t addr_int, struct memory *mem, bool ma
 
     // check if line is already in set, otherwise add it. CACHE HIT/MISS
     if (line_index == -1) { // MISS
-        line_index = get_replacement_line_index(layer, addr.set_index);
-        handle_miss(layer, addr, mem, mark_dirty);
+        line_index = get_replacement_line_index(cache, addr.set_index);
+        handle_miss(cache, addr, mem, mark_dirty);
     }
-    // HIT
-    else {
-        // count cache hits
+    else { // HIT
         cache->sets[addr.set_index][line_index].LRU = 0; // least recently used; just now
 
-        fprintf(CACHE_LOG, "H %d %d %d\n", layer+1, addr.set_index, line_index);
+        fprintf(CACHE_LOG, "H %d %d %d\n", cache->layer+1, addr.set_index, line_index);
     }
     
     if (mark_dirty) {
@@ -127,20 +145,20 @@ char* fetch_block(uint32_t layer, uint32_t addr_int, struct memory *mem, bool ma
     return cache->sets[addr.set_index][line_index].block;
 }
 
-void handle_miss(uint32_t layer, Address_t addr, struct memory* mem, bool mark_dirty) {
-    Cache_t* cache = &caches[layer];
-    fprintf(CACHE_LOG, "M %d %d\n", layer+1, addr.set_index);
+void handle_miss(Cache_t* cache, Address_t addr, struct memory* mem, bool mark_dirty) {
+    fprintf(CACHE_LOG, "M %d %d\n", cache->layer+1, addr.set_index);
 
-    int line_index = get_replacement_line_index(layer, addr.set_index);
+    // replace, back-invalidate and evict another line in this set first.
+    int line_index = get_replacement_line_index(cache, addr.set_index);
     CacheLine_t* victim = &cache->sets[addr.set_index][line_index];
-    if (victim->valid) {
-        if (layer != 0) {
+    if (victim->valid) { // sometimes the line to replace is unused, in which case we don't need to invalidate or evict anything
+        if (cache->layer != 0) {
             uint32_t inval_line_addr = (victim->tag << (cache->set_bit_length + cache->block_offset_bit_length)) | (addr.set_index << cache->block_offset_bit_length);
-            invalidate_line(layer-1, inval_line_addr, mem);
+            invalidate_line(cache->parent_cache, inval_line_addr, mem);
         }
         if (victim->dirty) {
             uint32_t evict_addr = (victim->tag << (cache->set_bit_length + cache->block_offset_bit_length)) | (addr.set_index << cache->block_offset_bit_length);
-            evict_cache_line(layer, evict_addr, victim, mem);
+            evict_cache_line(cache, evict_addr, victim, mem);
         }
     }
 
@@ -148,33 +166,25 @@ void handle_miss(uint32_t layer, Address_t addr, struct memory* mem, bool mark_d
     char* block;
     uint32_t block_offset = 0;
 
-    if (layer != N_CACHE_LEVELS-1) { // Not at last layer of cache
+    if (!(cache->child_cache == NULL)) { // Not at last layer of cache
         // recursive call
-        block = fetch_block(layer+1, addr.full_addr, mem, mark_dirty);
+        block = fetch_block(cache->child_cache, addr.full_addr, mem, mark_dirty);
 
         // in case were getting stuff from another layer of cache, we need to find the offset within the block we've been given
 
         // mask out the top and bottom bits. If L1 uses 00000011 and L2 uses 00001111, the block_idx after shifting and masking will be 00001100
         block_offset = (addr.full_addr >> cache->block_offset_bit_length) << cache->block_offset_bit_length;
-        uint32_t mask = ((uint32_t)pow(2,(&caches[layer+1])->block_offset_bit_length)-1);
+        uint32_t mask = ((uint32_t)pow(2,caches->child_cache->block_offset_bit_length)-1);
         block_offset = block_offset & mask;
 
-    } else {
+    } else { // at last layer; fetch from main memory instead
         fprintf(CACHE_LOG, "RAM\n");
         // when fetching from main memory, the block offset will just be 0, since we've already requested our specific size.
         block = find_block(mem, addr.full_addr, cache->block_size);
     }
 
     // Fetched a block into the cache
-    fprintf(CACHE_LOG, "F %d %d %d\n", layer+1, addr.set_index, line_index);
-    
-    // Evict
-    // if (victim->valid) {
-    //     // Here we need to find the address of the cacheline to be able to find it in the lower cache, otherwise we don't know where to evict it to.
-    //     uint32_t evictAddr = (cache->sets[a.setIndex][lineIndex].tag << (cache->SetBitLength + cache->block_offset_bit_length)) | (a.setIndex << cache->block_offset_bit_length);
-    //     EvictCacheLine(cache, evictAddr, &cache->sets[a.setIndex][lineIndex], mem);
-    // }
-
+    fprintf(CACHE_LOG, "F %d %d %d\n", cache->layer+1, addr.set_index, line_index);
 
     // update line
     victim->valid = 1;
@@ -185,8 +195,7 @@ void handle_miss(uint32_t layer, Address_t addr, struct memory* mem, bool mark_d
 }
 
 // NOTE: This function assumes that cache inclusivity holds
-void cache_writeback_block(uint32_t layer, int addr_int, char* data, size_t block_size) {
-    Cache_t* cache = &caches[layer];
+void cache_writeback_block(Cache_t* cache, int addr_int, char* data, size_t block_size) {
 
     Address_t addr = get_address(cache, addr_int);
 
@@ -195,10 +204,10 @@ void cache_writeback_block(uint32_t layer, int addr_int, char* data, size_t bloc
 
     if (line_index == -1) {
         printf("ERROR: Tried to perform write-back, but block was missing in lower level cache. Cache inclusivity didn't hold.\n");
-        printf("We were trying to insert tag %x into L%d\n", addr.tag, layer+1);
+        printf("We were trying to insert tag %x into L%d\n", addr.tag, cache->layer+1);
         exit(1);
     }
-    fprintf(CACHE_LOG, "E %d %d %d\n", layer+1, addr.set_index, line_index);
+    fprintf(CACHE_LOG, "E %d %d %d\n", cache->layer+1, addr.set_index, line_index);
 
     char* block = cache->sets[addr.set_index][line_index].block;
 
@@ -213,11 +222,11 @@ int get_line_index_from_tag(Cache_t* cache, Address_t addr) {
     return -1;
 }
 
-int get_replacement_line_index(uint32_t layer, uint32_t set_index) {
-    CacheLine_t* set = caches[layer].sets[set_index];
+int get_replacement_line_index(Cache_t* cache, uint32_t set_index) {
+    CacheLine_t* set = cache->sets[set_index];
     // first check if there's room anywhere.
     int line_index = -1;
-    for (uint32_t i = 0; i < (&caches[layer])->associativity; i++) {
+    for (uint32_t i = 0; i < cache->associativity; i++) {
         if (!set[i].valid) {
             line_index = i;
             break;
@@ -229,7 +238,7 @@ int get_replacement_line_index(uint32_t layer, uint32_t set_index) {
         switch (ACTIVE_REPLACEMENT_POLICY) {
             case LRU_REPLACEMENT_POLICY:
                 uint32_t maxval = 0;
-                for (uint32_t i = 0; i < (&caches[layer])->associativity; i++) {
+                for (uint32_t i = 0; i < cache->associativity; i++) {
                     if (set[i].LRU >= maxval) {
                         line_index = i;
                         maxval = set[i].LRU;
@@ -244,37 +253,37 @@ int get_replacement_line_index(uint32_t layer, uint32_t set_index) {
     }
 
     if (line_index == -1) {
-        printf("ERROR: Couldn't find line in L%d to mark as victim.\n", layer+1);
+        printf("ERROR: Couldn't find line in L%d to mark as victim.\n", cache->layer+1);
         exit(1);
     }
 
     return line_index;
 }
 
-void evict_cache_line(uint32_t layer, uint32_t addr_int, CacheLine_t* evict_line, struct memory *mem) {
+void evict_cache_line(Cache_t* cache, uint32_t addr_int, CacheLine_t* evict_line, struct memory *mem) {
     evict_line->dirty = false;
-    if (layer == N_CACHE_LEVELS-1) { // Writing to main memory
-        memory_write_back(mem, addr_int, evict_line->block, (&caches[layer])->block_size);
+    if (cache->child_cache == NULL) { // Writing to main memory
+        memory_write_back(mem, addr_int, evict_line->block, cache->block_size);
     } else { // Writing to cache
-        cache_writeback_block(layer+1, addr_int, evict_line->block, (&caches[layer])->block_size);
+        cache_writeback_block(cache->child_cache, addr_int, evict_line->block, cache->block_size);
     }
 }
 
-void invalidate_line(uint32_t layer, uint32_t addr_int, struct memory* mem) {
-    Address_t addr = get_address(&caches[layer], addr_int);
+void invalidate_line(Cache_t* cache, uint32_t addr_int, struct memory* mem) {
+    Address_t addr = get_address(cache, addr_int);
 
-    int line_index = get_line_index_from_tag(&caches[layer], addr);
+    int line_index = get_line_index_from_tag(cache, addr);
     if (line_index != -1) {
-        CacheLine_t* victim = &caches[layer].sets[addr.set_index][line_index];
-        fprintf(CACHE_LOG, "I %d %d %d\n", layer+1, addr.set_index, line_index);
+        CacheLine_t* victim = &cache->sets[addr.set_index][line_index];
+        fprintf(CACHE_LOG, "I %d %d %d\n", cache->layer+1, addr.set_index, line_index);
         victim->valid = 0;
         if (victim->dirty) {
             victim->dirty = false;
-            uint32_t evict_addr = (victim->tag << (caches[layer].set_bit_length + caches[layer].block_offset_bit_length)) | (addr.set_index << caches[layer].block_offset_bit_length);
-            evict_cache_line(layer, evict_addr, &caches[layer].sets[addr.set_index][line_index], mem);
+            uint32_t evict_addr = (victim->tag << (cache->set_bit_length + cache->block_offset_bit_length)) | (addr.set_index << cache->block_offset_bit_length);
+            evict_cache_line(cache, evict_addr, &cache->sets[addr.set_index][line_index], mem);
         }
         // Back-invalidation up the cache chain
-        if (layer != 0) {invalidate_line(layer-1, addr_int, mem);}
+        if (cache->parent_cache != NULL) {invalidate_line(cache->parent_cache, addr_int, mem);}
     }
 }
 
@@ -345,6 +354,32 @@ Cache_t* parse_cpu(char* path) {
     // Associativity: a-way
     uint32_t p, q, k, a;
 
+
+    memset(buf, 0, sizeof(buf));
+
+    fgets(buf, sizeof(buf), file); // name
+    if (strcmp(buf, "i\n")) { // IF NOT EQUALS
+        fseek(file, (long)-strlen(buf), SEEK_CUR);
+    }
+    else {
+        memset(buf, 0, sizeof(buf));
+        fgets(buf, sizeof(buf), file); // p
+        p = atoi(buf);
+        memset(buf, 0, sizeof(buf));
+        fgets(buf, sizeof(buf), file); // q
+        q = atoi(buf);
+        memset(buf, 0, sizeof(buf));
+        fgets(buf, sizeof(buf), file); // k
+        k = atoi(buf);
+        memset(buf, 0, sizeof(buf));
+        fgets(buf, sizeof(buf), file); // associativity
+        a = atoi(buf);
+        memset(buf, 0, sizeof(buf));
+
+        printf("%d, %d, %d, %d\n", p, q, k, a);
+        L1i = cache_new(0, (uint32_t)(pow(2,p) * q), (uint32_t)(pow(2,k)), a);
+    }
+
     for (uint32_t i = 0; i < N_CACHE_LEVELS; i++) {
         fgets(buf, sizeof(buf), file); // Name
         memset(buf, 0, sizeof(buf));
@@ -359,9 +394,19 @@ Cache_t* parse_cpu(char* path) {
         memset(buf, 0, sizeof(buf));
         fgets(buf, sizeof(buf), file); // associativity
         a = atoi(buf);
+        memset(buf, 0, sizeof(buf));
 
-        caches[i] = *cache_new((uint32_t)(pow(2,p) * q), (uint32_t)(pow(2,k)), a);
+        printf("%d, %d, %d, %d\n", p, q, k, a);
+        caches[i] = *cache_new(i, (uint32_t)(pow(2,p) * q), (uint32_t)(pow(2,k)), a);
+        if (i > 0) { // linked list
+            caches[i-1].child_cache = &caches[i];
+            caches[i].parent_cache = &caches[i-1];
+        }
     }
+    if (N_CACHE_LEVELS > 1 && L1i != NULL) {
+        L1i->child_cache = &caches[1]; // set L2 as child of instruction cache L1i
+    }
+
     fclose(file);
     return caches;
 }
@@ -397,8 +442,9 @@ Address_t get_address(Cache_t* cache, uint32_t address) {
 }
 
 
-Cache_t* cache_new(uint32_t cacheSize, uint32_t block_size, uint32_t associativity) {
+Cache_t* cache_new(uint32_t layer, uint32_t cacheSize, uint32_t block_size, uint32_t associativity) {
     Cache_t* c = (Cache_t*)malloc(sizeof(Cache_t));
+    c->layer = layer;
     c->cache_size = cacheSize;
     c->block_size = block_size;
     c->associativity = associativity;
@@ -407,6 +453,9 @@ Cache_t* cache_new(uint32_t cacheSize, uint32_t block_size, uint32_t associativi
     c->block_offset_bit_length = log2(c->block_size);
     c->set_bit_length = log2(c->set_count);
     c->tag_bit_length = ADDR_LEN - c->block_offset_bit_length - c->set_bit_length;
+
+    c->child_cache = NULL; // THIS HAS TO BE SET ELSEWHERE
+    c->parent_cache = NULL; // THIS HAS TO BE SET ELSEWHERE
    
     c->sets = (CacheLine_t**)malloc(c->set_count * sizeof(CacheLine_t*));
     for (uint32_t i = 0; i < c->set_count; i++) {
