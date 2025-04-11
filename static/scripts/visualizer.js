@@ -1,4 +1,3 @@
-let N_CACHE_LAYERS = 0
 let CONFIG = []
 let LOAD_LOG = []
 let EXEC_LOG = []
@@ -7,6 +6,7 @@ let CURRENT_STEP = 0
 const DELAY = 0;
 let BIT_LENGTHS = []
 let SPLIT_ADDRS = []
+let INSTR_SPLIT_ADDRS = null
 let ADDRESS_OBJECTS = []
 let CACHES = []
 let PROGRAM_TEXT = ""
@@ -17,17 +17,13 @@ let COLORED_SET_OBJECTS = []
 let COLORED_LINES = []
 let REG_CHANGED = true
 
-let HAS_INSTRUCTION_CACHE = false
-let INSTRUCTION_CONFIG = {}
-let INSTR_HITS = 0
-let INSTR_MISSES = 0
-let INSTR_BIT_LENGTHS = {}
-
 let READERS = []
 let WRITERS = []
 
 // The indices dictate which level of cache we're talking about
 let HITS = []
+let INSTR_HITS = 0
+let INSTR_MISSES = 0
 let MISSES = []
 let LINE_HITS = []
 let LINE_MISSES = []
@@ -50,9 +46,10 @@ let line_end = -2
 let render_time = 0
 let step_time = 0
 let steps_per_frame = 0
+let second = 1000
 
 
-function visualizeStep_playing() {
+function visualizeStep_playing(n_steps) {
     if (CURRENT_STEP == TOTAL_STEPS) {pause()}
 
     if (PLAYING) {
@@ -61,24 +58,30 @@ function visualizeStep_playing() {
             CURRENT_STEP++
             pause()
         } else {
-            if (DELAY_INPUT.value == "0") {
-                for (let i = 0; i < Math.round(steps_per_frame) && CURRENT_STEP < TOTAL_STEPS; i++) {
-                    visualizeStep(EXEC_LOG[CURRENT_STEP]);
-                    CURRENT_STEP++;
-                }
-                render_start = performance.now()
-                requestAnimationFrame(() => {
-                    render_time = performance.now() - render_start
-                    steps_per_frame = render_time / step_time;
-                    visualizeStep_playing();
-                })
-            } else {
+            for (let i = 0; i < n_steps && CURRENT_STEP < TOTAL_STEPS; i++) {
                 visualizeStep(EXEC_LOG[CURRENT_STEP]);
                 CURRENT_STEP++;
-                setTimeout(() => {
-                    visualizeStep_playing();
-                }, DELAY_INPUT.value);
             }
+            extract()
+
+            // if (DELAY_INPUT.value == "0") {
+            //     for (let i = 0; i < Math.round(steps_per_frame) && CURRENT_STEP < TOTAL_STEPS; i++) {
+            //         visualizeStep(EXEC_LOG[CURRENT_STEP]);
+            //         CURRENT_STEP++;
+            //     }
+            //     render_start = performance.now()
+            //     requestAnimationFrame(() => {
+            //         render_time = performance.now() - render_start
+            //         steps_per_frame = render_time / step_time;
+            //         visualizeStep_playing();
+            //     })
+            // } else {
+            //     visualizeStep(EXEC_LOG[CURRENT_STEP]);
+            //     CURRENT_STEP++;
+            //     setTimeout(() => {
+            //         visualizeStep_playing();
+            //     }, DELAY_INPUT.value);
+            // }
         }
     }
 }
@@ -97,7 +100,6 @@ function visualizeStep(step) {
     }
     
     
-    SPLIT_ADDRS.forEach(addr => {addr.innerHTML = hex_to_string_addr(step["addr"],)})
     if (step["lines"].length > 0) {
         visualize_path(step["hits"], step["misses"], step["evict"], step["insert"], step["invalidate"], step["lines"][0], step["lines"][1], step["is_write"])
     } else {
@@ -115,12 +117,18 @@ function visualizeStep(step) {
         CACHE_PERCENT_OBJECTS[i].innerHTML = Math.round((MISSES[i] / (MISSES[i] + HITS[i]))*100)
         
     }
+    if (HAS_INSTRUCTION_CACHE) {
+        hit_sum += INSTR_HITS
+        INSTR_HIT_COUNTER_OBJECT.innerHTML = INSTR_HITS
+        INSTR_MISS_COUNTER_OBJECT.innerHTML = INSTR_MISSES
+        INSTR_PERCENT_OBJECT.innerHTML = Math.round((INSTR_MISSES / (INSTR_MISSES + INSTR_HITS))*100)
+    }
     CACHE_MISS_RATE.innerHTML = Math.round((MISSES[N_CACHE_LAYERS-1] / (MISSES[N_CACHE_LAYERS-1] + hit_sum)) * 100)
     CYCLE_COUNTER.innerHTML = ESTIMATED_CYCLES
 
     INSTR_COUNTER.innerHTML = "(" + (CURRENT_STEP+1) + "/" + TOTAL_STEPS + ") "
     INSTR.innerHTML = step["title"]
-    visualizeInstr(step["readers"], step["writers"])
+    visualizeInstrRegs(step["readers"], step["writers"])
 }
 
 function visualize_path(hits, misses, evictions, inserts, invalidations, lineS, lineE, is_write) {
@@ -271,6 +279,7 @@ function create_caches() {
             </div>
         </div>
         `
+        ADDRESS_OBJECTS.push(data_cache_div.querySelector())
         data_cache_info = data_cache_div.querySelector(".cache-info")
         for (let k = 0; k < Math.pow(2, BIT_LENGTHS[0].s); k++) {
             set = document.createElement("div")
@@ -384,6 +393,7 @@ function create_caches() {
     }
 }
 
+// Returns a span containing the address split up in tag, set, and offset bits
 function hex_to_string_addr(addr, set_len, offset_len) {
     let i = 0
     let tag = "";
@@ -405,7 +415,8 @@ function hex_to_string_addr(addr, set_len, offset_len) {
     return element
 }
 
-function visualizeInstr(readers, writers) {
+// Colors in the corresponding registers that were read from and written to
+function visualizeInstrRegs(readers, writers) {
     clearRegisters();
     READERS = []
     WRITERS = []
@@ -421,6 +432,7 @@ function visualizeInstr(readers, writers) {
     });
 }
 
+// Removes color from all colored registers
 function clearRegisters() {
     if (!REG_CHANGED) {return}
     READERS.forEach(reg => {
@@ -464,17 +476,14 @@ function play() {
     // Testing rendering time
     const render_start = performance.now()
     requestAnimationFrame(() => {
-        rendertime = performance.now() - render_start
+        render_time = performance.now() - render_start
         const step_start = performance.now()
         visualizeStep(EXEC_LOG[CURRENT_STEP])
         CURRENT_STEP += 1
         step_time = performance.now() - step_start
     })
     steps_per_frame = render_time / step_time
-
-    setTimeout(() => {
-        visualizeStep_playing();
-    }, DELAY_INPUT.value);
+    extract()
 }
 
 function pause() {
@@ -507,14 +516,19 @@ function end() {
         CURRENT_STEP += 1;
     }
     if (PLAYING) {pause()}
+}
 
-    // if (CURRENT_STEP == TOTAL_STEPS-1) {
-    //     visualizeStep(EXEC_LOG[CURRENT_STEP])
-    //     CURRENT_STEP += 1
-    //     if (PLAYING) {pause()}
-    // } else {
-    //     visualizeStep(EXEC_LOG[CURRENT_STEP])
-    //     CURRENT_STEP += 1
-    //     end()
-    // }
+function extract() {
+    maximum_steps_per_second = SECOND / (render_time+step_time)
+    desired_steps_per_second = DELAY_INPUT.value
+    requires_one_step_per = SECOND / desired_steps_per_second
+    if (requires_one_step_per >= render_time + step_time) {
+        setTimeout(() => {
+           visualizeStep_playing(1) 
+        }, requires_one_step_per);
+    } else { // We need to fit multiple steps per render
+        setTimeout(() => {
+            visualizeStep_playing(Math.round(desired_steps_per_second/maximum_steps_per_second))
+        }, 0)
+    }
 }

@@ -20,49 +20,38 @@ def index():
 def get_logs():
     return [[], session["loading_prog"], session["executing_prog"]]
 
+
+def write_cache_to_file(file, name, config):
+    file.write(f"{name}\n")
+    file.write(f"{config['p']}\n")
+    file.write(f"{config['q']}\n")
+    file.write(f"{config['k']}\n")
+    file.write(f"{config['a']}\n")
+
 # TODO: Very important that we make the config and program filenames be unique
 # and random, as well as have them cleaned ud (deleted) after use. This is due
 # to multithreading if multiple people are requesting at the same time we're
 # currently vulnurable to a race condition.
+# NOTE: This function expects a dictionary with specific entries present as the input
 @socketio.on("run_program")
 def handle_run_program(data):
     print("Got message from server")
-    config = data["config"]
-    print(config)
+    data_caches = data["data_caches"]
+    instr_cache = data["instr_cache"]
     program = data["program"]
-    N_CACHE_LEVELS = data["levels"]
-    print(N_CACHE_LEVELS)
-    # TODO: Make it possible to send arguments from frontend to run the program with
+    N_CACHE_LEVELS = len(data_caches)
     args = data["args"].split(" ")
     id = uuid.uuid4().hex
     architecture_file_name = f"./tmp/architecture_{id}"
     program_file_path = f"./tmp/program_{id}"
 
-
-
     with open(architecture_file_name, "w") as file:
         file.write(f"{N_CACHE_LEVELS}\n")
-        if (N_CACHE_LEVELS != len(config)):
-            file.write("i\n")
-            file.write(f"{config[0]['p']}\n")
-            file.write(f"{config[0]['q']}\n")
-            file.write(f"{config[0]['k']}\n")
-            file.write(f"{config[0]['a']}\n")
-            for i in range(1,N_CACHE_LEVELS+1):
-                file.write(f"L{i}\n")
-                
-                file.write(f"{config[i]['p']}\n")
-                file.write(f"{config[i]['q']}\n")
-                file.write(f"{config[i]['k']}\n")
-                file.write(f"{config[i]['a']}\n")
-        else:
-            for i in range(N_CACHE_LEVELS):
-                file.write(f"L{i+1}\n")
-                
-                file.write(f"{config[i]['p']}\n")
-                file.write(f"{config[i]['q']}\n")
-                file.write(f"{config[i]['k']}\n")
-                file.write(f"{config[i]['a']}\n")
+        if instr_cache:
+            print("Instruction cache was detected")
+            write_cache_to_file(file, "i", instr_cache)
+        for i in range(N_CACHE_LEVELS):
+            write_cache_to_file(file, f"L{i+1}", data_caches[i])
 
     program = addDebugComments(program)
 
@@ -180,3 +169,4 @@ def addDebugComments(program:str):
 ### MAIN
 if __name__ == "__main__":
     socketio.run(app, debug=True)
+

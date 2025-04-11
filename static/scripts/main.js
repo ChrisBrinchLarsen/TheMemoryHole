@@ -1,17 +1,17 @@
+let data_caches = []
+let instr_cache = {}
+let N_CACHE_LAYERS = 0
+let INSTR_BIT_LENGTHS = {}
+let HAS_INSTRUCTION_CACHE = false
+
 function sendProgram() {
+    confirmArchitecture()
     PROGRAM_TEXT = document.getElementById("programText").value;
     document.getElementById("programText").value = "";
-    socket.emit("run_program", {program:PROGRAM_TEXT, config:confirmArchitecture(), args:document.getElementById("args").value, levels:get_layer_n()}, runCallback)
+    socket.emit("run_program", {program:PROGRAM_TEXT, data_caches:data_caches, instr_cache:instr_cache, args:document.getElementById("args").value}, runCallback)
 }
 
-function get_layer_n() {
-    if (HAS_INSTRUCTION_CACHE) {
-        N_CACHE_LAYERS = CONFIG.length - 1
-        return CONFIG.length - 1
-    }
-    else {return CONFIG.length}
-}
-
+// This function needs a rewrite
 function runCallback(load_log, exec_log) {
     create_caches()
     src_lines = PROGRAM_TEXT.replaceAll("<", "&lt")
@@ -73,39 +73,42 @@ function runCallback(load_log, exec_log) {
 
 function confirmArchitecture() {
     cacheList = Array.from(ARCHITECTURE.querySelectorAll(".cache-container"));
-    N_CACHE_LAYERS = cacheList.length
-    let instr_cache = null
-    if (HAS_INSTRUCTION_CACHE) {
-        N_CACHE_LAYERS -= 1 // Since two cache containers share a layer
-        instr_cache = cacheList[1]
-        cacheList = cacheList.filter((cache) => cache.querySelector(".cache-title").innerHTML != "L1 Instruction")
-        settings = instr_cache.querySelectorAll(".num-box")
-        CONFIG.push({p:settings[0].value
-                    ,q:settings[1].value
-                    ,k:settings[2].value
-                    ,a:settings[3].value})
-        block_offset_len = Math.log2(Math.pow(2, settings[2].value))
-        set_len = Math.log2((Math.pow(2,settings[0].value) * settings[1].value) / (Math.pow(2, settings[2].value) * settings[3].value))
-        INSTR_BIT_LENGTHS = {s:set_len, b:block_offset_len}
-    }
-    
-    for (let i = 0; i < N_CACHE_LAYERS; i++) {
-        HITS.push(0)
-        MISSES.push(0)
-        settings = cacheList[i].querySelectorAll(".num-box")
-        CONFIG.push({p:settings[0].value
-            ,q:settings[1].value
-            ,k:settings[2].value
-            ,a:settings[3].value})
-        block_offset_len = Math.log2(Math.pow(2, settings[2].value))
-        set_len = Math.log2((Math.pow(2,settings[0].value) * settings[1].value) / (Math.pow(2, settings[2].value) * settings[3].value))
-        BIT_LENGTHS.push({s:set_len
-                            ,b:block_offset_len})
-    }
-
-    return CONFIG
+    cacheList.forEach(cache => {
+        if (cache.querySelector(".cache-title").innerHTML == "L1 Instruction") {
+            confirm_instr_cache(cache)
+        } else {
+            confirm_data_cache(cache)
+            N_CACHE_LAYERS++ // Data caches determine depth
+        }
+    });
 }
 
+function confirm_data_cache(cache) {
+    let input_boxes = cache.querySelectorAll(".num-box")
+    HITS.push(0)
+    MISSES.push(0)
+    data_caches.push({p:input_boxes[0].value,
+                      q:input_boxes[1].value,
+                      k:input_boxes[2].value,
+                      a:input_boxes[3].value})
+    block_offset_len = Math.log2(Math.pow(2, settings[2].value))
+    set_len = Math.log2((Math.pow(2,settings[0].value) * settings[1].value) / (Math.pow(2, settings[2].value) * settings[3].value))
+    BIT_LENGTHS.push({s:set_len, b:block_offset_len})
+}
+
+function confirm_instr_cache(cache) {
+    HAS_INSTRUCTION_CACHE = true
+    let input_boxes = cache.querySelectorAll(".num-box")
+    instr_cache = {p:input_boxes[0].value,
+                   q:input_boxes[1].value,
+                   k:input_boxes[2].value,
+                   a:input_boxes[3].value}
+    block_offset_len = Math.log2(Math.pow(2, settings[2].value))
+    set_len = Math.log2((Math.pow(2,settings[0].value) * settings[1].value) / (Math.pow(2, settings[2].value) * settings[3].value))
+    INSTR_BIT_LENGTHS = {s:set_len, b:block_offset_len}
+}
+
+// TODO: Everything below this point is giga scuffed right now
 function renameCaches() {
     titles = ARCHITECTURE.querySelectorAll(".cache-title")
     
@@ -212,6 +215,15 @@ function add_instruction_cache() {
     ARCHITECTURE.replaceChild(wrapper, l1)
 }
 
+
+function preset_program(path) {
+    fetch(path)
+        .then(response => response.text())
+        .then(data => {document.getElementById("programText").value = data})
+        .catch(error => console.error("Error fetching file:", error));
+}
+
+// This doesn't work currently
 function preset_architecture(caches) {
     ARCHITECTURE.innerHTML = ""
     caches.forEach(cache => {
@@ -237,18 +249,3 @@ function preset_architecture(caches) {
     ARCHITECTURE.appendChild(ADD_CACHE)
     renameCaches()
 }
-
-function preset_program(path) {
-    fetch(path)
-        .then(response => response.text())
-        .then(data => {document.getElementById("programText").value = data})
-        .catch(error => console.error("Error fetching file:", error));
-}
-
-function get_settings_from_cache(cache) {
-    settings = cache.querySelectorAll(".num-box")
-    for (let i = 0; i < 4; i++) {
-
-    }
-}
-
