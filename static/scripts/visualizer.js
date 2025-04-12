@@ -206,14 +206,12 @@ function clear_sets_of_misses() {
 }
 
 function give_line_class(class_name, cache, set_n, line_n) {
-    console.log("In cache", cache, "giving set " + set_n + " line " + line_n + " class: " + class_name)
     let line = cache.children[1].children[Number(set_n)].children[line_n]
     line.classList.add(class_name);
     COLORED_LINES.push(line)
 }
 
 function remove_class_from_line(class_name, cache, set_n, line_n) {
-    console.log("In cache", cache, "taking away from set " + set_n + " line " + line_n + " class: " + class_name)
     cache.children[1].children[Number(set_n)].children[line_n].classList.remove(class_name)
 }
 
