@@ -1,5 +1,3 @@
-let CONFIG = []
-let LOAD_LOG = []
 let EXEC_LOG = []
 let TOTAL_STEPS = 0
 let CURRENT_STEP = 0
@@ -8,7 +6,6 @@ let BIT_LENGTHS = []
 let SPLIT_ADDRS = []
 let INSTR_SPLIT_ADDRS = null
 let ADDRESS_OBJECTS = []
-let CACHES = []
 let PROGRAM_TEXT = ""
 let SRC_LINES = []
 let SELECTED_LINE = undefined
@@ -28,6 +25,7 @@ let MISSES = []
 let LINE_HITS = []
 let LINE_MISSES = []
 
+let INSTR_CACHE_LATENCY = 3
 let LATENCY_AT_LEVEL = [3, 12, 38, 108, 150, 150, 150, 150, 150, 150, 150, 150]
 let DRAM_LATENCY = 195
 let ESTIMATED_CYCLES = 0
@@ -38,19 +36,24 @@ let CACHE_HIT_COUNTER_OBJECTS = []
 let CACHE_MISS_COUNTER_OBJECTS = []
 let CACHE_PERCENT_OBJECTS = []
 
-let step_time_sum = 0.0
-
 let line_start = -1
 let line_end = -2
 
 let render_time = 0
+let frame_start = 0
 let step_time = 0
 let steps_per_frame = 0
-let second = 1000
+let SECOND = 1000
+let maximum_frames_per_second = 0
 
+let CACHE_OBJECTS = [] // The first N_CACHE_LAYERS are the data caches, and then potnetially N+1 is the instr cache
+let INSTR_CACHE_OBJECT = null
 
 function visualizeStep_playing(n_steps) {
-    if (CURRENT_STEP == TOTAL_STEPS) {pause()}
+    if (CURRENT_STEP == TOTAL_STEPS) {
+        pause()
+        return
+    }
 
     if (PLAYING) {
         if (CURRENT_STEP == TOTAL_STEPS-1) {
@@ -58,36 +61,19 @@ function visualizeStep_playing(n_steps) {
             CURRENT_STEP++
             pause()
         } else {
+            if (n_steps < 1) {n_steps++}
             for (let i = 0; i < n_steps && CURRENT_STEP < TOTAL_STEPS; i++) {
                 visualizeStep(EXEC_LOG[CURRENT_STEP]);
                 CURRENT_STEP++;
             }
-            extract()
-
-            // if (DELAY_INPUT.value == "0") {
-            //     for (let i = 0; i < Math.round(steps_per_frame) && CURRENT_STEP < TOTAL_STEPS; i++) {
-            //         visualizeStep(EXEC_LOG[CURRENT_STEP]);
-            //         CURRENT_STEP++;
-            //     }
-            //     render_start = performance.now()
-            //     requestAnimationFrame(() => {
-            //         render_time = performance.now() - render_start
-            //         steps_per_frame = render_time / step_time;
-            //         visualizeStep_playing();
-            //     })
-            // } else {
-            //     visualizeStep(EXEC_LOG[CURRENT_STEP]);
-            //     CURRENT_STEP++;
-            //     setTimeout(() => {
-            //         visualizeStep_playing();
-            //     }, DELAY_INPUT.value);
-            // }
+            prep_next_step_dynamically()
         }
     }
 }
 
 function visualizeStep(step) {
-    clear_sets()
+    console.log("------------------")
+    clear_sets_of_misses()
     clear_lines()
     if (step["lines-changed"]) {
         clear_src_lines()
@@ -99,11 +85,10 @@ function visualizeStep(step) {
         ACCESS_COUNTER.innerHTML = 1 + Number(ACCESS_COUNTER.innerHTML)
     }
     
-    
     if (step["lines"].length > 0) {
-        visualize_path(step["hits"], step["misses"], step["evict"], step["insert"], step["invalidate"], step["lines"][0], step["lines"][1], step["is_write"])
+        visualize_path(step["type"], step["hits"], step["misses"], step["evict"], step["insert"], step["invalidate"], step["lines"][0], step["lines"][1], step["is_write"])
     } else {
-        visualize_path(step["hits"], step["misses"], step["evict"], step["insert"], step["invalidate"], -2, -1, step["is_write"])
+        visualize_path(step["type"], step["hits"], step["misses"], step["evict"], step["insert"], step["invalidate"], -2, -1, step["is_write"])
     }
     
     updateLineSummary(SELECTED_LINE)
@@ -131,16 +116,22 @@ function visualizeStep(step) {
     visualizeInstrRegs(step["readers"], step["writers"])
 }
 
-function visualize_path(hits, misses, evictions, inserts, invalidations, lineS, lineE, is_write) {
+function visualize_path(access_type, hits, misses, evictions, inserts, invalidations, lineS, lineE, is_write) {
     COLORED_LINES = []
     COLORED_SET_OBJECTS = []
     
     hits.forEach(hit => {
-        HITS[hit[0]-1] += 1;
-        ESTIMATED_CYCLES += LATENCY_AT_LEVEL[hit[0]-1]
-        give_line_class("hit", hit[0], hit[1], hit[2])
-        if (is_write && (hit[0] == 1)) { // Hit a write access in L1
-            give_line_class("dirty", hit[0], hit[1], hit[2])
+        if (HAS_INSTRUCTION_CACHE && Number(hit[0]) == 1 && access_type == "fetch") {
+            INSTR_HITS += 1
+            ESTIMATED_CYCLES += INSTR_CACHE_LATENCY
+            give_line_class("hit", INSTR_CACHE_OBJECT, hit[1], hit[2])
+        } else {
+            HITS[hit[0]-1] += 1;
+            ESTIMATED_CYCLES += LATENCY_AT_LEVEL[hit[0]-1]
+            give_line_class("hit", CACHE_OBJECTS[hit[0]-1], hit[1], hit[2])
+            if (is_write && (hit[0] == 1)) { // Hit a write access in L1 Data
+                give_line_class("dirty", CACHE_OBJECTS[hit[0]-1], hit[1], hit[2])
+            }
         }
         for (let i = lineS; i <= lineE; i++) {
             LINE_HITS[i] += 1;
@@ -148,11 +139,20 @@ function visualize_path(hits, misses, evictions, inserts, invalidations, lineS, 
     })
     
     misses.forEach(miss => {
-        set = CACHES[miss[0]-1].children[1].children[1+Number(miss[1])]
-        set.classList.add("miss")
-        COLORED_SET_OBJECTS.push(set)
-        MISSES[miss[0]-1] += 1;
-        ESTIMATED_CYCLES += LATENCY_AT_LEVEL[miss[0]-1]
+        if (HAS_INSTRUCTION_CACHE && Number(miss[0]) == 1 && access_type == "fetch") {
+            give_set_class("miss", INSTR_CACHE_OBJECT, miss[1])
+            INSTR_MISSES += 1
+            ESTIMATED_CYCLES += INSTR_CACHE_LATENCY
+        } else {
+            give_set_class("miss", CACHE_OBJECTS[miss[0]-1], miss[1])
+            MISSES[miss[0]-1] += 1;
+            ESTIMATED_CYCLES += LATENCY_AT_LEVEL[miss[0]-1]
+        }
+
+        if (miss[0] == N_CACHE_LAYERS) {
+            ESTIMATED_CYCLES += DRAM_LATENCY
+        }
+
         for (let i = lineS; i <= lineE; i++) {
             if (miss[0] == N_CACHE_LAYERS) { // Miss in last layer of cache, this is prone to breakage
                 LINE_MISSES[i] += 1;
@@ -161,39 +161,60 @@ function visualize_path(hits, misses, evictions, inserts, invalidations, lineS, 
     })
     
     evictions.forEach(evictee => {
-        give_line_class("evict", evictee[0], evictee[1], evictee[2])
-        give_line_class("dirty", evictee[0], evictee[1], evictee[2])
-        give_line_class("valid", evictee[0], evictee[1], evictee[2])
+        let cache = CACHE_OBJECTS[evictee[0]-1]
+        let set = evictee[1]
+        let line = evictee[2]
+        give_line_class("evict", cache, set, line)
+        give_line_class("dirty", cache, set, line)
+        give_line_class("valid", cache, set, line)
     })
     inserts.forEach(insertee => {
-        give_line_class("insert", insertee[0], insertee[1], insertee[2])
-        give_line_class("valid", insertee[0], insertee[1], insertee[2])
-        if (is_write && (insertee[0] == 1)) {
-            give_line_class("dirty", insertee[0], insertee[1], insertee[2])
+        if (HAS_INSTRUCTION_CACHE && Number(insertee[0]) == 1 && access_type == "fetch") {
+            give_line_class("insert", INSTR_CACHE_OBJECT, insertee[1], insertee[2])
+            give_line_class("valid", INSTR_CACHE_OBJECT, insertee[1], insertee[2])
         } else {
-            remove_line_class("dirty", insertee[0], insertee[1], insertee[2])
+            let cache = CACHE_OBJECTS[insertee[0]-1]
+            let set = insertee[1]
+            let line = insertee[2]
+            give_line_class("insert", cache, set, line)
+            give_line_class("valid", cache, set, line)
+            if (is_write && (insertee[0] == 1)) {
+                give_line_class("dirty", cache, set, line)
+            } else {
+                remove_class_from_line("dirty", cache, set, line)
+            }
         }
     })
-    invalidations.forEach(invalidee => {
-        remove_line_class("valid", invalidee[0], invalidee[1], invalidee[2]);
-        remove_line_class("dirty", invalidee[0], invalidee[1], invalidee[2]);
+
+    invalidations.forEach(invalidatee => {
+        let cache = CACHE_OBJECTS[invalidatee[0]-1]
+        let set = invalidatee[1]
+        let line = invalidatee[2]
+        remove_class_from_line("valid", cache, set, line);
+        remove_class_from_line("dirty", cache, set, line);
     })
 }
 
-function clear_sets() {
+function give_set_class(class_name, cache, set_n) {
+    let set = cache.children[1].children[Number(set_n)]
+    set.classList.add(class_name)
+    COLORED_SET_OBJECTS.push(set)
+}
+
+function clear_sets_of_misses() {
     COLORED_SET_OBJECTS.forEach(set => {set.classList.remove("miss")})
 }
 
-
-function give_line_class(className, cacheN, setN, lineN) {
-    let line = CACHES[cacheN-1].children[1].children[1+Number(setN)].children[lineN]
-    line.classList.add(className);
+function give_line_class(class_name, cache, set_n, line_n) {
+    console.log("In cache", cache, "giving set " + set_n + " line " + line_n + " class: " + class_name)
+    let line = cache.children[1].children[Number(set_n)].children[line_n]
+    line.classList.add(class_name);
     COLORED_LINES.push(line)
 }
 
-function remove_line_class(className, cacheN, setN, lineN) {
-    let line = CACHES[cacheN-1].children[1].children[1+Number(setN)].children[lineN]
-    line.classList.remove(className);
+function remove_class_from_line(class_name, cache, set_n, line_n) {
+    console.log("In cache", cache, "taking away from set " + set_n + " line " + line_n + " class: " + class_name)
+    cache.children[1].children[Number(set_n)].children[line_n].classList.remove(class_name)
 }
 
 function clear_lines() {
@@ -203,7 +224,6 @@ function clear_lines() {
         line.classList.remove("insert")
     })
 }
-
 
 function clear_src_lines() {
     for (let i = line_start; i <= line_end; i++) {
@@ -219,177 +239,69 @@ function visualize_src(start, end) {
     }
 }
 
-// function create_caches() {
-//     document.getElementById("caches").innerHTML = "";
-//     for (let i = 0; i < N_CACHE_LAYERS; i++) {
-//         cache_div = document.createElement("div");
-//         cache_div.classList.add("cache")
-//         title = document.createElement("h1");
-//         title.innerHTML = "L" + (i+1);
-//         cache_info_div = document.createElement("div");
-//         cache_info_div.classList.add("cache-info");
-//         cache_div.appendChild(title);
-//         cache_div.appendChild(cache_info_div);
-//         addr = document.createElement("div")
-//         SPLIT_ADDRS.push(addr)
-//         addr.classList.add("split_addr")
-//         addr.innerHTML = hex_to_string_addr(0x0, BIT_LENGTHS[i].s, BIT_LENGTHS[i].b);
-//         cache_info_div.appendChild(addr);
-//         for (let k = 0; k < Math.pow(2, BIT_LENGTHS[i].s); k++) {
-//             set = document.createElement("div")
-//             set.classList.add("set")
-//             for (let j = 0; j < CONFIG[i].a; j++) {
-//                 line = document.createElement("div");
-//                 line.classList.add("line");
-//                 set.appendChild(line)
-//             }
-//             cache_info_div.appendChild(set);
-//         }
-//         document.getElementById("caches").appendChild(cache_div)
-//         CACHES.push(cache_div)
-//     }
-// }
-
 function create_caches() {
-    caches_object = document.getElementById("caches")
-    caches_object.innerHTML = ""
+    let cache_container = document.getElementById("cache-container")
+    cache_container.innerHTML = ""
 
-    if (HAS_INSTRUCTION_CACHE) {
-        horiz_caches = document.createElement("div")
-        horiz_caches.setAttribute("id","horizontal-caches")
-        instr_cache_div = document.createElement("div")
-        data_cache_div = document.createElement("div")
-        horiz_caches.appendChild(data_cache_div)
-        horiz_caches.appendChild(instr_cache_div)
-        instr_cache_div.classList.add("cache")
-        data_cache_div.classList.add("cache")
-        instr_cache_div.innerHTML = `
+    for (let i = 0; i < N_CACHE_LAYERS; i++) {
+        let cache_layer = document.createElement("div")
+        cache_layer.classList.add("cache-layer")
+        
+        let cache = document.createElement("div")
+        cache.classList.add("cache")
+        
+        cache.innerHTML = `
         <div class="cache-info">
-            <div class="split_addr cache-header">
-                <h1 class="cache-name">L1i-</h1>
-                ${hex_to_string_addr(0x0, INSTR_BIT_LENGTHS.s, INSTR_BIT_LENGTHS.b)}
+            <h1 class="cache-name">L${i+1}</h1>
+            <div class="split_addr">
+            ${hex_to_string_addr(0x0, BIT_LENGTHS[i].s, BIT_LENGTHS[i].b)}
             </div>
         </div>
+        <div class="set-holder"></div>
         `
-        data_cache_div.innerHTML = `
-        <div class="cache-info">
-            <div class="split_addr cache-header">
-                <h1 class="cache-name">L1d-</h1>
-                ${hex_to_string_addr(0x0, BIT_LENGTHS[0].s, BIT_LENGTHS[0].b)}
-            </div>
-        </div>
-        `
-        ADDRESS_OBJECTS.push(data_cache_div.querySelector())
-        data_cache_info = data_cache_div.querySelector(".cache-info")
-        for (let k = 0; k < Math.pow(2, BIT_LENGTHS[0].s); k++) {
+        let set_holder = cache.querySelector(".set-holder")
+        for (let k = 0; k < Math.pow(2, BIT_LENGTHS[i].s); k++) {
             set = document.createElement("div")
             set.classList.add("set")
-            for (let j = 0; j < CONFIG[1].a; j++) {
+            for (let j = 0; j < data_caches[i].a; j++) {
                 line = document.createElement("div");
                 line.classList.add("line");
                 set.appendChild(line)
             }
-            data_cache_info.appendChild(set);
+            set_holder.appendChild(set);
         }
-        CACHES.push(data_cache_div)
-        instr_cache_info = instr_cache_div.querySelector(".cache-info")
+
+        CACHE_OBJECTS.push(cache)
+        
+        cache_layer.appendChild(cache)
+        cache_container.appendChild(cache_layer)
+    }
+
+    if (HAS_INSTRUCTION_CACHE) {
+        INSTR_CACHE_OBJECT = document.createElement("div")
+        INSTR_CACHE_OBJECT.classList.add("cache")
+        INSTR_CACHE_OBJECT.innerHTML = `
+        <div class="cache-info">
+            <h1 class="cache-name">L1i</h1>
+            <div class="split_addr">
+            ${hex_to_string_addr(0x0, INSTR_BIT_LENGTHS.s, INSTR_BIT_LENGTHS.b)}
+            </div>
+        </div>
+        <div class="set-holder"></div>
+        `
+        let set_holder = INSTR_CACHE_OBJECT.querySelector(".set-holder")
         for (let k = 0; k < Math.pow(2, INSTR_BIT_LENGTHS.s); k++) {
             set = document.createElement("div")
             set.classList.add("set")
-            for (let j = 0; j < CONFIG[0].a; j++) {
+            for (let j = 0; j < instr_cache.a; j++) {
                 line = document.createElement("div");
                 line.classList.add("line");
                 set.appendChild(line)
             }
-            instr_cache_info.appendChild(set);
+            set_holder.appendChild(set);
         }
-        CACHES.push(instr_cache_div)
-        caches_object.appendChild(horiz_caches)
-
-
-    } else {
-        cache_div = document.createElement("div")
-        cache_div.classList.add("cache")
-        cache_div.innerHTML = `
-        <div class="cache-info">
-            <div class="split_addr cache-header">
-                <h1 class="cache-name">L1-</h1>
-                ${hex_to_string_addr(0x0, BIT_LENGTHS[0].s, BIT_LENGTHS[0].b)}
-            </div>
-        </div>
-        `
-        cache_info = cache_div.querySelector(".cache-info")
-        for (let k = 0; k < Math.pow(2, BIT_LENGTHS[0].s); k++) {
-            set = document.createElement("div")
-            set.classList.add("set")
-            for (let j = 0; j < CONFIG[0].a; j++) {
-                line = document.createElement("div");
-                line.classList.add("line");
-                set.appendChild(line)
-            }
-            cache_info.appendChild(set);
-        }
-        caches_object.appendChild(cache_div)
-        CACHES.push(cache_div)
-    }
-
-
-
-
-    if (!HAS_INSTRUCTION_CACHE) {
-        for (let i = 1; i < N_CACHE_LAYERS; i++) {
-            cache_div = document.createElement("div")
-            cache_div.classList.add("cache")
-            
-            cache_div.innerHTML = `
-            <div class="cache-info">
-                <div class="split_addr cache-header">
-                    <h1 class="cache-name">${"L"+(i+1)}-</h1>
-                    ${hex_to_string_addr(0x0, BIT_LENGTHS[i].s, BIT_LENGTHS[i].b)}
-                </div>
-            </div>
-            `
-            cache_info = cache_div.querySelector(".cache-info")
-            for (let k = 0; k < Math.pow(2, BIT_LENGTHS[i].s); k++) {
-                set = document.createElement("div")
-                set.classList.add("set")
-                for (let j = 0; j < CONFIG[i].a; j++) {
-                    line = document.createElement("div");
-                    line.classList.add("line");
-                    set.appendChild(line)
-                }
-                cache_info.appendChild(set);
-            }
-            caches_object.appendChild(cache_div)
-            CACHES.push(cache_div)
-        }
-    } else {
-        for (let i = 1; i < N_CACHE_LAYERS; i++) {
-            cache_div = document.createElement("div")
-            cache_div.classList.add("cache")
-            
-            cache_div.innerHTML = `
-            <div class="cache-info">
-                <div class="split_addr cache-header">
-                    <h1 class="cache-name">${"L"+(i+1)}-</h1>
-                    ${hex_to_string_addr(0x0, BIT_LENGTHS[i].s, BIT_LENGTHS[i].b)}
-                </div>
-            </div>
-            `
-            cache_info = cache_div.querySelector(".cache-info")
-            for (let k = 0; k < Math.pow(2, BIT_LENGTHS[i].s); k++) {
-                set = document.createElement("div")
-                set.classList.add("set")
-                for (let j = 0; j < CONFIG[i].a; j++) {
-                    line = document.createElement("div");
-                    line.classList.add("line");
-                    set.appendChild(line)
-                }
-                cache_info.appendChild(set);
-            }
-            caches_object.appendChild(cache_div)
-            CACHES.push(cache_div)
-        }
+        CACHE_OBJECTS[0].parentElement.appendChild(INSTR_CACHE_OBJECT)
+        CACHE_OBJECTS[0].querySelector(".cache-name").innerHTML = "L1d"
     }
 }
 
@@ -473,17 +385,37 @@ function play() {
     PLAY_BUTTON.style.display = "none"
     PAUSE_BUTTON.style.display = "block"
 
+    render_time = 1000/60 // Guessing 60fps before further estimations
+
     // Testing rendering time
-    const render_start = performance.now()
-    requestAnimationFrame(() => {
-        render_time = performance.now() - render_start
-        const step_start = performance.now()
-        visualizeStep(EXEC_LOG[CURRENT_STEP])
-        CURRENT_STEP += 1
-        step_time = performance.now() - step_start
-    })
+    requestAnimationFrame(time_dummy1)
+    const step_start = performance.now()
+    visualizeStep(EXEC_LOG[CURRENT_STEP])
+    CURRENT_STEP += 1
+    step_time = performance.now() - step_start
+    console.log("Render time: " + render_time)
+    console.log("Step time: " + step_time)
     steps_per_frame = render_time / step_time
-    extract()
+    console.log("We can render " + steps_per_frame + " steps per frame")
+    maximum_frames_per_second = SECOND / render_time
+    console.log("We can render " + maximum_frames_per_second + " frames per second")
+
+
+    //TEMP
+    desired_steps_per_second = DELAY_INPUT.value
+    console.log("We want " + desired_steps_per_second + " steps per second")
+    requires_one_step_per = SECOND / desired_steps_per_second
+    console.log("So we need one step per " + requires_one_step_per + "ms")
+
+    if (requires_one_step_per >= render_time + step_time) {
+        console.log("That's longer than it takes us to render a single step, which is " + (render_time + step_time))
+        console.log("So we simply wait " + requires_one_step_per + " before executing next step") 
+    } else {
+        console.log("That's less time than it takes to render a single frame, so we need more steps in each frame")
+        console.log("In fact we need to render " + Math.round(desired_steps_per_second/maximum_frames_per_second) + " steps every " + render_time + "ms")
+    }
+
+    prep_next_step_dynamically()
 }
 
 function pause() {
@@ -518,9 +450,9 @@ function end() {
     if (PLAYING) {pause()}
 }
 
-function extract() {
-    maximum_steps_per_second = SECOND / (render_time+step_time)
+function prep_next_step_dynamically() {
     desired_steps_per_second = DELAY_INPUT.value
+    
     requires_one_step_per = SECOND / desired_steps_per_second
     if (requires_one_step_per >= render_time + step_time) {
         setTimeout(() => {
@@ -528,7 +460,17 @@ function extract() {
         }, requires_one_step_per);
     } else { // We need to fit multiple steps per render
         setTimeout(() => {
-            visualizeStep_playing(Math.round(desired_steps_per_second/maximum_steps_per_second))
+            visualizeStep_playing(Math.round(desired_steps_per_second/maximum_frames_per_second))
         }, 0)
+
     }
+}
+
+function time_dummy1() {
+    frame_start = performance.now()
+    requestAnimationFrame(time_dummy2)
+}
+
+function time_dummy2() {
+    render_time = performance.now() - frame_start
 }

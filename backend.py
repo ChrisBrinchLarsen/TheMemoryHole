@@ -63,7 +63,6 @@ def handle_run_program(data):
     print(result.stdout)
     print(result.stderr)
 
-    loading_instr = []
     executing_prog = []
     active_lines = []
     with open("cache_log", "r") as log:
@@ -147,7 +146,7 @@ def handle_run_program(data):
     # TODO: Needs to return meta config information as well
 
     # TODO: Probably needs to return the summary information from stdout as well
-    return loading_instr, executing_prog
+    return executing_prog
 
 
 def C_to_dis(program_file_path):

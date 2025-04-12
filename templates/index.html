@@ -61,7 +61,7 @@
                 <button id="pause-button" onclick="pause()" class="img-button" style="display: none;"><img src="{{ url_for('static', filename='images/pause.png') }}" class="img-icon"></button>
                 <button id="next-button" onclick="next()" class="img-button"><img src="{{ url_for('static', filename='images/next.png') }}" class="img-icon"></button>
                 <button id="end-button" onclick="end()" class="img-button">END</button>
-                <h2>Delay:<input id="delay-input" min="0" class="num-box" type="number" value="100">ms</h2>
+                <h2>Steps per second:<input id="delay-input" min="0" class="num-box" type="number" value="1"></h2>
             </div>
         </div>
         <h1 id="instr" style="text-align: right;"></h1>
@@ -123,8 +123,8 @@
                 </div>
             </div>
             <div id="right-visualizer">
-                <div id="caches">
-                    <div id="horizontal-caches">
+                <div id="cache-container">
+                    <div id="cache-layer">
                         <div class="cache">
                             <div class="cache-info">
                                 <div class="split_addr cache-header">
@@ -165,51 +165,8 @@
                                 </div>
                             </div>
                         </div>
-                   
                     </div>
-                    <div class="cache">
-                        <h1>L1</h1>
-                        <div class="cache-info">
-                            <div class="split_addr">
-                                <span style="color: red;">00000000000000000000000000</span>|<span style="color: green;">00</span>|<span style="color: blue;">0000</span>
-                            </div>
-                            <div class="set">
-                                <div class="line valid"></div>
-                            </div>
-                            <div class="set">
-                                <div class="line valid"></div>
-                            </div>
-                            <div class="set">
-                                <div class="line valid"></div>
-                            </div>
-                            <div class="set">
-                                <div class="line valid"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="cache">
-                    <h1>L2</h1>
-                    <div class="cache-info">
-                        <div class="split_addr">
-                            <span style="color: red;">00000000000000000000000000</span>|<span style="color: green;">00</span>|<span style="color: blue;">0000</span></div>
-                            <div class="set">
-                                <div class="line valid"></div>
-                                <div class="line valid"></div>
-                            </div>
-                            <div class="set">
-                                <div class="line valid"></div>
-                                <div class="line valid"></div>
-                            </div>
-                            <div class="set">
-                                <div class="line valid"></div>
-                                <div class="line valid"></div>
-                            </div>
-                            <div class="set">
-                                <div class="line valid"></div>
-                                <div class="line valid"></div>
-                            </div>
-                        </div>
-                    </div>
+                </div>
                 </div>
             </div>
         </div>

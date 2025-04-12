@@ -3,6 +3,9 @@ let instr_cache = {}
 let N_CACHE_LAYERS = 0
 let INSTR_BIT_LENGTHS = {}
 let HAS_INSTRUCTION_CACHE = false
+let INSTR_HIT_COUNTER_OBJECT = null
+let INSTR_MISS_COUNTER_OBJECT = null
+let INSTR_PERCENT_OBJECT = null
 
 function sendProgram() {
     confirmArchitecture()
@@ -12,7 +15,7 @@ function sendProgram() {
 }
 
 // This function needs a rewrite
-function runCallback(load_log, exec_log) {
+function runCallback(exec_log) {
     create_caches()
     src_lines = PROGRAM_TEXT.replaceAll("<", "&lt")
                             .replaceAll(">", "&gt")
@@ -41,12 +44,32 @@ function runCallback(load_log, exec_log) {
 
     ADDRESS_OBJECTS = document.querySelectorAll(".split_addr");
 
-    for (let i = 0; i < CONFIG.length; i++) {
-        cache_stats = document.createElement("div");
-        cache_stats.innerHTML = `
-            <div>L${i+1}: <span class="cache-miss-percent"></span>% (<span class="cache-hits"></span>H/<span class="cache-misses"></span>M)</div>
+    if (HAS_INSTRUCTION_CACHE) {
+        l1d_stats = document.createElement("div")
+        li1_stats = document.createElement("div")
+        l1d_stats.innerHTML = `
+            <div>L1d: <span class="cache-miss-percent"></span>% (<span class="cache-hits"></span>H/<span class="cache-misses"></span>M)</div>
         `
-        SUMMARY.appendChild(cache_stats)
+        li1_stats.innerHTML = `
+            <div>L1i: <span class="instr-cache-miss-percent"></span>% (<span class="instr-cache-hits"></span>H/<span class="instr-cache-misses"></span>M)</div>
+        `
+        SUMMARY.appendChild(l1d_stats)
+        SUMMARY.appendChild(li1_stats)
+        for (let i = 1; i < N_CACHE_LAYERS; i++) {
+            cache_stats = document.createElement("div");
+            cache_stats.innerHTML = `
+                <div>L${i+1}: <span class="cache-miss-percent"></span>% (<span class="cache-hits"></span>H/<span class="cache-misses"></span>M)</div>
+            `
+            SUMMARY.appendChild(cache_stats)
+        }
+    } else {
+        for (let i = 0; i < N_CACHE_LAYERS; i++) {
+            cache_stats = document.createElement("div");
+            cache_stats.innerHTML = `
+                <div>L${i+1}: <span class="cache-miss-percent"></span>% (<span class="cache-hits"></span>H/<span class="cache-misses"></span>M)</div>
+            `
+            SUMMARY.appendChild(cache_stats)
+        }
     }
 
     combined_missrate_object = document.createElement("div");
@@ -62,12 +85,16 @@ function runCallback(load_log, exec_log) {
     CACHE_HIT_COUNTER_OBJECTS = SUMMARY.querySelectorAll(".cache-hits")
     CACHE_MISS_COUNTER_OBJECTS = SUMMARY.querySelectorAll(".cache-misses")
     CACHE_PERCENT_OBJECTS = SUMMARY.querySelectorAll(".cache-miss-percent")
+    if (HAS_INSTRUCTION_CACHE) {
+        INSTR_HIT_COUNTER_OBJECT = SUMMARY.querySelector(".instr-cache-hits")
+        INSTR_MISS_COUNTER_OBJECT = SUMMARY.querySelector(".instr-cache-misses")
+        INSTR_PERCENT_OBJECT = SUMMARY.querySelector(".instr-cache-miss-percent")
+    }
 
     INPUT_PAGE.style.display = "none";
     VISUALIZATION_PAGE.style.display = "flex";
-    LOAD_LOG = load_log
     EXEC_LOG = exec_log
-    TOTAL_STEPS = load_log.length + exec_log.length
+    TOTAL_STEPS = exec_log.length
     INSTR_COUNTER.innerHTML = "(0/" + TOTAL_STEPS + ") "
 }
 
@@ -91,8 +118,8 @@ function confirm_data_cache(cache) {
                       q:input_boxes[1].value,
                       k:input_boxes[2].value,
                       a:input_boxes[3].value})
-    block_offset_len = Math.log2(Math.pow(2, settings[2].value))
-    set_len = Math.log2((Math.pow(2,settings[0].value) * settings[1].value) / (Math.pow(2, settings[2].value) * settings[3].value))
+    block_offset_len = Math.log2(Math.pow(2, input_boxes[2].value))
+    set_len = Math.log2((Math.pow(2,input_boxes[0].value) * input_boxes[1].value) / (Math.pow(2, input_boxes[2].value) * input_boxes[3].value))
     BIT_LENGTHS.push({s:set_len, b:block_offset_len})
 }
 
