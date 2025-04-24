@@ -15,7 +15,7 @@ void close_accesses_file() {
 
 void mmu_wr_w_instr(struct memory *mem, int addr, uint32_t data) {
     
-    fprintf(accesses, "mmu_wr_w_instr(memory, 0x%x, %d);\n", addr, data);
+    //fprintf(accesses, "mmu_wr_w_instr(memory, 0x%x, %d);\n", addr, data);
     if (addr & 0b11)
     {
         printf("Unaligned word write to %x\n", addr);
@@ -25,7 +25,7 @@ void mmu_wr_w_instr(struct memory *mem, int addr, uint32_t data) {
 }
 
 void mmu_wr_h_instr(struct memory *mem, int addr, uint16_t data) {
-    fprintf(accesses, "mmu_wr_h_instr(memory, 0x%x, %d);\n", addr, data);
+    //fprintf(accesses, "mmu_wr_h_instr(memory, 0x%x, %d);\n", addr, data);
     if (addr & 0b1)
     {
         printf("Unaligned word write to %x\n", addr);
@@ -35,12 +35,12 @@ void mmu_wr_h_instr(struct memory *mem, int addr, uint16_t data) {
 }
 
 void mmu_wr_b_instr(struct memory *mem, int addr, uint8_t data) {
-    fprintf(accesses, "mmu_wr_b_instr(memory, 0x%x, %d);\n", addr, data);
+    //fprintf(accesses, "mmu_wr_b_instr(memory, 0x%x, %d);\n", addr, data);
     memory_wr_b(mem, addr, data);
 }
 
 void mmu_wr_w(struct memory *mem, int addr, uint32_t data) {
-    fprintf(accesses, "mmu_wr_w(memory, 0x%x, %d);\n", addr, data);
+    //fprintf(accesses, "mmu_wr_w(memory, 0x%x, %d);\n", addr, data);
     if (addr & 0b11)
     {
         printf("Unaligned word write to %x\n", addr);
@@ -50,7 +50,7 @@ void mmu_wr_w(struct memory *mem, int addr, uint32_t data) {
 }
 
 void mmu_wr_h(struct memory *mem, int addr, uint16_t data) {
-    fprintf(accesses, "mmu_wr_h(memory, 0x%x, %d);\n", addr, data);
+    //fprintf(accesses, "mmu_wr_h(memory, 0x%x, %d);\n", addr, data);
     if (addr & 0b1)
     {
         printf("Unaligned word write to %x\n", addr);
@@ -60,12 +60,12 @@ void mmu_wr_h(struct memory *mem, int addr, uint16_t data) {
 }
 
 void mmu_wr_b(struct memory *mem, int addr, uint8_t data) {
-    fprintf(accesses, "mmu_wr_b(memory, 0x%x, %d);\n", addr, data);
+    //fprintf(accesses, "mmu_wr_b(memory, 0x%x, %d);\n", addr, data);
     cache_wr_b(mem, addr, data);
 }
 
 int mmu_rd_instr(struct memory *mem, int addr) {
-    fprintf(accesses, "mmu_rd_instr(memory, 0x%x);\n", addr);
+    //fprintf(accesses, "mmu_rd_instr(memory, 0x%x);\n", addr);
     if (addr & 0b11)
     {
         printf("Unaligned word write to %x\n", addr);
@@ -76,7 +76,7 @@ int mmu_rd_instr(struct memory *mem, int addr) {
 }
 
 int mmu_rd_w(struct memory *mem, int addr) {
-    fprintf(accesses, "mmu_rd_w(memory, 0x%x);\n", addr);
+    //fprintf(accesses, "mmu_rd_w(memory, 0x%x);\n", addr);
     if (addr & 0b11)
     {
         printf("Unaligned word write to %x\n", addr);
@@ -87,8 +87,8 @@ int mmu_rd_w(struct memory *mem, int addr) {
 }
 
 int mmu_rd_h(struct memory *mem, int addr) {
-    fprintf(accesses, "mmu_rd_h(memory, 0x%x);\n", addr);
-    fprintf(accesses, "Reading a half from 0x%x\n", addr);
+    //fprintf(accesses, "mmu_rd_h(memory, 0x%x);\n", addr);
+    //fprintf(accesses, "Reading a half from 0x%x\n", addr);
     if (addr & 0b1)
     {
         printf("Unaligned word write to %x\n", addr);
@@ -99,7 +99,7 @@ int mmu_rd_h(struct memory *mem, int addr) {
 }
 
 int mmu_rd_b(struct memory *mem, int addr) {
-    fprintf(accesses, "mmu_rd_b(memory, 0x%x);\n", addr);
+    //fprintf(accesses, "mmu_rd_b(memory, 0x%x);\n", addr);
     int result = cache_rd_b(mem, addr);
     return result;
 }

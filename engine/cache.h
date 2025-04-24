@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __CACHE_H__
+#define __CACHE_H__
 
 #include "memory.h"
 #include <stdbool.h> 
@@ -43,6 +44,10 @@ typedef struct Cache {
 
     CacheLine_t **sets;
 } Cache_t;
+
+
+Cache_t* get_caches();
+Cache_t* get_l1i();
 
 /**
  * Parses a cache architecture file to generate cache hierarchy data structure
@@ -135,3 +140,5 @@ FILE* get_cache_log();
  * 
  */
 void print_all_caches();
+
+#endif

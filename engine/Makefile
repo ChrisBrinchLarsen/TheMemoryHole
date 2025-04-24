@@ -5,10 +5,10 @@ CFLAGS= -std=gnu11 -g3 -Wextra -Wall #-pedantic -std=gnu11
 
 # Compile your program (make og make file)
 prototype: prototype.c prototype.h
-	$(CC) $(CFLAGS) prototype.h prototype.c -o prototype.exe
+	$(CC) $(CFLAGS) prototype.h prototype.c -o prototype
 
 unit: cache.o memory.o mmu.o unit.o hashmap/hashmap.o
-	$(CC) $(CFLAGS) cache.o memory.o mmu.o unit.o hashmap/hashmap.o -o unit.exe -lm
+	$(CC) $(CFLAGS) cache.o memory.o mmu.o unit.o hashmap/hashmap.o -o unit -lm
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -37,7 +37,8 @@ rebuild: clean all
 
 # Used for removing generated files (make clean)
 clean:
-	rm -f prototype.exe
+	rm -f prototype
+	rm -f unit
 	rm -f *.o
 	rm -f file
 	rm -f accesses

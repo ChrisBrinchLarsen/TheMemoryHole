@@ -16,6 +16,9 @@ uint32_t N_CACHE_LEVELS;
 Cache_t* caches = NULL;
 Cache_t* L1i = NULL;
 
+Cache_t* get_caches() { return caches; };
+Cache_t* get_l1i() { return L1i; };
+
 FILE* CACHE_LOG;
 
 // Policies
@@ -376,7 +379,7 @@ Cache_t* parse_cpu(char* path) {
         a = atoi(buf);
         memset(buf, 0, sizeof(buf));
 
-        printf("%d, %d, %d, %d\n", p, q, k, a);
+        //printf("%d, %d, %d, %d\n", p, q, k, a);
         L1i = cache_new(0, (uint32_t)(pow(2,p) * q), (uint32_t)(pow(2,k)), a);
     }
 
@@ -396,7 +399,7 @@ Cache_t* parse_cpu(char* path) {
         a = atoi(buf);
         memset(buf, 0, sizeof(buf));
 
-        printf("%d, %d, %d, %d\n", p, q, k, a);
+        //printf("%d, %d, %d, %d\n", p, q, k, a);
         caches[i] = *cache_new(i, (uint32_t)(pow(2,p) * q), (uint32_t)(pow(2,k)), a);
         if (i > 0) { // linked list
             caches[i-1].child_cache = &caches[i];
