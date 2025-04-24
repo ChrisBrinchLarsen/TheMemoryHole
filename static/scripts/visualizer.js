@@ -103,6 +103,7 @@ function visualizeStep(step) {
         
     }
     if (HAS_INSTRUCTION_CACHE) {
+        INSTR_SPLIT_ADDRS.innerHTML = hex_to_string_addr(step["addr"][0], INSTR_BIT_LENGTHS.s, INSTR_BIT_LENGTHS.b)
         hit_sum += INSTR_HITS
         INSTR_HIT_COUNTER_OBJECT.innerHTML = INSTR_HITS
         INSTR_MISS_COUNTER_OBJECT.innerHTML = INSTR_MISSES
@@ -287,6 +288,8 @@ function create_caches() {
         </div>
         <div class="set-holder"></div>
         `
+
+        INSTR_SPLIT_ADDRS = INSTR_CACHE_OBJECT.querySelector(".split_addr")
         let set_holder = INSTR_CACHE_OBJECT.querySelector(".set-holder")
         for (let k = 0; k < Math.pow(2, INSTR_BIT_LENGTHS.s); k++) {
             set = document.createElement("div")

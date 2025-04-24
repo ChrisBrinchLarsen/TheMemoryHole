@@ -42,7 +42,7 @@ function runCallback(exec_log) {
         LINE_MISSES.push(0)
     }
 
-    ADDRESS_OBJECTS = document.querySelectorAll(".split_addr");
+    ADDRESS_OBJECTS = Array.from(document.querySelectorAll(".split_addr")).filter((addr) => addr.previousElementSibling.innerHTML != "L1i");
 
     if (HAS_INSTRUCTION_CACHE) {
         l1d_stats = document.createElement("div")
@@ -77,7 +77,7 @@ function runCallback(exec_log) {
     SUMMARY.appendChild(combined_missrate_object);
 
     clock_cycles_counter_object = document.createElement("div");
-    clock_cycles_counter_object.innerHTML = `Clock Cycles: <span id="cycle_counter"></span>`
+    clock_cycles_counter_object.innerHTML = `Lookup Clock Cycles: <span id="cycle_counter"></span>`
     SUMMARY.appendChild(clock_cycles_counter_object)
 
     CYCLE_COUNTER = document.getElementById("cycle_counter")
@@ -130,8 +130,8 @@ function confirm_instr_cache(cache) {
                    q:input_boxes[1].value,
                    k:input_boxes[2].value,
                    a:input_boxes[3].value}
-    block_offset_len = Math.log2(Math.pow(2, settings[2].value))
-    set_len = Math.log2((Math.pow(2,settings[0].value) * settings[1].value) / (Math.pow(2, settings[2].value) * settings[3].value))
+    block_offset_len = Math.log2(Math.pow(2, input_boxes[2].value))
+    set_len = Math.log2((Math.pow(2,input_boxes[0].value) * input_boxes[1].value) / (Math.pow(2, input_boxes[2].value) * input_boxes[3].value))
     INSTR_BIT_LENGTHS = {s:set_len, b:block_offset_len}
 }
 
@@ -252,27 +252,43 @@ function preset_program(path) {
 
 // This doesn't work currently
 function preset_architecture(caches) {
+    HAS_INSTRUCTION_CACHE = !caches["instr"] == null
     ARCHITECTURE.innerHTML = ""
-    caches.forEach(cache => {
+    caches["data"].forEach(cache => {
         container = document.createElement("div");
         container.classList.add("cache-container");
         container.innerHTML = `
-        <div class="cache-header">
-            <h2 class="cache-title">L1</h2>
-            <button onclick="removeCache(this)" class="x-button">X</button>
-        </div>
-        <div class="cache-setting">
-            Cache size: 2^<input class="num-box" type="number" value="${cache[0]}"> * <input class="num-box" type="number" value="${cache[1]}"> bytes
-        </div>
-        <div class="cache-setting">
-            Block size: 2^<input class="num-box" type="number" value="${cache[2]}"> bytes
-        </div>
-        <div class="cache-setting">
-            Associativity: <input class="num-box" type="number" value="${cache[3]}">-way
-        </div>
+            <div class="cache-header">
+                <h2 class="cache-title">L1</h2>
+                <button onclick="removeCache(this)" class="x-button">X</button>
+            </div>
+            <div class="cache-setting">
+                Cache size: 2^<input class="num-box" type="number" value="${cache[0]}"> * <input class="num-box" type="number" value="${cache[1]}"> bytes
+            </div>
+            <div class="cache-setting">
+                Block size: 2^<input class="num-box" type="number" value="${cache[2]}"> bytes
+            </div>
+            <div class="cache-setting">
+                <div class="spread-horizontal">
+                    <span>
+                        Associativity: <input class="num-box" type="number" value="${cache[3]}">-way
+                    </span>
+                    <button style="display: none;" class="add-instr-cache-button" onclick="add_instruction_cache(this)">Add instruction cache</button>
+                </div>
+            </div>
         `
         ARCHITECTURE.appendChild(container)
     })
+
+    if (caches["instr"]) {
+        add_instruction_cache()
+        let instr_setup = caches["instr"]
+        let instr_boxes = ARCHITECTURE.children[0].children[1].querySelectorAll(".num-box")
+        for (let i = 0; i < instr_setup.length; i++) {
+            instr_boxes[i].value = instr_setup[i]
+        }
+    }
+
     ARCHITECTURE.appendChild(ADD_CACHE)
     renameCaches()
 }
