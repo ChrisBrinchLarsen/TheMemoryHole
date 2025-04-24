@@ -42,7 +42,7 @@ function runCallback(exec_log) {
         LINE_MISSES.push(0)
     }
 
-    ADDRESS_OBJECTS = document.querySelectorAll(".split_addr");
+    ADDRESS_OBJECTS = Array.from(document.querySelectorAll(".split_addr")).filter((addr) => addr.previousElementSibling.innerHTML != "L1i");
 
     if (HAS_INSTRUCTION_CACHE) {
         l1d_stats = document.createElement("div")
@@ -77,7 +77,7 @@ function runCallback(exec_log) {
     SUMMARY.appendChild(combined_missrate_object);
 
     clock_cycles_counter_object = document.createElement("div");
-    clock_cycles_counter_object.innerHTML = `Clock Cycles: <span id="cycle_counter"></span>`
+    clock_cycles_counter_object.innerHTML = `Lookup Clock Cycles: <span id="cycle_counter"></span>`
     SUMMARY.appendChild(clock_cycles_counter_object)
 
     CYCLE_COUNTER = document.getElementById("cycle_counter")
@@ -130,8 +130,8 @@ function confirm_instr_cache(cache) {
                    q:input_boxes[1].value,
                    k:input_boxes[2].value,
                    a:input_boxes[3].value}
-    block_offset_len = Math.log2(Math.pow(2, settings[2].value))
-    set_len = Math.log2((Math.pow(2,settings[0].value) * settings[1].value) / (Math.pow(2, settings[2].value) * settings[3].value))
+    block_offset_len = Math.log2(Math.pow(2, input_boxes[2].value))
+    set_len = Math.log2((Math.pow(2,input_boxes[0].value) * input_boxes[1].value) / (Math.pow(2, input_boxes[2].value) * input_boxes[3].value))
     INSTR_BIT_LENGTHS = {s:set_len, b:block_offset_len}
 }
 
