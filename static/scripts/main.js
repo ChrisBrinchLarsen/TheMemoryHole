@@ -252,27 +252,43 @@ function preset_program(path) {
 
 // This doesn't work currently
 function preset_architecture(caches) {
+    HAS_INSTRUCTION_CACHE = !caches["instr"] == null
     ARCHITECTURE.innerHTML = ""
-    caches.forEach(cache => {
+    caches["data"].forEach(cache => {
         container = document.createElement("div");
         container.classList.add("cache-container");
         container.innerHTML = `
-        <div class="cache-header">
-            <h2 class="cache-title">L1</h2>
-            <button onclick="removeCache(this)" class="x-button">X</button>
-        </div>
-        <div class="cache-setting">
-            Cache size: 2^<input class="num-box" type="number" value="${cache[0]}"> * <input class="num-box" type="number" value="${cache[1]}"> bytes
-        </div>
-        <div class="cache-setting">
-            Block size: 2^<input class="num-box" type="number" value="${cache[2]}"> bytes
-        </div>
-        <div class="cache-setting">
-            Associativity: <input class="num-box" type="number" value="${cache[3]}">-way
-        </div>
+            <div class="cache-header">
+                <h2 class="cache-title">L1</h2>
+                <button onclick="removeCache(this)" class="x-button">X</button>
+            </div>
+            <div class="cache-setting">
+                Cache size: 2^<input class="num-box" type="number" value="${cache[0]}"> * <input class="num-box" type="number" value="${cache[1]}"> bytes
+            </div>
+            <div class="cache-setting">
+                Block size: 2^<input class="num-box" type="number" value="${cache[2]}"> bytes
+            </div>
+            <div class="cache-setting">
+                <div class="spread-horizontal">
+                    <span>
+                        Associativity: <input class="num-box" type="number" value="${cache[3]}">-way
+                    </span>
+                    <button style="display: none;" class="add-instr-cache-button" onclick="add_instruction_cache(this)">Add instruction cache</button>
+                </div>
+            </div>
         `
         ARCHITECTURE.appendChild(container)
     })
+
+    if (caches["instr"]) {
+        add_instruction_cache()
+        let instr_setup = caches["instr"]
+        let instr_boxes = ARCHITECTURE.children[0].children[1].querySelectorAll(".num-box")
+        for (let i = 0; i < instr_setup.length; i++) {
+            instr_boxes[i].value = instr_setup[i]
+        }
+    }
+
     ARCHITECTURE.appendChild(ADD_CACHE)
     renameCaches()
 }
