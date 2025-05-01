@@ -72,12 +72,15 @@ function visualizeStep_playing(n_steps) {
 }
 
 function visualizeStep(step) {
-    console.log("------------------")
     clear_sets_of_misses()
     clear_lines()
     if (step["lines-changed"]) {
         clear_src_lines()
         visualize_src(step["lines"][0], step["lines"][1])
+    }
+
+    if (step["stdout"] != 0) {
+        STDOUT.innerHTML += String.fromCharCode(step["stdout"])
     }
     
     // Updating the summary counter of total memory accesses

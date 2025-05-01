@@ -71,7 +71,7 @@ def handle_run_program(data):
             # TODO: This entire parsing of the loading instructions part of the cache_log
             line = log.readline()
         while (True): # Executing program
-            step = {"type":"", "title":"", "ram":False, "hits":[], "misses":[], "readers":[], "writers":[], "addr":[], "evict":[], "insert":[], "invalidate":[], "lines":active_lines, "lines-changed":False, "is_write":False}
+            step = {"type":"", "title":"", "ram":False, "hits":[], "misses":[], "readers":[], "writers":[], "addr":[], "evict":[], "insert":[], "invalidate":[], "lines":active_lines, "lines-changed":False, "is_write":False, "stdout":0}
             line = log.readline()
             if (not line): break
             tokens = line.split()
@@ -114,6 +114,8 @@ def handle_run_program(data):
                             tokens = line.split()
                             continue
                         match tokens[0]:
+                            case "stdout":
+                                step["stdout"] = tokens[1]
                             case "H":
                                 step["hits"].append((tokens[1], tokens[2], tokens[3]))
                             case "M":

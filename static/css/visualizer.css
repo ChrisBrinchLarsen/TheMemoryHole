@@ -26,11 +26,21 @@
 #code-viewer {
     display: flex;
     flex-direction: column;
-    white-space: pre;
+    white-space: pre-line;
     background-color: lightgrey;
     border: 2px solid;
-    border-radius: 10px;
+    border-radius: 10px !important;
     margin: .25rem;
+}
+
+#stdout {
+    display: flex;
+    flex-direction: column;
+    white-space: pre;
+    background-color: darkgray;
+    border: 2px solid;
+    margin: .25rem;
+    min-height: 125px;
 }
 
 #cache-container {
@@ -105,6 +115,11 @@
 
 .valid {
     background-color: dimgray;
+}
+
+.valid:hover {
+    /* background-color: gray; */
+    transition: background-color ease-out 150ms;
 }
 
 .dirty {

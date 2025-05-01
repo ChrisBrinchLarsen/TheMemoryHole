@@ -489,6 +489,7 @@ void ProcessI_E(int instruction) {
                 fprintf(log_file_global, "Wrote '%c' to user", R[A0]);
             }
             putchar(rdReg(A0));
+            fprintf(CACHE_LOG_POINTER, "stdout %d\n", R[A0]);
             break;
         case 3: // terminate simulation
         case 93:

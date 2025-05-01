@@ -22,3 +22,5 @@ const DELAY_INPUT = document.getElementById("delay-input")
 const NEXT_BUTTON = document.getElementById("next-button")
 const PLAY_BUTTON = document.getElementById("play-button")
 const PAUSE_BUTTON = document.getElementById("pause-button")
+
+const STDOUT = document.getElementById("stdout")
