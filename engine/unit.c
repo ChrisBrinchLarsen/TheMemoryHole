@@ -34,9 +34,11 @@ char* create_cache_file(char* contents) {
     return filename;
 }
 void test_setup() {
+    start_cache_log();
     memory = memory_create();
 }
 void test_cleanup() {
+    stop_cache_log();
     // clean up caches
     if (get_l1i() != NULL) {
         free(get_l1i());
@@ -89,8 +91,6 @@ int main() {
 int backInvalidationTest()
 {
     int pass = 1;
-
-    initialize_cache();
     
     parse_cpu(create_cache_file("2\nL1\n5\n1\n4\n2\nL2\n6\n1\n4\n4"));
 
@@ -115,7 +115,6 @@ int backInvalidationTest()
         pass = 0;
     }
 
-    finalize_cache();
     // return true;
     return pass;
 }

@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
   struct hashmap *map = createInstructionHashmap(argv[2]);
 
   struct memory *mem = memory_create();
-  initialize_cache();
+  start_cache_log();
   parse_cpu(argv[1]);
   argc = pass_args_to_program(mem, argc, argv);
   if (argc == 3 || argc == 5)
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
     clock_t before = clock();
     long int num_insns = simulate(mem, as, start_addr, log_file, map);
     clock_t after = clock();
-    finalize_cache();
+    stop_cache_log();
 
     int ticks = after - before;
     double mips = (1.0 * num_insns * CLOCKS_PER_SEC) / ticks / 1000000;

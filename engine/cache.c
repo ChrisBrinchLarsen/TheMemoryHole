@@ -481,12 +481,12 @@ CacheLine_t cacheline_new(char* block) {
     return l;
 }
 
-void initialize_cache() {
+void start_cache_log() {
     CACHE_LOG = fopen("cache_log", "w");
 }
 
 // Returns amount of cycles spent on memory accesses
-void finalize_cache() {
+void stop_cache_log() {
     fclose(CACHE_LOG);
 }
 

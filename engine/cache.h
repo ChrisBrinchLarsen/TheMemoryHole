@@ -119,14 +119,14 @@ int cache_rd_b(struct memory *mem, int addr);
  * 
  * @note Really just opens a cache_log file in the scope of the cache.c file
  */
-void initialize_cache();
+void start_cache_log();
 
 /**
  * Finalizes the active cache
  * 
  * @note Really just closes a cache_log file in the scope of the cache.c file
  */
-void finalize_cache();
+void stop_cache_log();
 
 /**
  * Retrieves the active cache_log file pointer
