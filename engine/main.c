@@ -120,6 +120,7 @@ struct hashmap* createInstructionHashmap(const char *filename) {
 
 int main(int argc, char *argv[])
 {
+  srand(24);
   open_accesses_file();
   struct hashmap *map = createInstructionHashmap(argv[2]);
 

@@ -59,7 +59,8 @@ def handle_run_program(data):
 
     C_to_dis(program_file_path)
     print("Starting program simulation...")
-    result = subprocess.run(["./engine/sim", architecture_file_name, f"{program_file_path}.dis", "--", *args], capture_output=True, text=True)
+    os.system(f"rm -f cache_log accesses")
+    result = subprocess.run(["./engine/sim", architecture_file_name, f"{program_file_path}.dis", "-l", "loggers", "--", *args], capture_output=True, text=True)
     print(result.stdout)
     print(result.stderr)
 

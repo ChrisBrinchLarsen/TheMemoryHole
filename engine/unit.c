@@ -118,3 +118,14 @@ int backInvalidationTest()
     // return true;
     return pass;
 }
+
+int runtime_optimal_test()
+{
+    int pass = 1;
+    
+    parse_cpu(create_cache_file("2\nL1\n5\n1\n4\n2\nL2\n6\n1\n4\n4"));
+
+
+    // return true;
+    return pass;
+}

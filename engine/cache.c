@@ -24,7 +24,8 @@ FILE* CACHE_LOG;
 // Policies
 #define LRU_REPLACEMENT_POLICY 0
 #define RANDOM_REPLACEMENT_POLICY 1
-const uint32_t ACTIVE_REPLACEMENT_POLICY = LRU_REPLACEMENT_POLICY;
+#define RUNTIME_OPTIMAL_REPLACEMENT_POLICY 2
+const uint32_t ACTIVE_REPLACEMENT_POLICY = RUNTIME_OPTIMAL_REPLACEMENT_POLICY;
 
 
 // Private function prototypes
@@ -117,7 +118,7 @@ int cache_rd_b(struct memory *mem, int addr_int) {
 
 
 /// @brief recursive function that finds a block, starting at some Layer. Updates caches accordingly
-/// @param layer the layer of the cache
+/// @param cache the cache we're fetching from
 /// @param addr_int address
 /// @param mem memory
 /// @param mark_dirty whether to mark things dirty (in case of a write) 
@@ -249,6 +250,10 @@ int get_replacement_line_index(Cache_t* cache, uint32_t set_index) {
                 }
                 break;
             case RANDOM_REPLACEMENT_POLICY:
+                line_index = rand() % cache->associativity;
+                //printf("%d-way: %d\n", cache->associativity, line_index);
+                break;
+            case RUNTIME_OPTIMAL_REPLACEMENT_POLICY:
                 line_index = 0;
                 break;
             default: break;

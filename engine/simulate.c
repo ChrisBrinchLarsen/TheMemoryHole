@@ -54,6 +54,7 @@ long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE 
 
         // Read next instruction
         fprintf(CACHE_LOG_POINTER, "fetch: ");
+        printf("PC: %x\n", PC);
         int instructionInt = mmu_rd_instr(mem, PC);
         fprintf(CACHE_LOG_POINTER, "endfetch\n");
 
@@ -441,6 +442,7 @@ void ProcessI_L(int instruction, struct memory *mem) {
         case 0x2: // Load Word
             log_offset = R[rs1] + imm;
             fprintf(CACHE_LOG_POINTER, "LW %d, %d(%d)\n", rd, imm, rs1);
+            printf("Register num: %d - Register val: %d - Imm: %d", rs1, R[rs1], imm);
             wrReg(rd, mmu_rd_w(mem, rdReg(rs1) + imm));
             if (log_enabled) {
                 fprintf(log_file_global, "Load %d into R[%d] from %x", R[rd], rd, log_offset);
@@ -595,6 +597,7 @@ void ProcessB(int instruction) {
         if (rdReg(rs1) != rdReg(rs2)) {PC += imm; advancePC = 0;}
         break;
     case 0x4: // Branch <
+        printf("I'm inside BLT\n");
         if (log_enabled) {
             fprintf(log_file_global, "%d < %d = %d", R[rs1], R[rs2], R[rs1] < R[rs2]);
         }
