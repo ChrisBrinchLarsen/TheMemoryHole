@@ -43,6 +43,7 @@ void PrintCache(Cache_t* cache);
 Address_t get_address(Cache_t* cache, uint32_t address);
 Cache_t* cache_new(uint32_t layer, uint32_t cacheSize, uint32_t block_size, uint32_t associativity);
 CacheLine_t cacheline_new(char* block);
+void change_validity(Cache_t* cache, int set_index, int line_index, bool new_validity);
 
 
 void cache_wr_w(struct memory *mem, int addr_int, uint32_t data) {
@@ -515,4 +516,9 @@ void print_all_caches() {
         PrintCache(&caches[i]);
         printf("\n");
     }
+}
+
+void change_validity(Cache_t* cache, int set_index, int line_index, bool new_validity) {
+    // TODO: Append something to cachelog here
+    cache->sets[set_index][line_index].valid = new_validity;
 }
