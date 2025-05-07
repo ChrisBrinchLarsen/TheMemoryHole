@@ -97,7 +97,9 @@ function visualizeStep(step) {
     }
 
     if (step["type"] == "instr") {
-        console.log(step["CS"] + " B==F " + CHECKSUM)
+        if (Number(step["CS"]) != CHECKSUM) {
+            console.log(step["CS"] + " B==F " + CHECKSUM)
+        }
     }
     
     updateLineSummary(SELECTED_LINE)
@@ -200,10 +202,10 @@ function visualize_path(access_type, hits, misses, evictions, inserts, validitie
         } else {
             if (validity_change[3]) {
                 give_line_class("valid", cache, set, line)
-                update_checksum(1, validity_change[0]+1, set, line)
+                update_checksum(1, validity_change[0], set, line)
             } else {
                 remove_class_from_line("valid", cache, set, line)
-                update_checksum(2, validity_change[0]+1, set, line)
+                update_checksum(2, validity_change[0], set, line)
             }
         }
     })
@@ -215,10 +217,10 @@ function visualize_path(access_type, hits, misses, evictions, inserts, validitie
 
         if (dirtiness_change[3]) {
             give_line_class("dirty", cache, set, line)
-            update_checksum(3, dirtiness_change[0]+1, set, line)
+            update_checksum(3, dirtiness_change[0], set, line)
         } else {
             remove_class_from_line("dirty", cache, set, line)
-            update_checksum(4, dirtiness_change[0]+1, set, line)
+            update_checksum(4, dirtiness_change[0], set, line)
         }
     })
 }
