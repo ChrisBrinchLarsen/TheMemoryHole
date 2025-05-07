@@ -49,6 +49,8 @@ let maximum_frames_per_second = 0
 let CACHE_OBJECTS = [] // The first N_CACHE_LAYERS are the data caches, and then potnetially N+1 is the instr cache
 let INSTR_CACHE_OBJECT = null
 
+let CHECKSUM = 0
+
 function visualizeStep_playing(n_steps) {
     if (CURRENT_STEP == TOTAL_STEPS) {
         pause()
@@ -92,6 +94,10 @@ function visualizeStep(step) {
         visualize_path(step["type"], step["hits"], step["misses"], step["evict"], step["insert"], step["validity"], step["dirtiness"], step["lines"][0], step["lines"][1], step["is_write"])
     } else {
         visualize_path(step["type"], step["hits"], step["misses"], step["evict"], step["insert"], step["validity"], step["dirtiness"], -2, -1, step["is_write"])
+    }
+
+    if (step["type"] == "instr") {
+        console.log(step["CS"] + " B==F " + CHECKSUM)
     }
     
     updateLineSummary(SELECTED_LINE)
@@ -186,14 +192,18 @@ function visualize_path(access_type, hits, misses, evictions, inserts, validitie
         if (HAS_INSTRUCTION_CACHE && Number(validity_change[0]) == 1 && access_type == "fetch") {
             if (validity_change[3]) {
                 give_line_class("valid", INSTR_CACHE_OBJECT, set, line)
+                update_checksum(1, 0, set, line)
             } else {
                 remove_class_from_line("valid", INSTR_CACHE_OBJECT, set, line)
+                update_checksum(2, 0, set, line)
             }
         } else {
             if (validity_change[3]) {
                 give_line_class("valid", cache, set, line)
+                update_checksum(1, validity_change[0]+1, set, line)
             } else {
                 remove_class_from_line("valid", cache, set, line)
+                update_checksum(2, validity_change[0]+1, set, line)
             }
         }
     })
@@ -205,8 +215,10 @@ function visualize_path(access_type, hits, misses, evictions, inserts, validitie
 
         if (dirtiness_change[3]) {
             give_line_class("dirty", cache, set, line)
+            update_checksum(3, dirtiness_change[0]+1, set, line)
         } else {
             remove_class_from_line("dirty", cache, set, line)
+            update_checksum(4, dirtiness_change[0]+1, set, line)
         }
     })
 }
@@ -489,4 +501,8 @@ function time_dummy1() {
 
 function time_dummy2() {
     render_time = performance.now() - frame_start
+}
+
+function update_checksum(type, layer, setidx, lineidx) {
+    CHECKSUM = (CHECKSUM + type * 10 + layer * 100 + setidx * 1000 + lineidx * 10000) % 0xFFFFFFFF
 }
