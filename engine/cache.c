@@ -532,7 +532,7 @@ void print_all_caches() {
 void change_validity(Cache_t* cache, int set_index, int line_index, bool new_validity) {
     if (new_validity == 1) {
         fprintf(CACHE_LOG, "V %d %d %d\n", cache->layer+1, set_index, line_index);
-    } else {
+    } else if (cache != L1i) {
         fprintf(CACHE_LOG, "IV %d %d %d\n", cache->layer+1, set_index, line_index);
     }
     cache->sets[set_index][line_index].valid = new_validity;
@@ -545,9 +545,9 @@ void change_validity(Cache_t* cache, int set_index, int line_index, bool new_val
 void change_dirtiness(Cache_t* cache, int set_index, int line_index, bool new_dirty) {
     if (new_dirty == 1) {
         fprintf(CACHE_LOG, "D %d %d %d\n", cache->layer+1, set_index, line_index);
-    } else {
+    } else if (cache != L1i) {
         fprintf(CACHE_LOG, "C %d %d %d\n", cache->layer+1, set_index, line_index);
-    }
+    } else {return;}
     cache->sets[set_index][line_index].dirty = new_dirty;
 
     uint32_t operation_int = new_dirty ? 3 : 4;
