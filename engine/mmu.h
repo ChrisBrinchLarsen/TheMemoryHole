@@ -11,7 +11,7 @@ void supply_cache(Cache_t* cache);
 void open_accesses_file();
 void close_accesses_file();
 
-uint64_t mmu_get_checksum();
+uint32_t mmu_get_checksum();
 
 // skriv word/halfword/byte til lager
 void mmu_wr_w_instr(struct memory *mem, int addr, uint32_t data);

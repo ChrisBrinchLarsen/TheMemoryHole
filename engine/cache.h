@@ -7,7 +7,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-uint64_t cache_checksum = 0;
+uint32_t get_cache_checksum();
+void set_cache_checksum(uint32_t v);
 
 typedef struct Address {
     uint32_t full_addr;
@@ -142,5 +143,6 @@ FILE* get_cache_log();
  * 
  */
 void print_all_caches();
+
 
 #endif
