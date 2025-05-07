@@ -78,7 +78,7 @@ def handle_run_program(data):
             # TODO: This entire parsing of the loading instructions part of the cache_log
             line = log.readline()
         while (True): # Executing program
-            step = {"type":"", "title":"", "ram":False, "hits":[], "misses":[], "readers":[], "writers":[], "addr":[], "evict":[], "insert":[], "validity":[], "dirtiness":[], "lines":active_lines, "lines-changed":False, "is_write":False, "stdout":0}
+            step = {"type":"", "title":"", "CS":0, "ram":False, "hits":[], "misses":[], "readers":[], "writers":[], "addr":[], "evict":[], "insert":[], "validity":[], "dirtiness":[], "lines":active_lines, "lines-changed":False, "is_write":False, "stdout":0}
             line = log.readline()
             if (not line): break
             tokens = line.split()
@@ -123,29 +123,21 @@ def handle_run_program(data):
                             tokens = line.split()
                             continue
                         match tokens[0]:
-                            case "stdout":
-                                step["stdout"] = tokens[1]
-                            case "H":
-                                step["hits"].append((tokens[1], tokens[2], tokens[3]))
-                            case "M":
-                                step["misses"].append((tokens[1], tokens[2]))
-                            case "E":
-                                step["evict"].append((tokens[1], tokens[2], tokens[3]))
-                            case "F": # Yes I know F (fetch into cache) being insert is weird asf
-                                step["insert"].append((tokens[1], tokens[2], tokens[3]))
-                            case "V" | "IV":
-                                step["validity"].append((tokens[1], tokens[2], tokens[3], tokens[0] == "V"))
-                            case "D" | "C":
-                                step["dirtiness"].append((tokens[1], tokens[2], tokens[3], tokens[0] == "D"))
+                            case "CS": step["CS"] = tokens[1]
+                            case "stdout": step["stdout"] = tokens[1]
+                            case "H": step["hits"].append((tokens[1], tokens[2], tokens[3]))
+                            case "M": step["misses"].append((tokens[1], tokens[2]))
+                            case "E": step["evict"].append((tokens[1], tokens[2], tokens[3]))
+                            case "F": step["insert"].append((tokens[1], tokens[2], tokens[3]))
+                            case "V" | "IV": step["validity"].append((tokens[1], tokens[2], tokens[3], tokens[0] == "V"))
+                            case "D" | "C": step["dirtiness"].append((tokens[1], tokens[2], tokens[3], tokens[0] == "D"))
                             case _:
                                 match tokens[0]:
                                     case access if access in ["wb", "wh", "ww", "rb", "rh", "rw"]:
                                         step["addr"].append(int(tokens[1], 16))
                                         step["is_write"] = access in ["wb", "wh", "ww"]
-                                    case "r":
-                                        step["readers"].append(tokens[1])
-                                    case "w":
-                                        step["writers"].append(tokens[1])
+                                    case "r": step["readers"].append(tokens[1])
+                                    case "w": step["writers"].append(tokens[1])
                                     case "pc":
                                         active_lines = (tokens[2], tokens[3])
                                         step["lines-changed"] = True
