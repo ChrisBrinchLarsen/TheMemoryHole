@@ -44,15 +44,20 @@ Address_t get_address(Cache_t* cache, uint32_t address);
 Cache_t* cache_new(uint32_t layer, uint32_t cacheSize, uint32_t block_size, uint32_t associativity);
 CacheLine_t cacheline_new(char* block);
 void change_validity(Cache_t* cache, int set_index, int line_index, bool new_validity);
+void change_dirtiness(Cache_t* cache, int set_index, int line_index, bool new_dirty);
 
 
 void cache_wr_w(struct memory *mem, int addr_int, uint32_t data) {
     fprintf(CACHE_LOG, "ww 0x%x %d\n", addr_int, data);
 
     CacheLine_t* line = fetch_line(&caches[0], addr_int, mem);
-    line->dirty = true;
 
     Address_t addr = get_address(&caches[0], addr_int);
+    change_dirtiness(&caches[0],
+                     addr.set_index,
+                     get_line_index_from_tag(&caches[0], addr),
+                     1);
+
 
     memcpy(&line->block[addr.block_offset], &data, sizeof(uint32_t));
 }
@@ -61,9 +66,13 @@ void cache_wr_h(struct memory *mem, int addr_int, uint16_t data) {
     fprintf(CACHE_LOG, "wh 0x%x %d\n", addr_int, data);
     // TODO : Check if address in half-aligned
     CacheLine_t* line = fetch_line(&caches[0], addr_int, mem);
-    line->dirty = true;
-
+    
     Address_t addr = get_address(&caches[0], addr_int);
+    change_dirtiness(&caches[0],
+                     addr.set_index,
+                     get_line_index_from_tag(&caches[0], addr),
+                     1);
+
 
     memcpy(&line->block[addr.block_offset], &data, sizeof(uint16_t));
 }
@@ -72,9 +81,11 @@ void cache_wr_b(struct memory *mem, int addr_int, uint8_t data) {
     fprintf(CACHE_LOG, "wb 0x%x %d\n", addr_int, data);
     
     CacheLine_t* line = fetch_line(&caches[0], addr_int, mem);
-    line->dirty = true;
-
     Address_t addr = get_address(&caches[0], addr_int);
+    change_dirtiness(&caches[0],
+                     addr.set_index,
+                     get_line_index_from_tag(&caches[0], addr),
+                     1);
 
     memcpy(&line->block[addr.block_offset], &data, sizeof(uint8_t));
 }
@@ -145,10 +156,6 @@ CacheLine_t* fetch_line(Cache_t* cache, uint32_t addr_int, struct memory *mem) {
         
         fprintf(CACHE_LOG, "H %d %d %d\n", cache->layer+1, addr.set_index, line_index);
     }
-    
-    // if (mark_dirty) {
-    //     cache->sets[addr.set_index][line_index].dirty = true;
-    // }
 
     return &(cache->sets[addr.set_index][line_index]);
 }
@@ -201,8 +208,10 @@ void handle_miss(Cache_t* cache, Address_t addr, struct memory* mem) {
     victim->tag = addr.tag;
     victim->LRU = 0;
     if (received_cache_line_from_child != NULL) {
-        victim->dirty = received_cache_line_from_child->dirty;
-        received_cache_line_from_child->dirty = false; // make sure only the 'top level' version of this line is dirty
+        change_dirtiness(cache, addr.set_index, line_index, received_cache_line_from_child->dirty);
+        Address_t addr_in_child = get_address(cache->child_cache, addr.full_addr); 
+        change_dirtiness(cache->child_cache, addr_in_child.set_index, get_line_index_from_tag(cache->child_cache, addr_in_child), 0);
+        //received_cache_line_from_child->dirty = false; // make sure only the 'top level' version of this line is dirty
     }
     // copy and insert block
     memcpy(victim->block, block, cache->block_size);
@@ -229,7 +238,8 @@ void cache_writeback_block(Cache_t* cache, int addr_int, char* data, size_t bloc
     memcpy(block, data, block_size);
 
     // we only write back if the block is dirty, so the we also have to mark this line dirty
-    cache->sets[addr.set_index][line_index].dirty = true;
+    change_dirtiness(cache, addr.set_index, line_index, 1);
+    //cache->sets[addr.set_index][line_index].dirty = true;
 }
 
 int get_line_index_from_tag(Cache_t* cache, Address_t addr) {
@@ -278,7 +288,9 @@ int get_replacement_line_index(Cache_t* cache, uint32_t set_index) {
 }
 
 void evict_cache_line(Cache_t* cache, uint32_t addr_int, CacheLine_t* evict_line, struct memory *mem) {
-    evict_line->dirty = false;
+    Address_t addr = get_address(cache, addr_int);
+    change_dirtiness(cache, addr.set_index, get_line_index_from_tag(cache, addr), 0);
+    //evict_line->dirty = false;
     if (cache->child_cache == NULL) { // Writing to main memory
         memory_write_back(mem, addr_int, evict_line->block, cache->block_size);
     } else { // Writing to cache
@@ -293,7 +305,8 @@ void invalidate_line(Cache_t* cache, uint32_t addr_int, struct memory* mem) {
     if (line_index != -1) {
         CacheLine_t* victim = &cache->sets[addr.set_index][line_index];
         if (victim->dirty) {
-            victim->dirty = false;
+            //victim->dirty = false;
+            change_dirtiness(cache, addr.set_index, line_index, 0);
             uint32_t evict_addr = (victim->tag << (cache->set_bit_length + cache->block_offset_bit_length)) | (addr.set_index << cache->block_offset_bit_length);
             evict_cache_line(cache, evict_addr, &cache->sets[addr.set_index][line_index], mem);
         }
@@ -518,11 +531,19 @@ void print_all_caches() {
 }
 
 void change_validity(Cache_t* cache, int set_index, int line_index, bool new_validity) {
-    // TODO: Append something to cachelog here
     if (new_validity == 1) {
         fprintf(CACHE_LOG, "V %d %d %d\n", cache->layer+1, set_index, line_index);
     } else {
         fprintf(CACHE_LOG, "IV %d %d %d\n", cache->layer+1, set_index, line_index);
     }
     cache->sets[set_index][line_index].valid = new_validity;
+}
+
+void change_dirtiness(Cache_t* cache, int set_index, int line_index, bool new_dirty) {
+    if (new_dirty == 1) {
+        fprintf(CACHE_LOG, "D %d %d %d\n", cache->layer+1, set_index, line_index);
+    } else {
+        fprintf(CACHE_LOG, "C %d %d %d\n", cache->layer+1, set_index, line_index);
+    }
+    cache->sets[set_index][line_index].dirty = new_dirty;
 }

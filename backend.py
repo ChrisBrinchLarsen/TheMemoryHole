@@ -78,7 +78,7 @@ def handle_run_program(data):
             # TODO: This entire parsing of the loading instructions part of the cache_log
             line = log.readline()
         while (True): # Executing program
-            step = {"type":"", "title":"", "ram":False, "hits":[], "misses":[], "readers":[], "writers":[], "addr":[], "evict":[], "insert":[], "validity":[], "lines":active_lines, "lines-changed":False, "is_write":False, "stdout":0}
+            step = {"type":"", "title":"", "ram":False, "hits":[], "misses":[], "readers":[], "writers":[], "addr":[], "evict":[], "insert":[], "validity":[], "dirtiness":[], "lines":active_lines, "lines-changed":False, "is_write":False, "stdout":0}
             line = log.readline()
             if (not line): break
             tokens = line.split()
@@ -106,6 +106,8 @@ def handle_run_program(data):
                                 step["insert"].append((tokens[1], tokens[2], tokens[3]))
                             case "V" | "IV":
                                 step["validity"].append((tokens[1], tokens[2], tokens[3], tokens[0] == "V"))
+                            case "D" | "C":
+                                step["dirtiness"].append((tokens[1], tokens[2], tokens[3], tokens[0] == "D"))
                         line = log.readline()
                         tokens = line.split()
                 case "instr:":
@@ -131,8 +133,10 @@ def handle_run_program(data):
                                 step["evict"].append((tokens[1], tokens[2], tokens[3]))
                             case "F": # Yes I know F (fetch into cache) being insert is weird asf
                                 step["insert"].append((tokens[1], tokens[2], tokens[3]))
-                            case "I":
-                                step["invalidate"].append((tokens[1], tokens[2], tokens[3]))
+                            case "V" | "IV":
+                                step["validity"].append((tokens[1], tokens[2], tokens[3], tokens[0] == "V"))
+                            case "D" | "C":
+                                step["dirtiness"].append((tokens[1], tokens[2], tokens[3], tokens[0] == "D"))
                             case _:
                                 match tokens[0]:
                                     case access if access in ["wb", "wh", "ww", "rb", "rh", "rw"]:
