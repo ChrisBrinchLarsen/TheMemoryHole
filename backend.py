@@ -68,7 +68,7 @@ def handle_run_program(data):
     print(result.stderr)
 
 
-    print("Parsing cache_log starting")
+    print("Parsing cache_log starting...")
 
     executing_prog = []
     active_lines = []
@@ -146,7 +146,7 @@ def handle_run_program(data):
                         tokens = line.split()
             step["lines"] = active_lines
             executing_prog.append(step)
-    print("Finished parsing cache_log")
+    print("...Finished parsing cache_log")
     os.system(f"rm -f {program_file_path}.riscv {program_file_path}.dis {program_file_path}.c {architecture_file_name} tmp/program_* tmp/architecture_*")
     return executing_prog
 
@@ -164,7 +164,6 @@ def addDebugComments(program:str):
     for i in range(len(lines)):
         outstr += lines[i] + f"//[[{i}]]\n";
     outstr += "//PROGRAM_END\n"
-    print(outstr);
     return outstr;
 
 ### MAIN

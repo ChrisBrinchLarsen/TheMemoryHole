@@ -30,7 +30,7 @@ const uint32_t ACTIVE_REPLACEMENT_POLICY = LRU_REPLACEMENT_POLICY;
 // Private function prototypes
 void cache_writeback_block(Cache_t* cache, int addr_int, char* data, size_t block_size);
 CacheLine_t* fetch_line(Cache_t* cache, uint32_t addr_int, struct memory *mem);
-void handle_miss(Cache_t* cache, Address_t addr, struct memory* mem);
+int handle_miss(Cache_t* cache, Address_t addr, struct memory* mem);
 int get_line_index_from_tag(Cache_t* cache, Address_t addr);
 int get_replacement_line_index(Cache_t* cache, uint32_t set_index);
 void evict_cache_line(Cache_t* cache, uint32_t addr_int, CacheLine_t* evict_line, struct memory *mem);
@@ -145,24 +145,22 @@ CacheLine_t* fetch_line(Cache_t* cache, uint32_t addr_int, struct memory *mem) {
 
     increment_line_LRU(cache, addr.set_index);
 
-    // The index of the line that our address points to in the set our index points to
+    // If tag is in set, get corresponding line index
     int line_index = get_line_index_from_tag(cache, addr);
 
     // check if line is already in set, otherwise add it. CACHE HIT/MISS
     if (line_index == -1) { // MISS
-        line_index = get_replacement_line_index(cache, addr.set_index);
-        handle_miss(cache, addr, mem);
-    }
-    else { // HIT
+        line_index = handle_miss(cache, addr, mem);
+    } else { // HIT
         cache->sets[addr.set_index][line_index].LRU = 0; // least recently used; just now
-        
         fprintf(CACHE_LOG, "H %d %d %d\n", cache->layer+1, addr.set_index, line_index);
     }
 
     return &(cache->sets[addr.set_index][line_index]);
 }
 
-void handle_miss(Cache_t* cache, Address_t addr, struct memory* mem) {
+// Returns the line index that we're now replacing 
+int handle_miss(Cache_t* cache, Address_t addr, struct memory* mem) {
     fprintf(CACHE_LOG, "M %d %d\n", cache->layer+1, addr.set_index);
 
     // replace, back-invalidate and evict another line in this set first.
@@ -217,6 +215,7 @@ void handle_miss(Cache_t* cache, Address_t addr, struct memory* mem) {
     }
     // copy and insert block
     memcpy(victim->block, block, cache->block_size);
+    return line_index;
 }
 
 // NOTE: This function assumes that cache inclusivity holds
@@ -275,7 +274,7 @@ int get_replacement_line_index(Cache_t* cache, uint32_t set_index) {
                 }
                 break;
             case RANDOM_REPLACEMENT_POLICY:
-                line_index = 0;
+                line_index = rand() % cache->associativity;
                 break;
             default: break;
         }
@@ -410,7 +409,6 @@ Cache_t* parse_cpu(char* path) {
         a = atoi(buf);
         memset(buf, 0, sizeof(buf));
 
-        //printf("%d, %d, %d, %d\n", p, q, k, a);
         L1i = cache_new(0, (uint32_t)(pow(2,p) * q), (uint32_t)(pow(2,k)), a);
     }
 
@@ -430,7 +428,6 @@ Cache_t* parse_cpu(char* path) {
         a = atoi(buf);
         memset(buf, 0, sizeof(buf));
 
-        //printf("%d, %d, %d, %d\n", p, q, k, a);
         caches[i] = *cache_new(i, (uint32_t)(pow(2,p) * q), (uint32_t)(pow(2,k)), a);
         if (i > 0) { // linked list
             caches[i-1].child_cache = &caches[i];

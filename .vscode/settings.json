@@ -24,7 +24,8 @@
         "xtr1common": "c",
         "xutility": "c",
         "complex": "c",
-        "scoped_allocator": "c"
+        "scoped_allocator": "c",
+        "cstdint": "c"
     },
     "basedpyright.disableLanguageServices": true
 }
