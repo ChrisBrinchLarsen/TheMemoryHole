@@ -12,6 +12,11 @@ log.disabled = True
 socketio = SocketIO(app)
 
 
+policy_dict = {
+    "LRU": 0,
+    "RR" : 1,
+}
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -38,6 +43,7 @@ def handle_run_program(data):
     print("Got message from server")
     data_caches = data["data_caches"]
     instr_cache = data["instr_cache"]
+    r_policy = policy_dict[data["r_policy"]]
     program = data["program"]
     N_CACHE_LEVELS = len(data_caches)
     args = data["args"].split(" ")
@@ -60,7 +66,8 @@ def handle_run_program(data):
     C_to_dis(program_file_path)
     print("Starting program simulation...")
     os.system(f"rm -f accesses loggers cache_log")
-    result = subprocess.run(["./engine/sim", architecture_file_name, f"{program_file_path}.dis", "--", *args], capture_output=True, text=True)
+    print("policy", r_policy)
+    result = subprocess.run(["./engine/sim", str(r_policy), architecture_file_name, f"{program_file_path}.dis", "--", *args], capture_output=True, text=True)
     print("...Finished program simulation")
     print("Stdout:")
     print(result.stdout)

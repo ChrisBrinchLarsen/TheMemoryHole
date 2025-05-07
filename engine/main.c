@@ -122,25 +122,26 @@ int main(int argc, char *argv[])
 {
   srand(time(NULL));
   open_accesses_file();
-  struct hashmap *map = createInstructionHashmap(argv[2]);
+  struct hashmap *map = createInstructionHashmap(argv[3]);
 
   struct memory *mem = memory_create();
   start_cache_log();
-  parse_cpu(argv[1]);
+  parse_cpu(argv[2]);
+  set_policy(atoi(argv[1]));
   argc = pass_args_to_program(mem, argc, argv);
-  if (argc == 3 || argc == 5)
+  if (argc == 4 || argc == 6)
   {
     struct assembly *as = assembly_create();
     FILE *log_file = NULL;
-    if (argc == 5 && !strcmp(argv[3], "-l"))
+    if (argc == 6 && !strcmp(argv[4], "-l"))
     {
-      log_file = fopen(argv[4], "w");
+      log_file = fopen(argv[5], "w");
       if (log_file == NULL)
       {
         terminate("Could not open logfile, terminating.");
       }
     }
-    int start_addr = read_exec(mem, as, argv[2], log_file);
+    int start_addr = read_exec(mem, as, argv[3], log_file);
     clock_t before = clock();
     long int num_insns = simulate(mem, as, start_addr, log_file, map);
     clock_t after = clock();
@@ -148,9 +149,9 @@ int main(int argc, char *argv[])
 
     int ticks = after - before;
     double mips = (1.0 * num_insns * CLOCKS_PER_SEC) / ticks / 1000000;
-    if (argc == 5 && !strcmp(argv[3], "-s"))
+    if (argc == 6 && !strcmp(argv[4], "-s"))
     {
-      log_file = fopen(argv[4], "w");
+      log_file = fopen(argv[5], "w");
       if (log_file == NULL)
       {
         terminate("Could not open logfile, terminating.");

@@ -145,4 +145,6 @@ FILE* get_cache_log();
 void print_all_caches();
 
 
+void set_policy(int policy);
+
 #endif

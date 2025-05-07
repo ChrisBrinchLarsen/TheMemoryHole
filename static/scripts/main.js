@@ -11,7 +11,9 @@ function sendProgram() {
     confirmArchitecture()
     PROGRAM_TEXT = document.getElementById("programText").value;
     document.getElementById("programText").value = "";
-    socket.emit("run_program", {program:PROGRAM_TEXT, data_caches:data_caches, instr_cache:instr_cache, args:document.getElementById("args").value}, runCallback)
+
+    let policy = document.getElementById("policy-dropdown").value
+    socket.emit("run_program", {program:PROGRAM_TEXT, data_caches:data_caches, instr_cache:instr_cache, r_policy:policy, args:document.getElementById("args").value}, runCallback)
 }
 
 // This function needs a rewrite

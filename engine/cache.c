@@ -24,7 +24,7 @@ FILE* CACHE_LOG;
 // Policies
 #define LRU_REPLACEMENT_POLICY 0
 #define RANDOM_REPLACEMENT_POLICY 1
-const uint32_t ACTIVE_REPLACEMENT_POLICY = LRU_REPLACEMENT_POLICY;
+uint32_t ACTIVE_REPLACEMENT_POLICY;
 
 
 // Private function prototypes
@@ -562,3 +562,5 @@ void add_operation_to_checksum(uint32_t type, uint32_t cache_idx, uint32_t set_i
 
 uint32_t get_cache_checksum() {return cache_checksum;}
 void set_cache_checksum(uint32_t v) {cache_checksum = v;}
+
+void set_policy(int policy) {ACTIVE_REPLACEMENT_POLICY = policy;}

@@ -195,18 +195,15 @@ function visualize_path(access_type, hits, misses, evictions, inserts, validitie
             if (validity_change[3]) {
                 give_line_class("valid", INSTR_CACHE_OBJECT, set, line)
                 update_checksum(1, 0, set, line)
-            } else {
-                remove_class_from_line("valid", INSTR_CACHE_OBJECT, set, line)
-                update_checksum(2, 0, set, line)
             }
+        }
+        
+        if (validity_change[3]) {
+            give_line_class("valid", cache, set, line)
+            update_checksum(1, validity_change[0], set, line)
         } else {
-            if (validity_change[3]) {
-                give_line_class("valid", cache, set, line)
-                update_checksum(1, validity_change[0], set, line)
-            } else {
-                remove_class_from_line("valid", cache, set, line)
-                update_checksum(2, validity_change[0], set, line)
-            }
+            remove_class_from_line("valid", cache, set, line)
+            update_checksum(2, validity_change[0], set, line)
         }
     })
 
