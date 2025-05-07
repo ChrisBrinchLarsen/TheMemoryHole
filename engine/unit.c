@@ -7,8 +7,8 @@
 struct memory* memory;
 
 #if 1 // test headers
-int backInvalidationTest();
-int inclusivity_test();
+int back_invalidation();
+int back_invalidation_chain();
 #endif
 
 #if 1 // struct and other helpers
@@ -57,8 +57,8 @@ int main() {
     int test_count = 2;
     UnitTest_t *tests = malloc(test_count * sizeof(UnitTest_t));
 
-    tests[0] = test_new("Back Invalidation", &backInvalidationTest);
-    tests[1] = test_new("Inclusivity", &inclusivity_test);
+    tests[0] = test_new("Back Invalidation", &back_invalidation);
+    tests[1] = test_new("Inclusivity", &back_invalidation_chain);
 
     printf("Running %d unit tests:\n", test_count);
     
@@ -90,7 +90,7 @@ int main() {
     return 0;
 }
 
-int backInvalidationTest()
+int back_invalidation()
 {
     int pass = 1;
     
@@ -121,7 +121,7 @@ int backInvalidationTest()
     return pass;
 }
 
-int inclusivity_test() {
+int back_invalidation_chain() {
     //parse_cpu(create_cache_file("2\nL1\n7\n1\n4\n2\nL2\n9\n1\n4\n4\nL3\n11\n1\n4\n8"));
     parse_cpu(create_cache_file("3\nL1\n5\n1\n4\n2\nL2\n6\n1\n4\n4\nL3\n6\n1\n4\n4"));
     

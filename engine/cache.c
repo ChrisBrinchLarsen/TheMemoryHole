@@ -197,7 +197,7 @@ void handle_miss(Cache_t* cache, Address_t addr, struct memory* mem) {
     fprintf(CACHE_LOG, "F %d %d %d\n", cache->layer+1, addr.set_index, line_index);
 
     // update line
-    victim->valid = 1;
+    change_validity(cache, addr.set_index, line_index, 1);
     victim->tag = addr.tag;
     victim->LRU = 0;
     if (received_cache_line_from_child != NULL) {
@@ -292,7 +292,6 @@ void invalidate_line(Cache_t* cache, uint32_t addr_int, struct memory* mem) {
     int line_index = get_line_index_from_tag(cache, addr);
     if (line_index != -1) {
         CacheLine_t* victim = &cache->sets[addr.set_index][line_index];
-        fprintf(CACHE_LOG, "I %d %d %d\n", cache->layer+1, addr.set_index, line_index);
         if (victim->dirty) {
             victim->dirty = false;
             uint32_t evict_addr = (victim->tag << (cache->set_bit_length + cache->block_offset_bit_length)) | (addr.set_index << cache->block_offset_bit_length);
@@ -303,7 +302,7 @@ void invalidate_line(Cache_t* cache, uint32_t addr_int, struct memory* mem) {
             invalidate_line(cache->parent_cache, addr_int, mem);
         }
 
-        victim->valid = 0;
+        change_validity(cache, addr.set_index, line_index, 0);
     }
 }
 
@@ -520,5 +519,10 @@ void print_all_caches() {
 
 void change_validity(Cache_t* cache, int set_index, int line_index, bool new_validity) {
     // TODO: Append something to cachelog here
+    if (new_validity == 1) {
+        fprintf(CACHE_LOG, "V %d %d %d\n", cache->layer+1, set_index, line_index);
+    } else {
+        fprintf(CACHE_LOG, "IV %d %d %d\n", cache->layer+1, set_index, line_index);
+    }
     cache->sets[set_index][line_index].valid = new_validity;
 }

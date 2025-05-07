@@ -89,9 +89,9 @@ function visualizeStep(step) {
     }
     
     if (step["lines"].length > 0) {
-        visualize_path(step["type"], step["hits"], step["misses"], step["evict"], step["insert"], step["invalidate"], step["lines"][0], step["lines"][1], step["is_write"])
+        visualize_path(step["type"], step["hits"], step["misses"], step["evict"], step["insert"], step["validity"], step["lines"][0], step["lines"][1], step["is_write"])
     } else {
-        visualize_path(step["type"], step["hits"], step["misses"], step["evict"], step["insert"], step["invalidate"], -2, -1, step["is_write"])
+        visualize_path(step["type"], step["hits"], step["misses"], step["evict"], step["insert"], step["validity"], -2, -1, step["is_write"])
     }
     
     updateLineSummary(SELECTED_LINE)
@@ -120,7 +120,7 @@ function visualizeStep(step) {
     visualizeInstrRegs(step["readers"], step["writers"])
 }
 
-function visualize_path(access_type, hits, misses, evictions, inserts, invalidations, lineS, lineE, is_write) {
+function visualize_path(access_type, hits, misses, evictions, inserts, validities, lineS, lineE, is_write) {
     COLORED_LINES = []
     COLORED_SET_OBJECTS = []
     
@@ -170,18 +170,15 @@ function visualize_path(access_type, hits, misses, evictions, inserts, invalidat
         let line = evictee[2]
         give_line_class("evict", cache, set, line)
         give_line_class("dirty", cache, set, line)
-        give_line_class("valid", cache, set, line)
     })
     inserts.forEach(insertee => {
         if (HAS_INSTRUCTION_CACHE && Number(insertee[0]) == 1 && access_type == "fetch") {
             give_line_class("insert", INSTR_CACHE_OBJECT, insertee[1], insertee[2])
-            give_line_class("valid", INSTR_CACHE_OBJECT, insertee[1], insertee[2])
         } else {
             let cache = CACHE_OBJECTS[insertee[0]-1]
             let set = insertee[1]
             let line = insertee[2]
             give_line_class("insert", cache, set, line)
-            give_line_class("valid", cache, set, line)
             if (is_write && (insertee[0] == 1)) {
                 give_line_class("dirty", cache, set, line)
             } else {
@@ -190,12 +187,25 @@ function visualize_path(access_type, hits, misses, evictions, inserts, invalidat
         }
     })
 
-    invalidations.forEach(invalidatee => {
-        let cache = CACHE_OBJECTS[invalidatee[0]-1]
-        let set = invalidatee[1]
-        let line = invalidatee[2]
-        remove_class_from_line("valid", cache, set, line);
-        remove_class_from_line("dirty", cache, set, line);
+    validities.forEach(validity_change => {
+        let cache = CACHE_OBJECTS[validity_change[0]-1]
+        let set = validity_change[1]
+        let line = validity_change[2]
+
+        if (HAS_INSTRUCTION_CACHE && Number(validity_change[0]) == 1 && access_type == "fetch") {
+            if (validity_change[3]) {
+                give_line_class("valid", INSTR_CACHE_OBJECT, set, line)
+            } else {
+                remove_class_from_line("valid", INSTR_CACHE_OBJECT, set, line)
+            }
+        } else {
+            if (validity_change[3]) {
+                give_line_class("valid", cache, set, line)
+            } else {
+                remove_class_from_line("valid", cache, set, line)
+            }
+        }
+
     })
 }
 
