@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+uint64_t cache_checksum = 0;
+
 typedef struct Address {
     uint32_t full_addr;
     uint32_t tag;

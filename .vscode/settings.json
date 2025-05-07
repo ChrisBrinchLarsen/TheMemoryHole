@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        ".fantomasignore": "ignore",
         "any": "c",
         "array": "c",
         "charconv": "c",
@@ -11,7 +12,19 @@
         "utility": "c",
         "variant": "c",
         "random": "c",
-        "accesses": "cpp"
+        "accesses": "cpp",
+        "memory.h": "c",
+        "filesystem": "c",
+        "format": "c",
+        "future": "c",
+        "memory": "c",
+        "ranges": "c",
+        "regex": "c",
+        "xmemory": "c",
+        "xtr1common": "c",
+        "xutility": "c",
+        "complex": "c",
+        "scoped_allocator": "c"
     },
     "basedpyright.disableLanguageServices": true
 }
