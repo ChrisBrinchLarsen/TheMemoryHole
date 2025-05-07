@@ -66,6 +66,8 @@ long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE 
         if (plm != NULL) {
             fprintf(CACHE_LOG_POINTER, "pc %d %d %d\n", plm->pc, plm->start, plm->end);
         }
+        
+        fprintf(CACHE_LOG_POINTER, "CS %llu", mmu_get_checksum());
         fprintf(CACHE_LOG_POINTER, "endinstr\n");
         
 

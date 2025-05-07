@@ -13,6 +13,10 @@ void close_accesses_file() {
     fclose(accesses);
 }
 
+uint64_t mmu_get_checksum() {
+    return cache_checksum;
+}
+
 void mmu_wr_w_instr(struct memory *mem, int addr, uint32_t data) {
     
     //fprintf(accesses, "mmu_wr_w_instr(memory, 0x%x, %d);\n", addr, data);

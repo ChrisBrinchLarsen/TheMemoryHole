@@ -46,6 +46,8 @@ CacheLine_t cacheline_new(char* block);
 void change_validity(Cache_t* cache, int set_index, int line_index, bool new_validity);
 void change_dirtiness(Cache_t* cache, int set_index, int line_index, bool new_dirty);
 
+void add_operation_to_checksum(uint64_t type, uint64_t cache_idx, uint64_t set_idx, uint64_t line_idx);
+
 
 void cache_wr_w(struct memory *mem, int addr_int, uint32_t data) {
     fprintf(CACHE_LOG, "ww 0x%x %d\n", addr_int, data);
@@ -537,6 +539,8 @@ void change_validity(Cache_t* cache, int set_index, int line_index, bool new_val
         fprintf(CACHE_LOG, "IV %d %d %d\n", cache->layer+1, set_index, line_index);
     }
     cache->sets[set_index][line_index].valid = new_validity;
+    uint64_t operation_int = new_validity ? 1 : 2;
+    add_operation_to_checksum(operation_int, cache->layer, set_index, line_index);
 }
 
 void change_dirtiness(Cache_t* cache, int set_index, int line_index, bool new_dirty) {
@@ -546,4 +550,11 @@ void change_dirtiness(Cache_t* cache, int set_index, int line_index, bool new_di
         fprintf(CACHE_LOG, "C %d %d %d\n", cache->layer+1, set_index, line_index);
     }
     cache->sets[set_index][line_index].dirty = new_dirty;
+    uint64_t operation_int = new_dirty ? 3 : 4;
+    add_operation_to_checksum(operation_int, cache->layer, set_index, line_index);
+}
+
+
+void add_operation_to_checksum(uint64_t type, uint64_t cache_idx, uint64_t set_idx, uint64_t line_idx) {
+    cache_checksum += type * 10 + cache_idx * 100 + set_idx * 1000 + line_idx * 10000;
 }
