@@ -29,3 +29,7 @@
 .written-to {
     background-color: lightcoral;
 }
+
+.read-from.written-to {
+    background-color: yellow;
+}
