@@ -24,6 +24,9 @@ FILE* CACHE_LOG;
 // Policies
 #define LRU_REPLACEMENT_POLICY 0
 #define RANDOM_REPLACEMENT_POLICY 1
+#define LAST_IN_FIRST_OUT_REPLACEMENT_POLICY 2
+#define FIRST_IN_FIRST_OUT_REPLACEMENT_POLICY 3
+#define MRU_REPLACEMENT_POLICY 4
 uint32_t ACTIVE_REPLACEMENT_POLICY;
 
 
@@ -263,9 +266,10 @@ int get_replacement_line_index(Cache_t* cache, uint32_t set_index) {
 
     // if no room, find room based on replacement policy
     if (line_index == -1) {
+        uint32_t maxval = 0;
+        uint32_t minval = UINT32_MAX;
         switch (ACTIVE_REPLACEMENT_POLICY) {
             case LRU_REPLACEMENT_POLICY:
-                uint32_t maxval = 0;
                 for (uint32_t i = 0; i < cache->associativity; i++) {
                     if (set[i].LRU >= maxval) {
                         line_index = i;
@@ -275,6 +279,30 @@ int get_replacement_line_index(Cache_t* cache, uint32_t set_index) {
                 break;
             case RANDOM_REPLACEMENT_POLICY:
                 line_index = rand() % cache->associativity;
+                break;
+            case LAST_IN_FIRST_OUT_REPLACEMENT_POLICY:
+                for (uint32_t i = 0; i < cache->associativity; i++) {
+                    if (set[i].legacy >= maxval) {
+                        line_index = i;
+                        maxval = set[i].legacy;
+                    }
+                }
+                break;
+            case FIRST_IN_FIRST_OUT_REPLACEMENT_POLICY:
+                for (uint32_t i = 0; i < cache->associativity; i++) {
+                    if (set[i].legacy <= minval) {
+                        line_index = i;
+                        minval = set[i].legacy;
+                    }
+                }
+                break;
+            case MRU_REPLACEMENT_POLICY:
+                for (uint32_t i = 0; i < cache->associativity; i++) {
+                    if (set[i].LRU <= minval) {
+                        line_index = i;
+                        minval = set[i].LRU;
+                    }
+                }
                 break;
             default: break;
         }
@@ -376,6 +404,10 @@ Cache_t* parse_cpu(char* path) {
     char buf[32] = {0};
     fgets(buf, sizeof(buf), file);
     N_CACHE_LEVELS = (uint32_t)atoi(buf);
+    memset(buf, 0, sizeof(buf));
+
+    fgets(buf, sizeof(buf), file);
+    ACTIVE_REPLACEMENT_POLICY = (uint32_t)atoi(buf);
     memset(buf, 0, sizeof(buf));
     
     // Logging info about the general cache architecture
@@ -504,6 +536,7 @@ CacheLine_t cacheline_new(char* block) {
     l.valid = 0;
     l.dirty = 0;
     l.LRU = 0;
+    l.legacy = 0;
     l.tag = 0;
     l.block = block;
     return l;
@@ -536,6 +569,19 @@ void change_validity(Cache_t* cache, int set_index, int line_index, bool new_val
         fprintf(CACHE_LOG, "IV %d %d %d\n", cache->layer+1, set_index, line_index);
     }
     cache->sets[set_index][line_index].valid = new_validity;
+
+    if (new_validity) {
+        uint32_t max_legacy = 0;
+        for (uint32_t i = 0; i < cache->associativity; i++) {
+            bool is_not_the_changing_line = line_index != (int)i;
+            bool line_is_valid = cache->sets[set_index][i].valid;
+            bool line_is_older_than_max = cache->sets[set_index][i].legacy >= max_legacy;
+            if (is_not_the_changing_line && line_is_valid && line_is_older_than_max) {
+                max_legacy = cache->sets[set_index][i].legacy;
+            }
+        }
+        cache->sets[set_index][line_index].legacy = max_legacy + 1;
+    }
 
     uint32_t operation_int = new_validity ? 1 : 2;
     uint32_t cache_int = cache == L1i ? cache->layer : cache->layer+1;

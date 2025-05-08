@@ -20,6 +20,7 @@ typedef struct Address {
 typedef struct CacheLine {
     bool valid;
     bool dirty;
+    uint32_t legacy;
     uint32_t tag;
     uint32_t LRU;
     char* block;

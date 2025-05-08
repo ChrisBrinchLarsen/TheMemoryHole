@@ -13,8 +13,11 @@ socketio = SocketIO(app)
 
 
 policy_dict = {
-    "LRU": 0,
-    "RR" : 1,
+    "LRU" : 0,
+    "RR"  : 1,
+    "LIFO": 2,
+    "FIFO": 3,
+    "MRU" : 4,
 }
 
 @app.route('/')
@@ -53,6 +56,7 @@ def handle_run_program(data):
 
     with open(architecture_file_name, "w") as file:
         file.write(f"{N_CACHE_LEVELS}\n")
+        file.write(f"{r_policy}\n")
         if instr_cache:
             print("Instruction cache was detected")
             write_cache_to_file(file, "i", instr_cache)
@@ -67,7 +71,7 @@ def handle_run_program(data):
     print("Starting program simulation...")
     os.system(f"rm -f accesses loggers cache_log")
     print("policy", r_policy)
-    result = subprocess.run(["./engine/sim", str(r_policy), architecture_file_name, f"{program_file_path}.dis", "--", *args], capture_output=True, text=True)
+    result = subprocess.run(["./engine/sim", architecture_file_name, f"{program_file_path}.dis", "--", *args], capture_output=True, text=True)
     print("...Finished program simulation")
     print("Stdout:")
     print(result.stdout)

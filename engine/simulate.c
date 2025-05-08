@@ -138,7 +138,7 @@ void ExecuteInstruction(int OPCODE, int instruction, struct memory *mem) {
             ProcessU_A(instruction);
             break;
         default:
-            printf("Upcode didn't match any expected types\n");
+            printf("OPCODE didn't match any expected types\n");
             exit(-1);
     }
     return;

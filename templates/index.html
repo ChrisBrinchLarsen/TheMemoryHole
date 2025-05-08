@@ -31,6 +31,10 @@
             <option disabled value>Replacement Policy</option>
             <option selected value='LRU'>Least Recently Used</option>
             <option value='RR'>Random Replacement</option>
+            <option value='LIFO'>Last In First Out</option>
+            <option value='FIFO'>First In First Out</option>
+            <option value='MRU'>Most Recently Used</option>
+
         </select>
         <select name="predefined-Programs" id="program-dropdown" onchange="preset_program(this.value); this.selectedindex = -1">
             <option disabled selected value>Sample Programs</option>
