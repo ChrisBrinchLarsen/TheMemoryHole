@@ -48,6 +48,9 @@ Cache_t* cache_new(uint32_t layer, uint32_t cacheSize, uint32_t block_size, uint
 CacheLine_t cacheline_new(char* block);
 void change_validity(Cache_t* cache, int set_index, int line_index, bool new_validity);
 void change_dirtiness(Cache_t* cache, int set_index, int line_index, bool new_dirty);
+void dump_cache_content(FILE* log, Cache_t* cache);
+void dump_set_content(FILE* log, CacheLine_t* set, uint32_t associativity, uint32_t block_size);
+void dump_line_content(FILE* log, CacheLine_t* line, uint32_t block_size);
 
 void add_operation_to_checksum(uint32_t type, uint32_t cache_idx, uint32_t set_idx, uint32_t line_idx);
 
@@ -610,3 +613,37 @@ uint32_t get_cache_checksum() {return cache_checksum;}
 void set_cache_checksum(uint32_t v) {cache_checksum = v;}
 
 void set_policy(int policy) {ACTIVE_REPLACEMENT_POLICY = policy;}
+
+void cache_dump_memory(FILE* log) {
+    fprintf(log, "--------------- CACHE STATE DUMP ---------------\n");
+    if (L1i) {
+        fprintf(log, "--- L1i ---\n");
+        dump_cache_content(log, L1i);
+    }
+
+    for (uint32_t i = 0; i < N_CACHE_LEVELS; i++) {
+        fprintf(log, "--- L%d ---\n", i+1);
+        dump_cache_content(log, &caches[i]);
+    }
+}
+
+void dump_cache_content(FILE* log, Cache_t* cache) {
+    for (uint32_t i = 0; i < cache->set_count; i++) {
+        fprintf(log, "Set %*d: ", 2, i);
+        dump_set_content(log, cache->sets[i], cache->associativity, cache->block_size);
+        fprintf(log, "\n");
+    }
+}
+
+void dump_set_content(FILE* log, CacheLine_t* set, uint32_t associativity, uint32_t block_size) {
+    for (uint32_t i = 0; i < associativity; i++) {
+        dump_line_content(log, &set[i], block_size);
+        fprintf(log, "V:%d D:%d| ", (&set[i])->valid, (&set[i])->dirty);
+    }
+}
+
+void dump_line_content(FILE* log, CacheLine_t* line, uint32_t block_size) {
+    for (uint32_t i = 0; i < block_size; i++) {
+        fprintf(log, "%02hhx ", line->block[i]);
+    }
+}

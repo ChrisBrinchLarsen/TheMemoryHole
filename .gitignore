@@ -3,6 +3,7 @@
 .venv/
 *.o
 accesses
+dump.log
 loggers
 cache_log
 sim

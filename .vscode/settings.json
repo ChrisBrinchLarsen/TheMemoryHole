@@ -25,7 +25,8 @@
         "xutility": "c",
         "complex": "c",
         "scoped_allocator": "c",
-        "cstdint": "c"
+        "cstdint": "c",
+        "cmath": "c"
     },
     "basedpyright.disableLanguageServices": true
 }

@@ -29,4 +29,6 @@ int mmu_rd_w(struct memory *mem, int addr);
 int mmu_rd_h(struct memory *mem, int addr);
 int mmu_rd_b(struct memory *mem, int addr);
 
+void dump_memory();
+
 #endif

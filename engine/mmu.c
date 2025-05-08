@@ -107,3 +107,12 @@ int mmu_rd_b(struct memory *mem, int addr) {
     int result = cache_rd_b(mem, addr);
     return result;
 }
+
+void dump_memory() {
+    printf("Dumping cache state to dump.log");
+    FILE* log = fopen("dump.log", "w");
+
+    cache_dump_memory(log);
+
+    fclose(log);
+}

@@ -139,6 +139,7 @@ void ExecuteInstruction(int OPCODE, int instruction, struct memory *mem) {
             break;
         default:
             printf("OPCODE didn't match any expected types\n");
+            dump_memory();
             exit(-1);
     }
     return;

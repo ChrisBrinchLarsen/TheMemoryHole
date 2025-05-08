@@ -148,4 +148,6 @@ void print_all_caches();
 
 void set_policy(int policy);
 
+void cache_dump_memory(FILE* log);
+
 #endif
