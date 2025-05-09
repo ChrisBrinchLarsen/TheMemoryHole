@@ -638,12 +638,12 @@ void dump_cache_content(FILE* log, Cache_t* cache) {
 void dump_set_content(FILE* log, CacheLine_t* set, uint32_t associativity, uint32_t block_size) {
     for (uint32_t i = 0; i < associativity; i++) {
         dump_line_content(log, &set[i], block_size);
-        fprintf(log, "V:%d D:%d| ", (&set[i])->valid, (&set[i])->dirty);
+        fprintf(log, " T:%08x V:%d D:%d | ", (&set[i])->tag, (&set[i])->valid, (&set[i])->dirty);
     }
 }
 
 void dump_line_content(FILE* log, CacheLine_t* line, uint32_t block_size) {
     for (uint32_t i = 0; i < block_size; i++) {
-        fprintf(log, "%02hhx ", line->block[i]);
+        fprintf(log, "%02hhx", line->block[i]);
     }
 }

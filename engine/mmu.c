@@ -108,11 +108,13 @@ int mmu_rd_b(struct memory *mem, int addr) {
     return result;
 }
 
-void dump_memory() {
+void dump_memory(uint32_t instr) {
     printf("Dumping cache state to dump.log");
     FILE* log = fopen("dump.log", "w");
 
     cache_dump_memory(log);
+    
+    fprintf(log, "Crashed on received instruction: %08x\n", instr);
 
     fclose(log);
 }
