@@ -1,8 +1,8 @@
 Checksum starts at 0
 
 # Type Weight 10
-Validate: 1
-Invalidate: 2
+Valid: 1
+Invalid: 2
 Dirty: 3
 Clean: 4
 

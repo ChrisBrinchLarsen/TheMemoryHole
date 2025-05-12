@@ -116,9 +116,9 @@ def handle_run_program(data):
                             case "F": # Yes I know F (fetch into cache) being insert is weird asf
                                 step["insert"].append((tokens[1], tokens[2], tokens[3]))
                             case "V" | "IV":
-                                step["validity"].append((tokens[1], tokens[2], tokens[3], tokens[0] == "V"))
+                                step["validity"].append((tokens[1], tokens[2], tokens[3], tokens[0] == "V", tokens[4]))
                             case "D" | "C":
-                                step["dirtiness"].append((tokens[1], tokens[2], tokens[3], tokens[0] == "D"))
+                                step["dirtiness"].append((tokens[1], tokens[2], tokens[3], tokens[0] == "D", tokens[4]))
                         line = log.readline()
                         tokens = line.split()
                 case "instr:":
@@ -140,8 +140,8 @@ def handle_run_program(data):
                             case "M": step["misses"].append((tokens[1], tokens[2]))
                             case "E": step["evict"].append((tokens[1], tokens[2], tokens[3]))
                             case "F": step["insert"].append((tokens[1], tokens[2], tokens[3]))
-                            case "V" | "IV": step["validity"].append((tokens[1], tokens[2], tokens[3], tokens[0] == "V"))
-                            case "D" | "C": step["dirtiness"].append((tokens[1], tokens[2], tokens[3], tokens[0] == "D"))
+                            case "V" | "IV": step["validity"].append((tokens[1], tokens[2], tokens[3], tokens[0] == "V", tokens[4]))
+                            case "D" | "C": step["dirtiness"].append((tokens[1], tokens[2], tokens[3], tokens[0] == "D", tokens[4]))
                             case _:
                                 match tokens[0]:
                                     case access if access in ["wb", "wh", "ww", "rb", "rh", "rw"]:

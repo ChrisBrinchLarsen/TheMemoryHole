@@ -190,16 +190,17 @@ function visualize_path(access_type, hits, misses, evictions, inserts, validitie
         let cache = CACHE_OBJECTS[validity_change[0]-1]
         let set = validity_change[1]
         let line = validity_change[2]
+        let became_valid = validity_change[3]
 
-        if (HAS_INSTRUCTION_CACHE && Number(validity_change[0]) == 1 && access_type == "fetch") {
-            if (validity_change[3]) {
+        if (validity_change[4] == 'i') {
+            if (became_valid) {
                 give_line_class("valid", INSTR_CACHE_OBJECT, set, line)
                 update_checksum(1, 0, set, line)
+            } else {
+                remove_class_from_line("valid", INSTR_CACHE_OBJECT, set, line)
+                update_checksum(2, 0, set, line)
             }
-        } else if (validity_change[3] && Number(validity_change[0]) == 1 && !HAS_INSTRUCTION_CACHE) {
-            give_line_class("valid", cache, set, line)
-            update_checksum(1, validity_change[0], set, line)
-        } else if (validity_change[3]) {
+        } else if (became_valid) {
             give_line_class("valid", cache, set, line)
             update_checksum(1, validity_change[0], set, line)
         } else {
@@ -213,7 +214,17 @@ function visualize_path(access_type, hits, misses, evictions, inserts, validitie
         let set = dirtiness_change[1]
         let line = dirtiness_change[2]
 
-        if (dirtiness_change[3]) {
+
+
+        if (dirtiness_change[4] == 'i') {
+            if (dirtiness_change[3]) {
+                give_line_class("dirty", INSTR_CACHE_OBJECT, set, line)
+                update_checksum(3, 0, set, line)
+            } else {
+                remove_class_from_line("dirty", INSTR_CACHE_OBJECT, set, line)
+                update_checksum(4, 0, set, line)
+            }
+        } else if (dirtiness_change[3]) {
             give_line_class("dirty", cache, set, line)
             update_checksum(3, dirtiness_change[0], set, line)
         } else {

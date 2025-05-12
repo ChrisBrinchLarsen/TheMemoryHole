@@ -343,7 +343,7 @@ void invalidate_line(Cache_t* cache, uint32_t addr_int, struct memory* mem) {
         if (cache->parent_cache != NULL) {
             invalidate_line(cache->parent_cache, addr_int, mem);
         }
-        
+
         if (victim->dirty) {
             //victim->dirty = false;
             //change_dirtiness(cache, addr.set_index, line_index, 0);
@@ -570,10 +570,11 @@ void print_all_caches() {
 }
 
 void change_validity(Cache_t* cache, int set_index, int line_index, bool new_validity) {
+    char instr_vs_data = cache == L1i ? 'i' : 'd';
     if (new_validity == 1) {
-        fprintf(CACHE_LOG, "V %d %d %d\n", cache->layer+1, set_index, line_index);
-    } else if (cache != L1i) {
-        fprintf(CACHE_LOG, "IV %d %d %d\n", cache->layer+1, set_index, line_index);
+        fprintf(CACHE_LOG, "V %d %d %d %c\n", cache->layer+1, set_index, line_index, instr_vs_data);
+    } else {
+        fprintf(CACHE_LOG, "IV %d %d %d %c\n", cache->layer+1, set_index, line_index, instr_vs_data);
     }
     cache->sets[set_index][line_index].valid = new_validity;
 
@@ -596,11 +597,12 @@ void change_validity(Cache_t* cache, int set_index, int line_index, bool new_val
 }
 
 void change_dirtiness(Cache_t* cache, int set_index, int line_index, bool new_dirty) {
+    char instr_vs_data =  cache == L1i ? 'i' : 'd';
     if (new_dirty == 1) {
-        fprintf(CACHE_LOG, "D %d %d %d\n", cache->layer+1, set_index, line_index);
-    } else if (cache != L1i) {
-        fprintf(CACHE_LOG, "C %d %d %d\n", cache->layer+1, set_index, line_index);
-    } else {return;}
+        fprintf(CACHE_LOG, "D %d %d %d %c\n", cache->layer+1, set_index, line_index, instr_vs_data);
+    } else {
+        fprintf(CACHE_LOG, "C %d %d %d %c\n", cache->layer+1, set_index, line_index, instr_vs_data);
+    }
     cache->sets[set_index][line_index].dirty = new_dirty;
 
     uint32_t operation_int = new_dirty ? 3 : 4;
