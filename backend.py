@@ -71,7 +71,7 @@ def handle_run_program(data):
     print("Starting program simulation...")
     os.system(f"rm -f accesses loggers cache_log")
     print("policy", r_policy)
-    result = subprocess.run(["./engine/sim", architecture_file_name, f"{program_file_path}.dis", "--", *args], capture_output=True, text=True)
+    result = subprocess.run(["./engine/sim", architecture_file_name, f"{program_file_path}.dis", "-l", "loggers", "--", *args], capture_output=True, text=True)
     print("...Finished program simulation")
     print("Stdout:")
     print(result.stdout)

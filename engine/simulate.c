@@ -516,7 +516,7 @@ void ProcessI_J(int instruction) {
     imm = imm >> 20;
 
     if (funct3 == 0x0) { // Jump And Link Register
-        fprintf(CACHE_LOG_POINTER, "JALR %d, %d, %d\n", rd, rs1, imm);
+        fprintf(CACHE_LOG_POINTER, "JALR retaddr:r%d=%d, jump addr:r%d=%d + %d\n", rd,PC+4, rs1, R[rs1], imm);
         int offset = rdReg(rs1);
         if (log_enabled) {
             fprintf(log_file_global, "Jump %x -> %x", PC, offset + imm);
