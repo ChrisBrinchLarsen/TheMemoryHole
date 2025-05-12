@@ -61,10 +61,10 @@ void cache_wr_w(struct memory *mem, int addr_int, uint32_t data) {
     CacheLine_t* line = fetch_line(&caches[0], addr_int, mem, 1);
 
     Address_t addr = get_address(&caches[0], addr_int);
-    change_dirtiness(&caches[0],
-                     addr.set_index,
-                     get_line_index_from_tag(&caches[0], addr),
-                     1);
+    // change_dirtiness(&caches[0],
+    //                  addr.set_index,
+    //                  get_line_index_from_tag(&caches[0], addr),
+    //                  1);
 
 
     memcpy(&line->block[addr.block_offset], &data, sizeof(uint32_t));
@@ -76,10 +76,10 @@ void cache_wr_h(struct memory *mem, int addr_int, uint16_t data) {
     CacheLine_t* line = fetch_line(&caches[0], addr_int, mem, 1);
     
     Address_t addr = get_address(&caches[0], addr_int);
-    change_dirtiness(&caches[0],
-                     addr.set_index,
-                     get_line_index_from_tag(&caches[0], addr),
-                     1);
+    // change_dirtiness(&caches[0],
+    //                  addr.set_index,
+    //                  get_line_index_from_tag(&caches[0], addr),
+    //                  1);
 
 
     memcpy(&line->block[addr.block_offset], &data, sizeof(uint16_t));
@@ -90,10 +90,10 @@ void cache_wr_b(struct memory *mem, int addr_int, uint8_t data) {
     
     CacheLine_t* line = fetch_line(&caches[0], addr_int, mem, 1);
     Address_t addr = get_address(&caches[0], addr_int);
-    change_dirtiness(&caches[0],
-                     addr.set_index,
-                     get_line_index_from_tag(&caches[0], addr),
-                     1);
+    // change_dirtiness(&caches[0],
+    //                  addr.set_index,
+    //                  get_line_index_from_tag(&caches[0], addr),
+    //                  1);
 
     memcpy(&line->block[addr.block_offset], &data, sizeof(uint8_t));
 }
@@ -181,6 +181,7 @@ int handle_miss(Cache_t* cache, Address_t addr, struct memory* mem, bool make_di
             uint32_t evict_addr = (victim->tag << (cache->set_bit_length + cache->block_offset_bit_length)) | (addr.set_index << cache->block_offset_bit_length);
             evict_cache_line(cache, evict_addr, victim, mem);
         }
+        change_validity(cache, addr.set_index, line_index, 0);
     }
 
     // the cache below returns its entire block, we need to know which part of that cache is our block (since it might be smaller)
@@ -214,7 +215,7 @@ int handle_miss(Cache_t* cache, Address_t addr, struct memory* mem, bool make_di
     victim->tag = addr.tag;
     victim->LRU = 0;
     if (received_cache_line_from_child != NULL) {
-        change_dirtiness(cache, addr.set_index, line_index, received_cache_line_from_child->dirty);
+        change_dirtiness(cache, addr.set_index, line_index, received_cache_line_from_child->dirty || make_dirty);
         Address_t addr_in_child = get_address(cache->child_cache, addr.full_addr); 
         change_dirtiness(cache->child_cache, addr_in_child.set_index, get_line_index_from_tag(cache->child_cache, addr_in_child), 0);
         //received_cache_line_from_child->dirty = false; // make sure only the 'top level' version of this line is dirty
@@ -322,6 +323,7 @@ int get_replacement_line_index(Cache_t* cache, uint32_t set_index) {
 void evict_cache_line(Cache_t* cache, uint32_t addr_int, CacheLine_t* evict_line, struct memory *mem) {
     Address_t addr = get_address(cache, addr_int);
     change_dirtiness(cache, addr.set_index, get_line_index_from_tag(cache, addr), 0);
+    change_validity(cache, addr.set_index, get_line_index_from_tag(cache, addr), 0);
     //evict_line->dirty = false;
     if (cache->child_cache == NULL) { // Writing to main memory
         memory_write_back(mem, addr_int, evict_line->block, cache->block_size);
@@ -336,15 +338,17 @@ void invalidate_line(Cache_t* cache, uint32_t addr_int, struct memory* mem) {
     int line_index = get_line_index_from_tag(cache, addr);
     if (line_index != -1) {
         CacheLine_t* victim = &cache->sets[addr.set_index][line_index];
+        // Back-invalidation up the cache chain
+        
+        if (cache->parent_cache != NULL) {
+            invalidate_line(cache->parent_cache, addr_int, mem);
+        }
+        
         if (victim->dirty) {
             //victim->dirty = false;
             //change_dirtiness(cache, addr.set_index, line_index, 0);
             uint32_t evict_addr = (victim->tag << (cache->set_bit_length + cache->block_offset_bit_length)) | (addr.set_index << cache->block_offset_bit_length);
             evict_cache_line(cache, evict_addr, victim, mem);
-        }
-        // Back-invalidation up the cache chain
-        if (cache->parent_cache != NULL) {
-            invalidate_line(cache->parent_cache, addr_int, mem);
         }
 
         change_validity(cache, addr.set_index, line_index, 0);
