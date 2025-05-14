@@ -30,7 +30,7 @@ char *get_page(struct memory *mem, int addr) {
   return mem->pages[page_number];
 }
 
-char* find_block(struct memory *mem, int addr, uint32_t block_size) {
+char* ram_find_block(struct memory *mem, int addr, uint32_t block_size) {
   char* page = get_page(mem, addr);
   int block_offset_bit_length = (int)log2(block_size);
   addr = (addr >> block_offset_bit_length) << block_offset_bit_length; // Masking out block offset bits
@@ -38,7 +38,7 @@ char* find_block(struct memory *mem, int addr, uint32_t block_size) {
   return &page[page_offset];
 }
 
-void memory_write_back(struct memory* mem, int addr, char* block, uint32_t block_size) {
+void ram_write_back(struct memory* mem, int addr, char* block, uint32_t block_size) {
   char* page = get_page(mem, addr);
   int page_offset = addr & 0x0ffff;
   memcpy(&page[page_offset], block, block_size);

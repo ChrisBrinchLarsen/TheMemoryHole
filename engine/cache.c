@@ -31,12 +31,12 @@ uint32_t ACTIVE_REPLACEMENT_POLICY;
 
 
 // Private function prototypes
-void cache_writeback_block(Cache_t* cache, int addr_int, char* data, size_t block_size);
+void cache_write_back(Cache_t* cache, int addr_int, char* data, size_t block_size);
 CacheLine_t* fetch_line(Cache_t* cache, uint32_t addr_int, struct memory *mem, bool make_dirty);
 int handle_miss(Cache_t* cache, Address_t addr, struct memory* mem, bool make_dirty);
 int get_line_index_from_tag(Cache_t* cache, Address_t addr);
 int get_replacement_line_index(Cache_t* cache, uint32_t set_index);
-void evict_cache_line(Cache_t* cache, uint32_t addr_int, CacheLine_t* evict_line, struct memory *mem);
+void evict_line(Cache_t* cache, uint32_t addr_int, CacheLine_t* evict_line, struct memory *mem);
 void invalidate_line(Cache_t* cache, uint32_t addr_int, struct memory* mem);
 void increment_line_LRU(Cache_t* cache, uint32_t setIndex);
 void CacheSetToString(Cache_t* cache, int setIndex, char* out);
@@ -179,7 +179,7 @@ int handle_miss(Cache_t* cache, Address_t addr, struct memory* mem, bool make_di
         }
         if (victim->dirty) {
             uint32_t evict_addr = (victim->tag << (cache->set_bit_length + cache->block_offset_bit_length)) | (addr.set_index << cache->block_offset_bit_length);
-            evict_cache_line(cache, evict_addr, victim, mem);
+            evict_line(cache, evict_addr, victim, mem);
         }
         change_validity(cache, addr.set_index, line_index, 0);
     }
@@ -204,7 +204,7 @@ int handle_miss(Cache_t* cache, Address_t addr, struct memory* mem, bool make_di
     } else { // at last layer; fetch from main memory instead
         fprintf(CACHE_LOG, "RAM\n");
         // when fetching from main memory, the block offset will just be 0, since we've already requested our specific size.
-        block = find_block(mem, addr.full_addr, cache->block_size);
+        block = ram_find_block(mem, addr.full_addr, cache->block_size);
     }
 
     // Fetched a block into the cache
@@ -226,7 +226,7 @@ int handle_miss(Cache_t* cache, Address_t addr, struct memory* mem, bool make_di
 }
 
 // NOTE: This function assumes that cache inclusivity holds
-void cache_writeback_block(Cache_t* cache, int addr_int, char* data, size_t block_size) {
+void cache_write_back(Cache_t* cache, int addr_int, char* data, size_t block_size) {
 
     Address_t addr = get_address(cache, addr_int);
 
@@ -320,15 +320,15 @@ int get_replacement_line_index(Cache_t* cache, uint32_t set_index) {
     return line_index;
 }
 
-void evict_cache_line(Cache_t* cache, uint32_t addr_int, CacheLine_t* evict_line, struct memory *mem) {
+void evict_line(Cache_t* cache, uint32_t addr_int, CacheLine_t* evict_line, struct memory *mem) {
     Address_t addr = get_address(cache, addr_int);
     change_dirtiness(cache, addr.set_index, get_line_index_from_tag(cache, addr), 0);
     change_validity(cache, addr.set_index, get_line_index_from_tag(cache, addr), 0);
     //evict_line->dirty = false;
     if (cache->child_cache == NULL) { // Writing to main memory
-        memory_write_back(mem, addr_int, evict_line->block, cache->block_size);
+        ram_write_back(mem, addr_int, evict_line->block, cache->block_size);
     } else { // Writing to cache
-        cache_writeback_block(cache->child_cache, addr_int, evict_line->block, cache->block_size);
+        cache_write_back(cache->child_cache, addr_int, evict_line->block, cache->block_size);
     }
 }
 
@@ -348,7 +348,7 @@ void invalidate_line(Cache_t* cache, uint32_t addr_int, struct memory* mem) {
             //victim->dirty = false;
             //change_dirtiness(cache, addr.set_index, line_index, 0);
             uint32_t evict_addr = (victim->tag << (cache->set_bit_length + cache->block_offset_bit_length)) | (addr.set_index << cache->block_offset_bit_length);
-            evict_cache_line(cache, evict_addr, victim, mem);
+            evict_line(cache, evict_addr, victim, mem);
         }
 
         change_validity(cache, addr.set_index, line_index, 0);

@@ -11,8 +11,8 @@ void memory_delete(struct memory *);
 
 char *get_page(struct memory *mem, int addr);
 
-char* find_block(struct memory *mem, int addr, uint32_t block_size);
-void memory_write_back(struct memory* mem, int addr, char* block, uint32_t block_size);
+char* ram_find_block(struct memory *mem, int addr, uint32_t block_size);
+void ram_write_back(struct memory* mem, int addr, char* block, uint32_t block_size);
 
 void memory_wr_w(struct memory *mem, int addr, uint32_t data);
 void memory_wr_h(struct memory *mem, int addr, uint16_t data);
