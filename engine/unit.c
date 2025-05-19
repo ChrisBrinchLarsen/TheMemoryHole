@@ -126,7 +126,6 @@ int back_invalidation_chain() {
     parse_cpu(create_cache_file("3\nL1\n5\n1\n4\n2\nL2\n6\n1\n4\n4\nL3\n6\n1\n4\n4"));
     
     printf("\n");
-
     print_all_caches();
     mmu_wr_w(memory, 0x1c, 16773088);
     print_all_caches();
