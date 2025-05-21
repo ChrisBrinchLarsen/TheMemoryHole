@@ -14,7 +14,7 @@ sim: assembly.o cache.o main.o setup.o memory.o mmu.o read_exec.o simulate.o has
 	$(CC) $(CFLAGS) assembly.o cache.o main.o setup.o memory.o mmu.o read_exec.o simulate.o hashmap/hashmap.o -o sim -lm
 
 %.riscv: %.c lib.c Makefile
-	/opt/riscv/bin/riscv32-unknown-elf-gcc  -march=rv32im -mabi=ilp32 -fno-tree-loop-distribute-patterns -mno-relax -O1 $< lib.c -static -nostartfiles -nostdlib -o $@
+	/opt/riscv/bin/riscv32-unknown-elf-gcc  -march=rv32im -mabi=ilp32 -fno-tree-loop-distribute-patterns -mno-relax -Og $< lib.c -static -nostartfiles -nostdlib -o $@ -g
 
 %.dis: %.riscv Makefile
 	/opt/riscv/bin/riscv32-unknown-elf-objdump -s -w $< > $@
@@ -22,15 +22,6 @@ sim: assembly.o cache.o main.o setup.o memory.o mmu.o read_exec.o simulate.o has
 
 all: sim
 rebuild: clean all
-
-%.riscv: %.c lib.c Makefile
-	/opt/riscv/bin/riscv32-unknown-elf-gcc-12.1.0 -march=rv32im -mabi=ilp32 -fno-tree-loop-distribute-patterns -mno-relax -O2 $< lib.c -static -nostartfiles -nostdlib -o $@
-
-%.riscv: %.s Makefile
-	/opt/riscv/bin/riscv32-unknown-elf-gcc-12.1.0 -march=rv32im -mabi=ilp32 -fno-tree-loop-distribute-patterns -mno-relax -O2 $< -static -nostartfiles -nostdlib -o $@
-
-%.dis: %.riscv Makefile
-	/opt/riscv/bin/riscv32-unknown-elf-objdump -s -w $< > $@
 
 # Used for removing generated files (make clean)
 clean:

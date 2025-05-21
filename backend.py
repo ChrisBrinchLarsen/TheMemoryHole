@@ -164,7 +164,7 @@ def handle_run_program(data):
 
 def C_to_dis(program_file_path):
      # Compile from C -> RISC-V
-    os.system(f"./riscv/bin/riscv32-unknown-elf-gcc -march=rv32im -mabi=ilp32 -fno-tree-loop-distribute-patterns -mno-relax -Og {program_file_path}.c lib.c -static -nostartfiles -o {program_file_path}.riscv -g")
+    os.system(f"./riscv/bin/riscv32-unknown-elf-gcc -march=rv32im -mabi=ilp32 -fno-tree-loop-distribute-patterns -mno-relax -Og {program_file_path}.c lib.c -static -nostartfiles -nostdlib -o {program_file_path}.riscv -g")
     # Compile from RISC-V -> dis
     os.system(f"./riscv/bin/riscv32-unknown-elf-objdump -s -w {program_file_path}.riscv > {program_file_path}.dis")
     os.system(f"./riscv/bin/riscv32-unknown-elf-objdump -S {program_file_path}.riscv >> {program_file_path}.dis")

@@ -88,7 +88,7 @@ long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE 
     // PrintRegisters(); // Uncomment this line to see contents of registers at end of execution.
     ////// DEBUGGING //////
 
-    return instructionCount;
+    return R[A0];
 }
 
 // We always use this setter to write to registers so that we don't overwrite x0

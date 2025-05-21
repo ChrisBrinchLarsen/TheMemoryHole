@@ -106,23 +106,9 @@ int setup(char* architecture_path, char* dis_path, char* program_args[], int num
   struct assembly *as = assembly_create();
 
   int start_addr = read_exec(mem, as, dis_path, log_file);
-  clock_t before = clock();
-  long int num_insns = simulate(mem, as, start_addr, log_file, map);
-  clock_t after = clock();
+  int ret_val = simulate(mem, as, start_addr, log_file, map);
 
-  int ticks = after - before;
-  double mips = (1.0 * num_insns * CLOCKS_PER_SEC) / ticks / 1000000;
-
-  if (log_file)
-  {
-    fprintf(log_file, "\nSimulated %ld instructions in %d ticks (%f MIPS)\n", num_insns, ticks, mips);
-    fclose(log_file);
-  }
-  else
-  {
-    printf("\nSimulated %ld instructions in %d ticks (%f MIPS)\n", num_insns, ticks, mips);
-  }
   assembly_delete(as);
 
-  return 0;
+  return ret_val;
 }

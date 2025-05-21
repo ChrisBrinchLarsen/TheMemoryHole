@@ -215,11 +215,15 @@ int handle_miss(Cache_t* cache, Address_t addr, struct memory* mem, bool make_di
     victim->tag = addr.tag;
     victim->LRU = 0;
     if (received_cache_line_from_child != NULL) {
-        change_dirtiness(cache, addr.set_index, line_index, received_cache_line_from_child->dirty || make_dirty);
+        make_dirty = received_cache_line_from_child->dirty || make_dirty;
         Address_t addr_in_child = get_address(cache->child_cache, addr.full_addr); 
         change_dirtiness(cache->child_cache, addr_in_child.set_index, get_line_index_from_tag(cache->child_cache, addr_in_child), 0);
         //received_cache_line_from_child->dirty = false; // make sure only the 'top level' version of this line is dirty
     }
+    if (cache->sets[addr.set_index][line_index].dirty != make_dirty) {
+        change_dirtiness(cache, addr.set_index, line_index, make_dirty);
+    }
+
     // copy and insert block
     memcpy(victim->block, block, cache->block_size);
     return line_index;

@@ -67,6 +67,7 @@ int main(int argc, char *argv[])
     seperator_position = 0;
   }
   int retval = setup(arch, dis, &argv[seperator_position], num_args, mem, log_file);
+  printf("Retval: %d\n", retval);
 
   stop_cache_log();
   memory_delete(mem);
