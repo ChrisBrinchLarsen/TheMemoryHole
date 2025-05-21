@@ -117,7 +117,6 @@ int back_invalidation()
         pass = 0;
     }
 
-    // return true;
     return pass;
 }
 
