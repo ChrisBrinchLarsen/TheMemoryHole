@@ -1,7 +1,6 @@
 # Running the Simulator
 1. `$ git clone https://github.com/ChrisBrinchLarsen/TheMemoryHole.git`
-You will need the rars cross compiler installed and placed into a `riscv` directory at the root of the repository. 
-2. Download release `rv32i-131023`from [the RARS repository](https://github.com/stnolting/riscv-gcc-prebuilt?tab=readme-ov-file)
+2. You will need the rars cross compiler installed and placed into a `riscv` directory at the root of the repository. Download release `rv32i-131023`from the [RARS repository](https://github.com/stnolting/riscv-gcc-prebuilt?tab=readme-ov-file)
 3. Extract the tar file and rename the directory to `riscv`
 4. Move the entire directory to the root of the repository, such that the path to is is `TheMemoryHole/riscv/`. For clarity, the extracted directory you renamed `riscv` should contain the subdirectories: `bin/`, `include/`, `lib/`, `libexec/`, `riscv32-unknown-elf/` and `share/`.
 5. `$ cd TheMemoryHole/engine`
