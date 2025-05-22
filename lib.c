@@ -1,5 +1,7 @@
 #include "lib.h"
 
+unsigned long int previous_rand = 1;
+
 asm("  .globl _start");
 asm("_start:");
 asm("  li a0, 0x1000000");  // set start of stack (which grows in opposite direction)
@@ -198,4 +200,11 @@ void release(void* memory) {
   vp* header = small_block_headers + num_size;
   *(vp*)chunk = *header;
   *header = chunk;
+}
+
+unsigned int rand_uint() {
+    unsigned int m = 65537u;
+    unsigned int a = 75u;
+    previous_rand = (a * previous_rand) % m;
+    return previous_rand;
 }
