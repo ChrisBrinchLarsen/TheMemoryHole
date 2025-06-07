@@ -13,6 +13,7 @@ int ram_writeback();
 int cache_writeback();
 int lru_replacement();
 int fifo_replacement();
+int tall_cache();
 #endif
 
 #if 1 // struct and other helpers
@@ -58,7 +59,7 @@ void test_cleanup() {
 #endif
 
 int main() {
-    int test_count = 6;
+    int test_count = 7;
     UnitTest_t *tests = malloc(test_count * sizeof(UnitTest_t));
     tests[0] = test_new("Back Invalidation", &back_invalidation);
     tests[1] = test_new("Inclusivity", &back_invalidation_chain);
@@ -66,6 +67,7 @@ int main() {
     tests[3] = test_new("Ram Writeback", &ram_writeback);
     tests[4] = test_new("LRU Replacement", &lru_replacement);
     tests[5] = test_new("FIFO Replacement", &fifo_replacement);
+    tests[6] = test_new("Tall Cache", &tall_cache);
 
     printf("Running %d unit tests:\n", test_count);
     
@@ -128,6 +130,7 @@ int back_invalidation()
         pass = 0;
     }
 
+    // return true;
     return pass;
 }
 
@@ -276,6 +279,30 @@ int fifo_replacement()
         get_caches()[0].sets[0][3].legacy != 4) {
         pass = 0;        
     }
+
+    return pass;
+}
+int tall_cache() {
+    int pass = 1;
+
+    char** architectures = malloc(5*sizeof(char*));
+    architectures[0] = "5\n0\nL1\n4\n1\n4\n1\nL1\n4\n1\n4\n1\nL1\n4\n1\n4\n1\nL1\n4\n1\n4\n1\nL1\n4\n1\n4\n1";
+    architectures[1] = "5\n1\nL1\n4\n1\n4\n1\nL1\n4\n1\n4\n1\nL1\n4\n1\n4\n1\nL1\n4\n1\n4\n1\nL1\n4\n1\n4\n1";
+    architectures[2] = "5\n2\nL1\n4\n1\n4\n1\nL1\n4\n1\n4\n1\nL1\n4\n1\n4\n1\nL1\n4\n1\n4\n1\nL1\n4\n1\n4\n1";
+    architectures[3] = "5\n3\nL1\n4\n1\n4\n1\nL1\n4\n1\n4\n1\nL1\n4\n1\n4\n1\nL1\n4\n1\n4\n1\nL1\n4\n1\n4\n1";
+    architectures[4] = "5\n4\nL1\n4\n1\n4\n1\nL1\n4\n1\n4\n1\nL1\n4\n1\n4\n1\nL1\n4\n1\n4\n1\nL1\n4\n1\n4\n1";
+    for (int i = 0; i < 5; i++) {
+        parse_cpu(create_cache_file(architectures[i]));
+        mmu_wr_w(memory, 0x10, 69);
+        mmu_wr_w(memory, 0x20, 420);
+        if (mmu_rd_w(memory, 0x10) != 69) {
+            pass = 0;
+        }
+        if (mmu_rd_w(memory, 0x20) != 420) {
+            pass = 0;
+        }
+    }
+
 
     return pass;
 }
