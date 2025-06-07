@@ -16,4 +16,6 @@ unsigned int str_to_uns(const char* str);
 int uns_to_str(char* buffer, unsigned int val);
 void* allocate(int size);
 void release(void* mem);
+unsigned int rand_uint();
+
 #endif
