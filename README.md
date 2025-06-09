@@ -11,6 +11,20 @@
 10. With the virtual environment active, run `$ python backend.py` in the root directory of the repository.
 11. The frontend is now up and running on `http://localhost:5000/`
 
+# Frontend Legend
+As the program is running, the cache lines light change colors. Here's what each of them mean:
+
+| Color    | Description |
+| - | - |
+| White fill | Invalid line |
+| Gray fill | Valid line |
+| Dashed | Dirty line |
+| Green fill | line hit |
+| Red outline | miss in set |
+| Blue fill | Insertion victim |
+| Orange fill | Eviction to line |
+
+
 # Running Unit Tests
 Running the unit tests boils down to the following steps:
 1. `$ git clone https://github.com/ChrisBrinchLarsen/TheMemoryHole.git`
