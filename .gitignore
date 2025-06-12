@@ -6,6 +6,7 @@ accesses
 dump.log
 loggers
 cache_log
+step_count
 sim
 riscv/
 tmp/architecture*

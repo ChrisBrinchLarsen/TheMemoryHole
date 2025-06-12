@@ -17,7 +17,7 @@ function sendProgram() {
 }
 
 // This function needs a rewrite
-function runCallback(exec_log) {
+function runCallback(exec_log, n_steps) {
     create_caches()
     src_lines = PROGRAM_TEXT.replaceAll("<", "&lt")
                             .replaceAll(">", "&gt")
@@ -117,7 +117,7 @@ function runCallback(exec_log) {
     INPUT_PAGE.style.display = "none";
     VISUALIZATION_PAGE.style.display = "flex";
     EXEC_LOG = exec_log
-    TOTAL_STEPS = exec_log.length
+    TOTAL_STEPS = n_steps
     INSTR_COUNTER.innerHTML = "(0/" + TOTAL_STEPS + ") "
 }
 

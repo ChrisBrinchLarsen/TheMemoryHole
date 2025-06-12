@@ -37,11 +37,9 @@ FILE* CACHE_LOG_POINTER;
 // Simulates provided RISC-V assembly instructions.
 long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE *log_file, struct hashmap *map) {
     CACHE_LOG_POINTER = get_cache_log();
-    fprintf(CACHE_LOG_POINTER, "---- PROGRAM START ----\n");
-
     PC = start_addr;                                  // Initializing PC
     uint32_t prevPC = PC-4;                           // Used for keeping track of if we jumped or not
-    int instructionCount = 0;                         // Instruction count for return value
+    uint32_t instructionCount = 0;                         // Instruction count for return value
     log_enabled = (log_file != NULL);                 // Only log information to file if file was supplied
     log_file_global = log_file;                       // Making the log file visible everywhere
 
@@ -87,7 +85,9 @@ long int simulate(struct memory *mem, struct assembly *as, int start_addr, FILE 
     ////// DEBUGGING ////// 
     // PrintRegisters(); // Uncomment this line to see contents of registers at end of execution.
     ////// DEBUGGING //////
-
+    
+    FILE* f = fopen("step_count", "w");
+    fprintf(f, "%u", instructionCount * 2);
     return R[A0];
 }
 

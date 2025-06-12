@@ -69,7 +69,7 @@ def handle_run_program(data):
 
     C_to_dis(program_file_path)
     print("Starting program simulation...")
-    os.system(f"rm -f accesses loggers cache_log")
+    os.system(f"rm -f accesses loggers cache_log step_count")
     print("policy", r_policy)
     result = subprocess.run(["./engine/sim", architecture_file_name, f"{program_file_path}.dis", "-l", "loggers", "--", *args], capture_output=True, text=True)
     print("...Finished program simulation")
@@ -77,17 +77,20 @@ def handle_run_program(data):
     print(result.stdout)
     print("Stderr:")
     print(result.stderr)
+    print("Retval:")
+    print(result.returncode)
 
+    n_steps = 0
+    with open("step_count", "r") as f:
+        n_steps = int(f.readline())
+        print("Total steps:", n_steps)
 
     print("Parsing cache_log starting...")
+
 
     executing_prog = []
     active_lines = []
     with open("cache_log", "r") as log:
-        line = log.readline()
-        while (line != "---- PROGRAM START ----\n"): # Writing program to memory
-            # TODO: This entire parsing of the loading instructions part of the cache_log
-            line = log.readline()
         while (True): # Executing program
             step = {"type":"", "title":"", "CS":0, "ram":False, "hits":[], "misses":[], "readers":[], "writers":[], "addr":[], "evict":[], "insert":[], "validity":[], "dirtiness":[], "lines":active_lines, "lines-changed":False, "is_write":False, "stdout":0}
             line = log.readline()
@@ -159,7 +162,7 @@ def handle_run_program(data):
             executing_prog.append(step)
     print("...Finished parsing cache_log")
     os.system(f"rm -f {program_file_path}.riscv {program_file_path}.dis {program_file_path}.c {architecture_file_name} tmp/program_* tmp/architecture_*")
-    return executing_prog
+    return executing_prog, n_steps
 
 
 def C_to_dis(program_file_path):
