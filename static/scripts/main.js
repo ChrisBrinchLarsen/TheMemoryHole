@@ -24,21 +24,42 @@ function runCallback(exec_log) {
                             .split("\n");
     CODE_VIEWER.innerHTML = "";
     for (let i = 0; i < src_lines.length; i++) {
+        let current_line_number = i + 1
+
+        let line_wrapper = document.createElement("div")
+        let breakpoint_button = document.createElement("button")
+        let src_line_number_indicator = document.createElement("div")
         let line = document.createElement("div");
-        line.setAttribute("data-nr", i+1);
+
+        line_wrapper.appendChild(breakpoint_button)
+        line_wrapper.appendChild(src_line_number_indicator)
+        line_wrapper.appendChild(line)
+
+        line_wrapper.classList.add("code-line")
+        src_line_number_indicator.classList.add("src-line-number")
+
+        src_line_number_indicator.innerHTML = current_line_number
+        breakpoint_button.onclick = function () {
+            pressed_breakpoint(current_line_number)
+            breakpoint_button.classList.toggle("enabled-breakpoint")
+        }
+
+        line.setAttribute("data-nr", current_line_number);
         line.onclick = function () {
             SELECTED_LINE = i
             SRC_LINES.forEach(innerLine => {innerLine.classList.remove("selected")})
             line.classList.add("selected")
             SUMMARY.style.display = "none"
             LINE_SUMMARY.style.display = "flex"
-            SUMMARY_LINE_NR.innerHTML = i+1
+            SUMMARY_LINE_NR.innerHTML = current_line_number
             updateLineSummary(i)
         }
         line.classList.add("src-line");
         line.innerHTML = src_lines[i];
         if (line.innerHTML == "") {line.innerHTML = " "}
-        CODE_VIEWER.appendChild(line);
+
+
+        CODE_VIEWER.appendChild(line_wrapper);
         SRC_LINES.push(line);
         LINE_HITS.push(0)
         LINE_MISSES.push(0)

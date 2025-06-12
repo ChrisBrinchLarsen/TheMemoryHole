@@ -272,6 +272,7 @@ function visualize_src(start, end) {
     line_start = start;
     line_end = end;
     for (let i = start; i <= end; i++) {
+        if (ACTIVE_BREAKPOINTS.has(1+Number(i))) {pause()}
         SRC_LINES[i].classList.add("active");
     }
 }
@@ -516,4 +517,14 @@ function time_dummy2() {
 
 function update_checksum(type, layer, setidx, lineidx) {
     CHECKSUM = (CHECKSUM + type * 10 + layer * 100 + setidx * 1000 + lineidx * 10000) % 0xFFFFFFFF
+}
+
+const ACTIVE_BREAKPOINTS = new Set()
+
+function pressed_breakpoint(number) {
+    if (ACTIVE_BREAKPOINTS.has(number)) {
+        ACTIVE_BREAKPOINTS.delete(number)
+    } else {
+        ACTIVE_BREAKPOINTS.add(number)
+    }
 }

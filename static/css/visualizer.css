@@ -33,6 +33,21 @@
     margin: .25rem;
 }
 
+.code-line {
+    display: flex;
+    flex-direction: row;
+    height: 1.5rem;
+}
+
+.src-line-number {
+    margin-right: 1rem;
+    margin-left: 5px;
+}
+
+.enabled-breakpoint {
+    background-color: red;
+}
+
 #stdout {
     display: flex;
     flex-direction: column;
