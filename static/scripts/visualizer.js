@@ -51,22 +51,34 @@ let INSTR_CACHE_OBJECT = null
 
 let CHECKSUM = 0
 
+const CHUNK_SIZE = 500
+
+function increment_step() {
+    CURRENT_STEP++
+    if (CURRENT_STEP % CHUNK_SIZE == 0) {get_more_steps()}
+}
+
 function visualizeStep_playing(n_steps) {
     if (CURRENT_STEP == TOTAL_STEPS) {
         pause()
         return
     }
 
+    let log_idx = CURRENT_STEP % CHUNK_SIZE
+
+
     if (PLAYING) {
         if (CURRENT_STEP == TOTAL_STEPS-1) {
-            visualizeStep(EXEC_LOG[CURRENT_STEP])
-            CURRENT_STEP++
+            visualizeStep(EXEC_LOG[log_idx])
+            increment_step()
             pause()
         } else {
             if (n_steps < 1) {n_steps++}
             for (let i = 0; i < n_steps && CURRENT_STEP < TOTAL_STEPS; i++) {
-                visualizeStep(EXEC_LOG[CURRENT_STEP]);
-                CURRENT_STEP++;
+                
+                visualizeStep(EXEC_LOG[CURRENT_STEP % CHUNK_SIZE]);
+                increment_step()
+                
             }
             prep_next_step_dynamically()
         }
@@ -430,8 +442,8 @@ function play() {
     // Testing rendering time
     requestAnimationFrame(time_dummy1)
     const step_start = performance.now()
-    visualizeStep(EXEC_LOG[CURRENT_STEP])
-    CURRENT_STEP += 1
+    visualizeStep(EXEC_LOG[CURRENT_STEP % CHUNK_SIZE])
+    increment_step()
     step_time = performance.now() - step_start
     console.log("Render time: " + render_time)
     console.log("Step time: " + step_time)
@@ -473,8 +485,8 @@ function next() {
         alert("Must be paused in order to perform step-through")
         return
     }
-    visualizeStep(EXEC_LOG[CURRENT_STEP])
-    CURRENT_STEP += 1
+    visualizeStep(EXEC_LOG[CURRENT_STEP % CHUNK_SIZE])
+    increment_step()
 }
 
 function end() {
@@ -484,8 +496,8 @@ function end() {
     }
 
     while (CURRENT_STEP != TOTAL_STEPS) {
-        visualizeStep(EXEC_LOG[CURRENT_STEP])
-        CURRENT_STEP += 1;
+        visualizeStep(EXEC_LOG[CURRENT_STEP % CHUNK_SIZE])
+        increment_step()
     }
     if (PLAYING) {pause()}
 }
