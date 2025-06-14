@@ -95,83 +95,11 @@ def handle_run_program(data):
 
     cookie = 0
     with open("cache_log", "r") as log:
-        cookie = log.seek(0, os.SEEK_CUR)
+        log.seek(0, os.SEEK_SET)
+        cookie = log.tell()
 
     executing_prog, cookie = read_n_log_steps(CHUNK_SIZE, cookie)
-
-    # executing_prog = []
-    # active_lines = []
-    # with open("cache_log", "r") as log:
-    #     while (True): # Executing program
-    #         step = {"type":"", "title":"", "CS":0, "ram":False, "hits":[], "misses":[], "readers":[], "writers":[], "addr":[], "evict":[], "insert":[], "validity":[], "dirtiness":[], "lines":active_lines, "lines-changed":False, "is_write":False, "stdout":0}
-    #         line = log.readline()
-    #         if (not line): break
-    #         tokens = line.split()
-    #         match tokens[0]:
-    #             case "fetch:":
-    #                 step["type"] = "fetch"
-    #                 step["title"] = f"Fetching instruction {tokens[2]}"
-    #                 step["addr"].append(int(tokens[2], 16))
-    #                 line = log.readline()
-    #                 tokens = line.split()
-    #                 while (line != "endfetch\n"):
-    #                     if line == "RAM\n":
-    #                         step["ram"] = True
-    #                         line = log.readline()
-    #                         tokens = line.split()
-    #                         continue
-    #                     match tokens[0]:
-    #                         case "H":
-    #                             step["hits"].append((tokens[1], tokens[2], tokens[3]))
-    #                         case "M":
-    #                             step["misses"].append((tokens[1], tokens[2]))
-    #                         case "E":
-    #                             step["evict"].append((tokens[1], tokens[2], tokens[3]))
-    #                         case "F": # Yes I know F (fetch into cache) being insert is weird asf
-    #                             step["insert"].append((tokens[1], tokens[2], tokens[3]))
-    #                         case "V" | "IV":
-    #                             step["validity"].append((tokens[1], tokens[2], tokens[3], tokens[0] == "V", tokens[4]))
-    #                         case "D" | "C":
-    #                             step["dirtiness"].append((tokens[1], tokens[2], tokens[3], tokens[0] == "D", tokens[4]))
-    #                     line = log.readline()
-    #                     tokens = line.split()
-    #             case "instr:":
-    #                 step["type"] = "instr"
-    #                 step["title"] = log.readline()[:-1]
-    #                 if (step["title"] == "endinstr"): continue
-    #                 line =  log.readline()
-    #                 tokens = line.split()
-    #                 while (line != "endinstr\n"):
-    #                     if line == "RAM\n":
-    #                         step["ram"] = True
-    #                         line = log.readline()
-    #                         tokens = line.split()
-    #                         continue
-    #                     match tokens[0]:
-    #                         case "CS": step["CS"] = tokens[1]
-    #                         case "stdout": step["stdout"] = tokens[1]
-    #                         case "H": step["hits"].append((tokens[1], tokens[2], tokens[3]))
-    #                         case "M": step["misses"].append((tokens[1], tokens[2]))
-    #                         case "E": step["evict"].append((tokens[1], tokens[2], tokens[3]))
-    #                         case "F": step["insert"].append((tokens[1], tokens[2], tokens[3]))
-    #                         case "V" | "IV": step["validity"].append((tokens[1], tokens[2], tokens[3], tokens[0] == "V", tokens[4]))
-    #                         case "D" | "C": step["dirtiness"].append((tokens[1], tokens[2], tokens[3], tokens[0] == "D", tokens[4]))
-    #                         case _:
-    #                             match tokens[0]:
-    #                                 case access if access in ["wb", "wh", "ww", "rb", "rh", "rw"]:
-    #                                     step["addr"].append(int(tokens[1], 16))
-    #                                     step["is_write"] = access in ["wb", "wh", "ww"]
-    #                                 case "r": step["readers"].append(tokens[1])
-    #                                 case "w": step["writers"].append(tokens[1])
-    #                                 case "pc":
-    #                                     active_lines = (tokens[2], tokens[3])
-    #                                     step["lines-changed"] = True
-    #                     # Since there's no default case, stuff like 'ww 0xffa630 1' is actually ignored since the results of that operation are implicitly known by the cache misses and hits
-    #                     line = log.readline()
-    #                     tokens = line.split()
-    #         step["lines"] = active_lines
-    #         executing_prog.append(step)
-    print("...Finished parsing cache_log")
+   
     os.system(f"rm -f {program_file_path}.riscv {program_file_path}.dis {program_file_path}.c {architecture_file_name} tmp/program_* tmp/architecture_*")
     return executing_prog, n_steps, cookie
 
@@ -268,7 +196,7 @@ def read_n_log_steps(n: int, cookie):
             step["lines"] = active_lines
             ret_array.append(step)
             i += 1
-        cookie = log.seek(0, os.SEEK_CUR)
+        cookie = log.tell()
     return ret_array, cookie
 
 

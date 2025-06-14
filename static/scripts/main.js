@@ -19,12 +19,13 @@ function sendProgram() {
 }
 
 function get_more_steps() {
-    socket.emit("more_steps", log_progress_cookie, acceptSteps)
-}
-
-function acceptSteps(exec_log, cookie) {
-    EXEC_LOG = exec_log
-    log_progress_cookie = cookie
+    return new Promise((resolve) => {
+        socket.emit("more_steps", log_progress_cookie, (exec_log, cookie) => {
+            EXEC_LOG = exec_log;
+            log_progress_cookie = cookie;
+            resolve();
+        });
+    });
 }
 
 // This function needs a rewrite
