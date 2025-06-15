@@ -133,6 +133,7 @@ function visualizeStep(step) {
     if (step["type"] == "instr") {
         if (Number(step["CS"]) != CHECKSUM) {
             console.log(step["CS"] + " B != F " + CHECKSUM)
+        }
     }
 }
 
