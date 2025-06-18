@@ -7,6 +7,8 @@ let INSTR_HIT_COUNTER_OBJECT = null
 let INSTR_MISS_COUNTER_OBJECT = null
 let INSTR_PERCENT_OBJECT = null
 
+let log_progress_cookie = 0
+
 function sendProgram() {
     confirmArchitecture()
     PROGRAM_TEXT = document.getElementById("programText").value;
@@ -16,8 +18,19 @@ function sendProgram() {
     socket.emit("run_program", {program:PROGRAM_TEXT, data_caches:data_caches, instr_cache:instr_cache, r_policy:policy, args:document.getElementById("args").value}, runCallback)
 }
 
+function get_more_steps() {
+    return new Promise((resolve) => {
+        socket.emit("more_steps", log_progress_cookie, (exec_log, cookie) => {
+            EXEC_LOG = exec_log;
+            log_progress_cookie = cookie;
+            resolve();
+        });
+    });
+}
+
 // This function needs a rewrite
-function runCallback(exec_log) {
+function runCallback(exec_log, n_steps, cookie) {
+    log_progress_cookie = cookie
     create_caches()
     src_lines = PROGRAM_TEXT.replaceAll("<", "&lt")
                             .replaceAll(">", "&gt")
@@ -117,7 +130,7 @@ function runCallback(exec_log) {
     INPUT_PAGE.style.display = "none";
     VISUALIZATION_PAGE.style.display = "flex";
     EXEC_LOG = exec_log
-    TOTAL_STEPS = exec_log.length
+    TOTAL_STEPS = n_steps
     INSTR_COUNTER.innerHTML = "(0/" + TOTAL_STEPS + ") "
 }
 

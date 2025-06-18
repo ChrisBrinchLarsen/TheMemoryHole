@@ -11,6 +11,7 @@ log = logging.getLogger('werkzeug')
 log.disabled = True
 socketio = SocketIO(app)
 
+CHUNK_SIZE = 500
 
 policy_dict = {
     "LRU" : 0,
@@ -35,6 +36,11 @@ def write_cache_to_file(file, name, config):
     file.write(f"{config['q']}\n")
     file.write(f"{config['k']}\n")
     file.write(f"{config['a']}\n")
+
+@socketio.on("more_steps")
+def request_more_steps(cookie):
+    exec_log, cookie = read_n_log_steps(CHUNK_SIZE, cookie)
+    return exec_log, cookie
 
 # TODO: Very important that we make the config and program filenames be unique
 # and random, as well as have them cleaned ud (deleted) after use. This is due
@@ -69,7 +75,7 @@ def handle_run_program(data):
 
     C_to_dis(program_file_path)
     print("Starting program simulation...")
-    os.system(f"rm -f accesses loggers cache_log")
+    os.system(f"rm -f accesses loggers cache_log step_count")
     print("policy", r_policy)
     result = subprocess.run(["./engine/sim", architecture_file_name, f"{program_file_path}.dis", "-l", "loggers", "--", *args], capture_output=True, text=True)
     print("...Finished program simulation")
@@ -77,18 +83,50 @@ def handle_run_program(data):
     print(result.stdout)
     print("Stderr:")
     print(result.stderr)
+    print("Retval:")
+    print(result.returncode)
 
+    n_steps = 0
+    with open("step_count", "r") as f:
+        n_steps = int(f.readline())
+        print("Total steps:", n_steps)
 
     print("Parsing cache_log starting...")
 
-    executing_prog = []
-    active_lines = []
+    cookie = 0
     with open("cache_log", "r") as log:
-        line = log.readline()
-        while (line != "---- PROGRAM START ----\n"): # Writing program to memory
-            # TODO: This entire parsing of the loading instructions part of the cache_log
-            line = log.readline()
-        while (True): # Executing program
+        log.seek(0, os.SEEK_SET)
+        cookie = log.tell()
+
+    executing_prog, cookie = read_n_log_steps(CHUNK_SIZE, cookie)
+   
+    os.system(f"rm -f {program_file_path}.riscv {program_file_path}.dis {program_file_path}.c {architecture_file_name} tmp/program_* tmp/architecture_*")
+    return executing_prog, n_steps, cookie
+
+
+def C_to_dis(program_file_path):
+     # Compile from C -> RISC-V
+    os.system(f"./riscv/bin/riscv32-unknown-elf-gcc -march=rv32im -mabi=ilp32 -fno-tree-loop-distribute-patterns -mno-relax -Og {program_file_path}.c lib.c -static -nostartfiles -nostdlib -o {program_file_path}.riscv -g")
+    # Compile from RISC-V -> dis
+    os.system(f"./riscv/bin/riscv32-unknown-elf-objdump -s -w {program_file_path}.riscv > {program_file_path}.dis")
+    os.system(f"./riscv/bin/riscv32-unknown-elf-objdump -S {program_file_path}.riscv >> {program_file_path}.dis")
+
+def addDebugComments(program:str):
+    outstr = "//PROGRAM_START\n";
+    lines = program.splitlines();
+    for i in range(len(lines)):
+        outstr += lines[i] + f"//[[{i}]]\n";
+    outstr += "//PROGRAM_END\n"
+    return outstr;
+
+def read_n_log_steps(n: int, cookie):
+    ret_array = []
+    active_lines = []
+    
+    with open("cache_log", "r") as log:
+        log.seek(cookie, os.SEEK_SET)
+        i = 0
+        while (i < n):
             step = {"type":"", "title":"", "CS":0, "ram":False, "hits":[], "misses":[], "readers":[], "writers":[], "addr":[], "evict":[], "insert":[], "validity":[], "dirtiness":[], "lines":active_lines, "lines-changed":False, "is_write":False, "stdout":0}
             line = log.readline()
             if (not line): break
@@ -156,28 +194,13 @@ def handle_run_program(data):
                         line = log.readline()
                         tokens = line.split()
             step["lines"] = active_lines
-            executing_prog.append(step)
-    print("...Finished parsing cache_log")
-    os.system(f"rm -f {program_file_path}.riscv {program_file_path}.dis {program_file_path}.c {architecture_file_name} tmp/program_* tmp/architecture_*")
-    return executing_prog
+            ret_array.append(step)
+            i += 1
+        cookie = log.tell()
+    return ret_array, cookie
 
 
-def C_to_dis(program_file_path):
-     # Compile from C -> RISC-V
-    os.system(f"./riscv/bin/riscv32-unknown-elf-gcc -march=rv32im -mabi=ilp32 -fno-tree-loop-distribute-patterns -mno-relax -Og {program_file_path}.c lib.c -static -nostartfiles -nostdlib -o {program_file_path}.riscv -g")
-    # Compile from RISC-V -> dis
-    os.system(f"./riscv/bin/riscv32-unknown-elf-objdump -s -w {program_file_path}.riscv > {program_file_path}.dis")
-    os.system(f"./riscv/bin/riscv32-unknown-elf-objdump -S {program_file_path}.riscv >> {program_file_path}.dis")
-
-def addDebugComments(program:str):
-    outstr = "//PROGRAM_START\n";
-    lines = program.splitlines();
-    for i in range(len(lines)):
-        outstr += lines[i] + f"//[[{i}]]\n";
-    outstr += "//PROGRAM_END\n"
-    return outstr;
 
 ### MAIN
 if __name__ == "__main__":
     socketio.run(app, debug=True)
-

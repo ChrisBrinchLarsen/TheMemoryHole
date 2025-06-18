@@ -617,6 +617,7 @@ void change_dirtiness(Cache_t* cache, int set_index, int line_index, bool new_di
 
 void add_operation_to_checksum(uint32_t type, uint32_t cache_idx, uint32_t set_idx, uint32_t line_idx) {
     cache_checksum += type * 10 + cache_idx * 100 + set_idx * 1000 + line_idx * 10000;
+    fprintf(CACHE_LOG, "| %d = old + %d*10 + %d*100 + %d*1000 + %d*10000\n", cache_checksum, type, cache_idx, set_idx, line_idx);
 }
 
 uint32_t get_cache_checksum() {return cache_checksum;}
