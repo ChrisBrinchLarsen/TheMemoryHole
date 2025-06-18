@@ -22,7 +22,7 @@
        <!-- <select name="predefined-architectures" id="architecture-dropdown"> -->
         <select name="predefined-architectures" id="architecture-dropdown" onchange="preset_architecture(JSON.parse(this.value)); this.selectedindex = -1">
             <option disabled selected value>Sample Architectures</option>
-            <option value='{"data":[[6,1,4,1], [7,1,4,2]], "instr":null}'>Simple CPU</option>
+            <option value='{"data":[[7,1,5,1], [8,1,5,2]], "instr":[7,1,5,1]}'>Simple CPU</option>
             <option value='{"data":[[7,1,4,2],[9,1,4,4],[11,1,4,8]], "instr":null}'>Intermediate CPU</option>
             <option value='{"data":[[10,32,6,4],[10,512,6,16]], "instr":null}'>Raspberry Pi3</option>
             <option value='{"data":[[10,384,6,12], [20,8,6,16], [20,96,6,16]], "instr":[10,256,6,8]}'>AMD Ryzen 7 9800X3D</option>
