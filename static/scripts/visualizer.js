@@ -50,7 +50,7 @@ let INSTR_CACHE_OBJECT = null
 
 let CHECKSUM = 0
 
-const CHUNK_SIZE = 100000;
+const CHUNK_SIZE = 15000;
 
 async function increment_step() {
     CURRENT_STEP++
