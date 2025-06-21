@@ -11,7 +11,7 @@ log = logging.getLogger('werkzeug')
 log.disabled = True
 socketio = SocketIO(app)
 
-CHUNK_SIZE = 500
+CHUNK_SIZE = 100000
 
 policy_dict = {
     "LRU" : 0,
