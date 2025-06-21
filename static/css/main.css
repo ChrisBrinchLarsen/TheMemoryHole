@@ -84,3 +84,9 @@ body {
     display: flex;
     flex-direction: row;
 }
+
+#ram-latency-setter {
+    align-self: center;
+    margin-left: auto;
+    padding-right: 1rem;
+}

@@ -137,6 +137,7 @@ function runCallback(exec_log, n_steps, cookie) {
 }
 
 function confirmArchitecture() {
+    DRAM_LATENCY = Number(document.getElementById("ram-latency-setter").querySelector(".num-box").value)
     cacheList = Array.from(ARCHITECTURE.querySelectorAll(".cache-container"));
     cacheList.forEach(cache => {
         if (cache.querySelector(".cache-title").innerHTML == "L1 Instruction") {
