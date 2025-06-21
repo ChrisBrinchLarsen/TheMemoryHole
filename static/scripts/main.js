@@ -277,7 +277,7 @@ function add_instruction_cache() {
     `
     new_settingsd = data_container.querySelectorAll(".num-box")
     new_settingsi = instr_container.querySelectorAll(".num-box")
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < new_settingsd.length; i++) {
         new_settingsd[i].value = settings[i].value
         new_settingsi[i].value = settings[i].value
     }
@@ -324,7 +324,7 @@ function preset_architecture(caches) {
                 </div>
             </div>
             <div class="cache-setting">
-                Latency: <input class="num-box" type="number"> cycles
+                Latency: <input class="num-box" type="number" value="${cache[4]}"> cycles
             </div>
         `
         ARCHITECTURE.appendChild(container)
