@@ -1,4 +1,6 @@
 let data_caches = []
+let DATA_CACHE_LATENCIES = []
+let INSTR_CACHE_LATENCY = 0
 let instr_cache = {}
 let N_CACHE_LAYERS = 0
 let INSTR_BIT_LENGTHS = {}
@@ -157,6 +159,7 @@ function confirm_data_cache(cache) {
     block_offset_len = Math.log2(Math.pow(2, input_boxes[2].value))
     set_len = Math.log2((Math.pow(2,input_boxes[0].value) * input_boxes[1].value) / (Math.pow(2, input_boxes[2].value) * input_boxes[3].value))
     BIT_LENGTHS.push({s:set_len, b:block_offset_len})
+    DATA_CACHE_LATENCIES.push(Number(input_boxes[4].value))
 }
 
 function confirm_instr_cache(cache) {
@@ -169,6 +172,7 @@ function confirm_instr_cache(cache) {
     block_offset_len = Math.log2(Math.pow(2, input_boxes[2].value))
     set_len = Math.log2((Math.pow(2,input_boxes[0].value) * input_boxes[1].value) / (Math.pow(2, input_boxes[2].value) * input_boxes[3].value))
     INSTR_BIT_LENGTHS = {s:set_len, b:block_offset_len}
+    INSTR_CACHE_LATENCY = Number(input_boxes[4].value)
 }
 
 // TODO: Everything below this point is giga scuffed right now
@@ -227,6 +231,9 @@ function addCache() {
             <button style="display: none;" class="add-instr-cache-button" onclick="add_instruction_cache(this)">Add instruction cache</button>
         </div>
     </div>
+    <div class="cache-setting">
+        Latency: <input class="num-box" type="number"> cycles
+    </div>
     `
     ARCHITECTURE.insertBefore(container, ADD_CACHE)
     renameCaches()
@@ -263,6 +270,9 @@ function add_instruction_cache() {
         <div class="cache-setting">
             Associativity: <input class="num-box" type="number">-way
         </div>
+        <div class="cache-setting">
+        Latency: <input class="num-box" type="number"> cycles
+        </div>
     `
     new_settingsd = data_container.querySelectorAll(".num-box")
     new_settingsi = instr_container.querySelectorAll(".num-box")
@@ -286,7 +296,7 @@ function preset_program(path) {
         .catch(error => console.error("Error fetching file:", error));
 }
 
-// This doesn't work currently
+
 function preset_architecture(caches) {
     HAS_INSTRUCTION_CACHE = !caches["instr"] == null
     ARCHITECTURE.innerHTML = ""
@@ -311,6 +321,9 @@ function preset_architecture(caches) {
                     </span>
                     <button style="display: none;" class="add-instr-cache-button" onclick="add_instruction_cache(this)">Add instruction cache</button>
                 </div>
+            </div>
+            <div class="cache-setting">
+                Latency: <input class="num-box" type="number"> cycles
             </div>
         `
         ARCHITECTURE.appendChild(container)

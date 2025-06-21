@@ -20,6 +20,7 @@
       <h1 style="padding-left: 0.5rem;">The Memory Hole</h1>
       <div style="align-content: center; margin-right: 1rem;">
        <!-- <select name="predefined-architectures" id="architecture-dropdown"> -->
+        <div>RAM Latency: <input class="num-box" type="number"> cycles</div>
         <select name="predefined-architectures" id="architecture-dropdown" onchange="preset_architecture(JSON.parse(this.value)); this.selectedindex = -1">
             <option disabled selected value>Sample Architectures</option>
             <option value='{"data":[[7,1,5,1], [8,1,5,2]], "instr":[7,1,5,1]}'>Simple CPU</option>

@@ -25,7 +25,6 @@ let MISSES = []
 let LINE_HITS = []
 let LINE_MISSES = []
 
-let INSTR_CACHE_LATENCY = 3
 let LATENCY_AT_LEVEL = [1, 3, 9, 27, 81, 243, 729, 2187, 6561, 19683, 59049, 177147]
 let DRAM_LATENCY = 195
 let ESTIMATED_CYCLES = 0
@@ -148,7 +147,7 @@ function visualize_path(access_type, hits, misses, evictions, inserts, validitie
             give_line_class("hit", INSTR_CACHE_OBJECT, hit[1], hit[2])
         } else {
             HITS[hit[0]-1] += 1;
-            ESTIMATED_CYCLES += LATENCY_AT_LEVEL[hit[0]-1]
+            ESTIMATED_CYCLES += Number(DATA_CACHE_LATENCIES[hit[0]-1])
             give_line_class("hit", CACHE_OBJECTS[hit[0]-1], hit[1], hit[2])
         }
         for (let i = lineS; i <= lineE; i++) {
@@ -164,7 +163,7 @@ function visualize_path(access_type, hits, misses, evictions, inserts, validitie
         } else {
             give_set_class("miss", CACHE_OBJECTS[miss[0]-1], miss[1])
             MISSES[miss[0]-1] += 1;
-            ESTIMATED_CYCLES += LATENCY_AT_LEVEL[miss[0]-1]
+            ESTIMATED_CYCLES += Number(DATA_CACHE_LATENCIES[miss[0]-1])
         }
 
         if (miss[0] == N_CACHE_LAYERS) {
